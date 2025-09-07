@@ -4,9 +4,13 @@ import { Module } from '@nestjs/common'
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core'
 import { ZodSerializerInterceptor } from 'nestjs-zod'
 import { SharedModule } from './shared/shared.module'
+import { MailModule } from './3rdService/mail/mailer/mail.module'
+
 
 @Module({
-  imports: [SharedModule],
+  imports: [
+    MailModule,
+    SharedModule],
   controllers: [],
   providers: [
     {
@@ -20,4 +24,4 @@ import { SharedModule } from './shared/shared.module'
     }
   ]
 })
-export class AppModule {}
+export class AppModule { }
