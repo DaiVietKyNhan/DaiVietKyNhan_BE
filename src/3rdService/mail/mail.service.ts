@@ -89,6 +89,7 @@ export class MailService {
       bookingTime,
       reason,
       supportEmail: 'support@photogo.id.vn'
+      
     };
     
     await this.sendMail(email, subject, 'booking-cancellation', context);
