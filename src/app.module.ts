@@ -5,10 +5,17 @@ import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core'
 import { ZodSerializerInterceptor } from 'nestjs-zod'
 import { SharedModule } from './shared/shared.module'
 import { MailModule } from './3rdService/mail/mailer/mail.module'
+import { ConfigModule } from '@nestjs/config'
+import { ScheduleModule } from '@nestjs/schedule'
 
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true, // Cho phép dùng process.env ở mọi nơi
+    }),
+    ScheduleModule.forRoot(),
+
     MailModule,
     SharedModule],
   controllers: [],

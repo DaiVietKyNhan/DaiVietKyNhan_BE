@@ -89,9 +89,9 @@ export class MailService {
       bookingTime,
       reason,
       supportEmail: 'support@photogo.id.vn'
-      
+
     };
-    
+
     await this.sendMail(email, subject, 'booking-cancellation', context);
   }
 
@@ -119,7 +119,7 @@ export class MailService {
       refundNote,
       supportEmail: 'support@photogo.id.vn'
     };
-    
+
     await this.sendMail(email, subject, 'refund-notification', context);
   }
 
@@ -139,18 +139,18 @@ export class MailService {
     }
   ): Promise<void> {
     const subject = 'Đăng ký Subscription Thành công - PhotoGo';
-    
+
     // Format dates
     const startDate = this.formatDate(subscriptionData.startDate);
     const endDate = this.formatDate(subscriptionData.endDate);
     const nextBillingDate = subscriptionData.nextBillingDate ? this.formatDate(subscriptionData.nextBillingDate) : null;
-    
+
     // Format price
     const price = subscriptionData.price.toLocaleString('vi-VN') + ' VNĐ';
-    
+
     // Determine status class for styling
     const statusClass = subscriptionData.status === 'hoạt động' ? 'active' : 'pending';
-    
+
     const context = {
       customerName,
       customerEmail: email,
@@ -166,7 +166,7 @@ export class MailService {
       nextBillingDate,
       supportEmail: 'support@photogo.id.vn'
     };
-    
+
     await this.sendMail(email, subject, 'subscription-success', context);
   }
 

@@ -12,7 +12,7 @@ export const templateDir = process.env.NODE_ENV === 'Production'
 export function registerHandlebarsHelpers() {
   Handlebars.registerHelper('formatDate', (date: Date, format = 'DD/MM/YYYY') => {
     if (!date) return '';
-    return moment(date).format(format);
+    return moment.default(date).format(format);
   });
   Handlebars.registerHelper('formatPrice', (price: number) => price?.toLocaleString('vi-VN') ?? '');
   Handlebars.registerHelper('formatCurrency', (v: number) => v == null ? '' : Number(v).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }));

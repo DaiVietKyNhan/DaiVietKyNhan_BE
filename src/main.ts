@@ -3,6 +3,7 @@ import setupSwagger from '@/config/swagger.config'
 import { RequestMethod, VersioningType } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
@@ -29,8 +30,28 @@ async function bootstrap() {
     type: VersioningType.URI
   })
 
-  //swagger
-  setupSwagger(app)
+  //#region Swagger
+  //ConfigSwagger
+  const config = new DocumentBuilder()
+    .setTitle('API PhotoGO')
+    .setDescription('NestJS API PhotoGO')
+    .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        in: 'header',
+      },
+      'access-token',
+    )
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config, {
+    extraModels: [],
+  });
+  SwaggerModule.setup('api/document', app, document);
+  //#endregion
 
   await app.listen(envConfig.APP_PORT, '0.0.0.0')
 
