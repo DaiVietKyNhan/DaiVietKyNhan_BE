@@ -18,6 +18,7 @@ function setupSwagger(app: INestApplication) {
   SwaggerModule.setup('api-docs', app, document, {
     customSiteTitle: appName,
     swaggerOptions: {
+      persistAuthorization: true,
       tagsSorter: 'alpha',
       operationsSorter: '-method'
     }

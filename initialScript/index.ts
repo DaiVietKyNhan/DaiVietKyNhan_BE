@@ -16,6 +16,10 @@ const main = async () => {
       {
         name: RoleName.Admin,
         description: 'Admin role'
+      },
+      {
+        name: RoleName.Customer,
+        description: 'Customer role'
       }
     ]
   })

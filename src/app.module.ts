@@ -1,23 +1,30 @@
 import CustomZodValidationPipe from '@/common/pipes/custom-zod-validation.pipe'
 import { HttpExceptionFilter } from '@/shared/filters/http-exception.filter'
 import { Module } from '@nestjs/common'
-import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core'
-import { ZodSerializerInterceptor } from 'nestjs-zod'
-import { SharedModule } from './shared/shared.module'
-import { MailModule } from './3rdService/mail/mailer/mail.module'
 import { ConfigModule } from '@nestjs/config'
+import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core'
 import { ScheduleModule } from '@nestjs/schedule'
-
+import { ZodSerializerInterceptor } from 'nestjs-zod'
+import { MailModule } from './3rdService/mail/mailer/mail.module'
+import { AuthModule } from './modules/auth/auth.module'
+import { PermissionModule } from './modules/permission/permission.module'
+import { RoleModule } from './modules/role/role.module'
+import { SharedModule } from './shared/shared.module'
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true, // Cho phép dùng process.env ở mọi nơi
+      isGlobal: true // Cho phép dùng process.env ở mọi nơi
     }),
     ScheduleModule.forRoot(),
 
     MailModule,
-    SharedModule],
+    SharedModule,
+    AuthModule,
+    RoleModule,
+    PermissionModule
+  ],
+
   controllers: [],
   providers: [
     {
@@ -31,4 +38,4 @@ import { ScheduleModule } from '@nestjs/schedule'
     }
   ]
 })
-export class AppModule { }
+export class AppModule {}

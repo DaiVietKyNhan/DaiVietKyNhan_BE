@@ -1,5 +1,6 @@
 export const RoleName = {
-  Admin: 'ADMIN'
+  Admin: 'ADMIN',
+  Customer: 'CUSTOMER'
 } as const
 
 export const HTTPMethod = {
