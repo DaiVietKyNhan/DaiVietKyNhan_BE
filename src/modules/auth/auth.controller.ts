@@ -11,7 +11,7 @@ import {
   RefreshTokenResDTO,
   RegisterBodyDTO,
   RegisterResDTO
-} from '@/modules/auth/auth.dto'
+} from '@/modules/auth/dto/auth.zod-dto'
 import { MessageResDTO } from '@/shared/dtos/response.dto'
 import {
   Body,
@@ -38,7 +38,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly googleService: GoogleService
-  ) {}
+  ) { }
 
   // @Post('otp')
   // @IsPublic()

@@ -4,7 +4,7 @@ import {
   DeviceType,
   RefreshTokenType,
   VerificationCodeType
-} from 'src/modules/auth/auth.model'
+} from '@/modules/auth/entities/auth.entities'
 import { RoleType } from 'src/shared/models/shared-role.model'
 import { UserType } from 'src/shared/models/shared-user.model'
 import { WhereUniqueUserType } from 'src/shared/repositories/shared-user.repo'
@@ -12,7 +12,7 @@ import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
 export class AuthRepository {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) { }
 
   async findUniqueUser(where: WhereUniqueUserType): Promise<UserType | null> {
     return this.prismaService.user.findFirst({
@@ -100,12 +100,12 @@ export class AuthRepository {
     uniqueValue:
       | { id: number }
       | {
-          email_code_type: {
-            email: string
-            code: string
-            type: TypeOfVerificationCodeType
-          }
+        email_code_type: {
+          email: string
+          code: string
+          type: TypeOfVerificationCodeType
         }
+      }
   ): Promise<VerificationCodeType | null> {
     return this.prismaService.verificationCode.findUnique({
       where: uniqueValue
@@ -180,12 +180,12 @@ export class AuthRepository {
     uniqueValue:
       | { id: number }
       | {
-          email_code_type: {
-            email: string
-            code: string
-            type: TypeOfVerificationCodeType
-          }
+        email_code_type: {
+          email: string
+          code: string
+          type: TypeOfVerificationCodeType
         }
+      }
   ): Promise<VerificationCodeType> {
     return this.prismaService.verificationCode.delete({
       where: uniqueValue

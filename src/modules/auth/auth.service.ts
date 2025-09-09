@@ -9,14 +9,14 @@ import {
   OTPExpiredException,
   RefreshTokenAlreadyUsedException,
   UnauthorizedAccessException
-} from '@/modules/auth/auth.error'
+} from '@/modules/auth/dto/auth.error'
 import {
   ForgotPasswordBodyType,
   LoginBodyType,
   RefreshTokenBodyType,
   RegisterBodyType,
   UpdateMeBodyType
-} from '@/modules/auth/auth.model'
+} from '@/modules/auth/entities/auth.entities'
 import { AuthRepository } from '@/modules/auth/auth.repo'
 import { InvalidPasswordException, NotFoundRecordException } from '@/shared/error'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from '@/shared/helpers'
@@ -42,7 +42,7 @@ export class AuthService {
     private readonly bullQueueService: BullQueueService,
     @InjectQueue('user-deletion') private readonly deletionQueue: Queue,
     private readonly tokenService: TokenService
-  ) {}
+  ) { }
 
   async validateVerificationCode({
     email,

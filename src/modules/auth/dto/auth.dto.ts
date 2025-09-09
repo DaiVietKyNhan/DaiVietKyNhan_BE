@@ -13,6 +13,4 @@ export class RegisterMultipartSwaggerDTO {
     @ApiProperty({ example: '0986056438', description: 'Số điện thoại' })
     phoneNumber: string;
 
-    @ApiProperty({ example: 'password123', description: 'Mật khẩu xác nhận' })
-    confirmPassword: string;
 }

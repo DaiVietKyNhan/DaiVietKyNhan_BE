@@ -6,8 +6,8 @@ import { google } from 'googleapis'
 import { AuthService } from 'src/modules/auth/auth.service'
 import { HashingService } from 'src/shared/services/hashing.service'
 import { v4 as uuidv4 } from 'uuid'
-import { GoogleUserInfoError } from './auth.error'
-import { GoogleAuthStateType } from './auth.model'
+import { GoogleUserInfoError } from './dto/auth.error'
+import { GoogleAuthStateType } from './entities/auth.entities'
 @Injectable()
 export class GoogleService {
   private oauth2Client
