@@ -8,7 +8,9 @@ import { Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
 
 export interface Response<T> {
+  statusCode: number
   data: T
+  message?: string
 }
 
 @Injectable()
@@ -19,7 +21,10 @@ export class TransformInterceptor<T> implements NestInterceptor<T, Response<T>> 
         const ctx = context.switchToHttp()
         const response = ctx.getResponse()
         const statusCode = response.statusCode
-        return { data, statusCode }
+        if (data && typeof data === 'object' && 'data' in data && 'message' in data) {
+          return { statusCode, ...data }
+        }
+        return { statusCode, data }
       })
     )
   }

@@ -1,4 +1,6 @@
 import { ActiveUser } from '@/common/decorators/active-user.decorator'
+import { PaginationQueryDTO } from '@/shared/dtos/request.dto'
+import { PaginationResponseSchema } from '@/shared/models/response.model'
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 import { ZodSerializerDto } from 'nestjs-zod'
@@ -7,8 +9,6 @@ import {
   CreatePermissionResDTO,
   GetPermissionDetailResDTO,
   GetPermissionParamsDTO,
-  GetPermissionsQueryDTO,
-  GetPermissionsResDTO,
   UpdatePermissionBodyDTO,
   UpdatePermissionResDTO
 } from 'src/modules/permission/permission.dto'
@@ -20,13 +20,11 @@ import { MessageResDTO } from 'src/shared/dtos/response.dto'
 export class PermissionController {
   constructor(private readonly permissionService: PermissionService) {}
 
+  //permissions?qs=sort:name,name:like:DELETE
   @Get()
-  @ZodSerializerDto(GetPermissionsResDTO)
-  list(@Query() query: GetPermissionsQueryDTO) {
-    return this.permissionService.list({
-      page: query.page,
-      limit: query.limit
-    })
+  @ZodSerializerDto(PaginationResponseSchema)
+  list(@Query() query: PaginationQueryDTO) {
+    return this.permissionService.list(query)
   }
 
   @Get(':permissionId')

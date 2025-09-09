@@ -71,6 +71,9 @@ importers:
       '@react-email/components':
         specifier: 0.0.33
         version: 0.0.33(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      api-query-params:
+        specifier: ^6.0.1
+        version: 6.0.1
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
@@ -149,9 +152,6 @@ importers:
       zod:
         specifier: ^3.25.17
         version: 3.25.17
-      zod-openapi:
-        specifier: ^5.4.0
-        version: 5.4.0(zod@3.25.17)
     devDependencies:
       '@commitlint/config-conventional':
         specifier: ^19.8.1
@@ -2357,6 +2357,10 @@ packages:
   anymatch@3.1.3:
     resolution: {integrity: sha512-KMReFUr0B4t+D+OBkjR3KYqvocp2XaSzO55UcB6mgQMd3KbcE+mWTyvVV7D/zsdEbNnV6acZUutkiHQXvTr1Rw==}
     engines: {node: '>= 8'}
+
+  api-query-params@6.0.1:
+    resolution: {integrity: sha512-RGiq0N7IwGjR2m0LqW5nttwk+DgOt2kGA1iO3fDmpcbfxNQxhhNYAkDEnSloq5DBN2f4/xv+vaGILnLO4UR/GA==}
+    engines: {node: '>=18'}
 
   app-root-path@3.1.0:
     resolution: {integrity: sha512-biN3PwB2gUtjaYy/isrU3aNWI5w+fAfvHkSvCKeQGxhmYpwKFUxudR3Yya+KqVRHBmEDYh+/lTozYCFbmzX4nA==}
@@ -5822,12 +5826,6 @@ packages:
     resolution: {integrity: sha512-cYVsTjKl8b+FrnidjibDWskAv7UKOfcwaVZdp/it9n1s9fU3IkgDbhdIRKCW4JDsAlECJY0ytoVPT3sK6kideA==}
     engines: {node: '>=18'}
 
-  zod-openapi@5.4.0:
-    resolution: {integrity: sha512-5FdEnJmeNFmSEzfoH10GGF0OQFtSkJCnoXBZR618/Aozv2NF7dhS6y4dj+88rwAgNezbUH+9GJC3QsEiyu3rUQ==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      zod: ^3.25.74 || ^4.0.0
-
   zod@3.25.17:
     resolution: {integrity: sha512-8hQzQ/kMOIFbwOgPrm9Sf9rtFHpFUMy4HvN0yEB0spw14aYi0uT5xG5CE2DB9cd51GWNsz+DNO7se1kztHMKnw==}
 
@@ -8046,6 +8044,8 @@ snapshots:
     dependencies:
       normalize-path: 3.0.0
       picomatch: 2.3.1
+
+  api-query-params@6.0.1: {}
 
   app-root-path@3.1.0: {}
 
@@ -12280,9 +12280,5 @@ snapshots:
   yocto-queue@0.1.0: {}
 
   yoctocolors-cjs@2.1.2: {}
-
-  zod-openapi@5.4.0(zod@3.25.17):
-    dependencies:
-      zod: 3.25.17
 
   zod@3.25.17: {}

@@ -67,7 +67,10 @@ export class AuthRepository {
   ): Promise<Omit<UserType, 'password'>> {
     const { password, ...userData } = user
     const createdUser = await this.prismaService.user.create({
-      data: user
+      data: user,
+      include: {
+        role: true
+      }
     })
     // Loại bỏ password khỏi kết quả trả về
     const { password: _, ...result } = createdUser

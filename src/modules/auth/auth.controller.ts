@@ -1,7 +1,6 @@
 import { IsPublic } from '@/common/decorators/auth.decorator'
 import { UserAgent } from '@/common/decorators/user-agent.decorator'
 import envConfig from '@/config/env.config'
-import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import {
   ForgotPasswordBodyDTO,
   GetAuthorizationUrlResDTO,
@@ -26,19 +25,20 @@ import {
   Res,
   UseInterceptors
 } from '@nestjs/common'
+import { AnyFilesInterceptor } from '@nestjs/platform-express'
 import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger'
 import { Response } from 'express'
 import { ZodSerializerDto } from 'nestjs-zod'
 import { AuthService } from './auth.service'
-import { GoogleService } from './google.service'
 import { RegisterMultipartSwaggerDTO } from './dto/auth.dto'
+import { GoogleService } from './google.service'
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly googleService: GoogleService
-  ) { }
+  ) {}
 
   // @Post('otp')
   // @IsPublic()
@@ -48,6 +48,7 @@ export class AuthController {
   // }
 
   @Post('login')
+  @HttpCode(HttpStatus.OK)
   @IsPublic()
   @ZodSerializerDto(LoginResDTO)
   login(@Body() body: LoginBodyDTO, @UserAgent() userAgent: string, @Ip() ip: string) {
@@ -60,7 +61,7 @@ export class AuthController {
 
   @Post('register')
   @IsPublic()
-  // @ZodSerializerDto(RegisterResDTO)
+  @ZodSerializerDto(RegisterResDTO)
   @UseInterceptors(AnyFilesInterceptor())
   @ApiConsumes('multipart/form-data')
   @ApiBody({ type: RegisterMultipartSwaggerDTO }) // dùng class để render form đẹp
@@ -75,7 +76,6 @@ export class AuthController {
   @Post('refresh-token')
   @ApiBearerAuth()
   @IsPublic()
-  @HttpCode(HttpStatus.OK)
   @ZodSerializerDto(RefreshTokenResDTO)
   refreshToken(
     @Body() body: RefreshTokenBodyDTO,
@@ -90,6 +90,7 @@ export class AuthController {
   }
 
   @Post('logout')
+  @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ZodSerializerDto(MessageResDTO)
   logout(@Body() body: LogoutBodyDTO) {

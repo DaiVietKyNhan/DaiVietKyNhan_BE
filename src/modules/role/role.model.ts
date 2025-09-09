@@ -27,7 +27,10 @@ export const GetRoleParamsSchema = z
   })
   .strict()
 
-export const GetRoleDetailResSchema = RoleWithPermissionsSchema
+export const GetRoleDetailResSchema = z.object({
+  data: RoleWithPermissionsSchema,
+  message: z.string()
+})
 
 export const CreateRoleBodySchema = RoleSchema.pick({
   name: true,

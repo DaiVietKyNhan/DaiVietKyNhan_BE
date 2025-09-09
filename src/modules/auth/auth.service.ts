@@ -1,8 +1,5 @@
 import { BullQueueService } from '@/3rdService/bull/bull-queue.service'
-import {
-  TypeOfVerificationCode,
-  TypeOfVerificationCodeType
-} from '@/common/constants/auth.constant'
+import { TypeOfVerificationCodeType } from '@/common/constants/auth.constant'
 import { AUTH_MESSAGE } from '@/common/constants/message'
 import { RoleName } from '@/common/constants/role.constant'
 import {
@@ -18,7 +15,6 @@ import {
   LoginBodyType,
   RefreshTokenBodyType,
   RegisterBodyType,
-  SendOTPBodyType,
   UpdateMeBodyType
 } from '@/modules/auth/auth.model'
 import { AuthRepository } from '@/modules/auth/auth.repo'
@@ -35,7 +31,7 @@ import { Queue } from 'bull'
 
 @Injectable()
 export class AuthService {
-  private readonly logger = new Logger(AuthService.name);
+  private readonly logger = new Logger(AuthService.name)
   constructor(
     private readonly hashingService: HashingService,
     private readonly sharedRoleRepository: SharedRoleRepository,
@@ -46,7 +42,7 @@ export class AuthService {
     private readonly bullQueueService: BullQueueService,
     @InjectQueue('user-deletion') private readonly deletionQueue: Queue,
     private readonly tokenService: TokenService
-  ) { }
+  ) {}
 
   async validateVerificationCode({
     email,
@@ -73,11 +69,10 @@ export class AuthService {
     return vevificationCode
   }
 
-
   async login(body: LoginBodyType & { userAgent: string; ip: string }) {
     // 1. Lấy thông tin user, kiểm tra user có tồn tại hay không, mật khẩu có đúng không
     const user = await this.authRepository.findUniqueUserIncludeRole({
-      email: body.email
+      email: body.email.toLowerCase()
     })
     if (!user) {
       throw EmailNotFoundException
@@ -108,8 +103,13 @@ export class AuthService {
       roleId: user.roleId,
       roleName: user.role.name
     })
+    const { password, ...userWithoutPassword } = user
+    const data = {
+      ...userWithoutPassword,
+      ...tokens
+    }
     return {
-      data: tokens,
+      data,
       message: 'Đăng nhập thành công'
     }
   }
@@ -127,7 +127,7 @@ export class AuthService {
       const roleId = await this.sharedRoleRepository.getCustomerRoleId()
       const [user] = await Promise.all([
         this.authRepository.registerUser({
-          email: body.email,
+          email: body.email.toLowerCase(),
           password: hashedPassword,
           roleId,
           name: body.name,
@@ -136,21 +136,26 @@ export class AuthService {
       ])
       // xóa những nhừng user không active sau 5 phút
       // Thêm tác vụ xóa vào hàng đợi
-      const jobAdded = await this.bullQueueService.addJob(this.deletionQueue, 'delete-inactive-user', { userId: user.id }, {
-        delay: 5 * 60 * 1000,
-        attempts: 3,
-        backoff: { type: 'fixed', delay: 1000 },
-        removeOnComplete: true,
-        removeOnFail: true,
-      });
+      const jobAdded = await this.bullQueueService.addJob(
+        this.deletionQueue,
+        'delete-inactive-user',
+        { userId: user.id },
+        {
+          delay: 5 * 60 * 1000,
+          attempts: 3,
+          backoff: { type: 'fixed', delay: 1000 },
+          removeOnComplete: true,
+          removeOnFail: true
+        }
+      )
 
       if (jobAdded) {
-        this.logger.log(`Đã tạo người dùng ID ${user.id} và lập lịch xóa sau 5 phút`);
+        this.logger.log(`Đã tạo người dùng ID ${user.id} và lập lịch xóa sau 5 phút`)
       } else {
-        this.logger.warn(`Đã tạo người dùng ID ${user.id} nhưng không thể lập lịch xóa do lỗi Redis`);
+        this.logger.warn(
+          `Đã tạo người dùng ID ${user.id} nhưng không thể lập lịch xóa do lỗi Redis`
+        )
       }
-
-
 
       // 3. Tạo mới device
       const device = await this.authRepository.createDevice({
@@ -164,8 +169,13 @@ export class AuthService {
         roleId,
         roleName: RoleName.Customer
       })
+
+      const data = {
+        ...user,
+        ...tokens
+      }
       return {
-        data: tokens,
+        data,
         message: AUTH_MESSAGE.REGISTER_SUCCESS
       }
     } catch (error) {
@@ -232,16 +242,21 @@ export class AuthService {
       const $deleteRefreshToken = this.authRepository.deleteRefreshToken({
         token: refreshToken
       })
+      const userInfo = this.authRepository.findUniqueUserIncludeRole({ id: userId })
       // 5. Tạo mới accessToken và refreshToken
       const $tokens = this.generateTokens({ userId, roleId, roleName, deviceId })
-      const [, , tokens] = await Promise.all([
+      const [, , tokens, userData] = await Promise.all([
         $updateDevice,
         $deleteRefreshToken,
-        $tokens
+        $tokens,
+        userInfo
       ])
       return {
-        data: tokens,
-        message: 'Làm mới token thành công'
+        data: {
+          ...userData,
+          ...tokens
+        },
+        message: AUTH_MESSAGE.REFRESH_TOKEN_SUCCESS
       }
     } catch (error) {
       if (error instanceof HttpException) {
@@ -263,7 +278,7 @@ export class AuthService {
       await this.authRepository.updateDevice(deletedRefreshToken.deviceId, {
         isActive: false
       })
-      return { message: AUTH_MESSAGE.LOGOUT_SUCCESS }
+      return { data: null, message: AUTH_MESSAGE.LOGOUT_SUCCESS }
     } catch (error) {
       // Trường hợp đã refresh token rồi, hãy thông báo cho user biết
       // refresh token của họ đã bị đánh cắp

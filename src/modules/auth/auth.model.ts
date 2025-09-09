@@ -1,11 +1,11 @@
 import { TypeOfVerificationCode } from '@/common/constants/auth.constant'
+import { extendZodWithOpenApi } from '@anatine/zod-openapi'
+import { patchNestJsSwagger } from 'nestjs-zod'
+import { RoleSchema } from 'src/shared/models/shared-role.model'
 import { UserSchema } from 'src/shared/models/shared-user.model'
 import { z } from 'zod'
-import { patchNestJsSwagger } from 'nestjs-zod'
-import { extendZodWithOpenApi } from '@anatine/zod-openapi'
 extendZodWithOpenApi(z)
 patchNestJsSwagger()
-
 
 export const VerificationCodeSchema = z.object({
   id: z.number(),
@@ -26,34 +26,46 @@ export const LoginBodySchema = UserSchema.pick({
   password: true
 }).strict()
 
-export const LoginResSchema = z.object({
-  data: z.object({
-    accessToken: z.string(),
-    refreshToken: z.string()
-  }),
-  message: z.string()
-})
+export const LoginResSchema = z
+  .object({
+    statusCode: z.number(),
+    data: z.object({
+      accessToken: z.string(),
+      refreshToken: z.string(),
+      ...UserSchema.pick({
+        id: true,
+        name: true,
+        email: true,
+        phoneNumber: true,
+        roleId: true,
+        avatar: true
+      }).shape,
+      role: RoleSchema
+    }),
+    message: z.string()
+  })
+  .strict()
 
 export const RegisterBodySchema = UserSchema.pick({
   name: true,
   email: true,
   password: true,
-  phoneNumber: true,
+  phoneNumber: true
 })
-  .extend({
-    confirmPassword: z.string().min(6).max(100)
-    // code: z.string().length(6)
-  })
+  // .extend({
+  //   confirmPassword: z.string().min(6).max(100)
+  //   // code: z.string().length(6)
+  // })
   .strict()
-  .superRefine(({ confirmPassword, password }, ctx) => {
-    if (confirmPassword !== password) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Password and confirm password must match',
-        path: ['confirmPassword']
-      })
-    }
-  })
+// .superRefine(({ confirmPassword, password }, ctx) => {
+//   if (confirmPassword !== password) {
+//     ctx.addIssue({
+//       code: 'custom',
+//       message: 'Password and confirm password must match',
+//       path: ['confirmPassword']
+//     })
+//   }
+// })
 
 export const RegisterResSchema = LoginResSchema
 
@@ -83,18 +95,6 @@ export const RefreshTokenSchema = z.object({
   createdAt: z.date()
 })
 
-export const RoleSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  description: z.string(),
-  isActive: z.boolean(),
-  createdById: z.number().nullable(),
-  updatedById: z.number().nullable(),
-  deletedAt: z.date().nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date()
-})
-
 export const LogoutBodySchema = RefreshTokenBodySchema
 
 export const GoogleAuthStateSchema = DeviceSchema.pick({
@@ -103,7 +103,11 @@ export const GoogleAuthStateSchema = DeviceSchema.pick({
 })
 
 export const GetAuthorizationUrlResSchema = z.object({
-  url: z.string().url()
+  statusCode: z.number(),
+  data: z.object({
+    url: z.string().url()
+  }),
+  message: z.string()
 })
 
 export const ForgotPasswordBodySchema = z

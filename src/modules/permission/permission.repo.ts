@@ -1,8 +1,8 @@
+import { parseQs } from '@/common/utils/qs-parser'
+import { PaginationQueryType } from '@/shared/models/request.model'
 import { Injectable } from '@nestjs/common'
 import {
   CreatePermissionBodyType,
-  GetPermissionsQueryType,
-  GetPermissionsResType,
   PermissionType,
   UpdatePermissionBodyType
 } from 'src/modules/permission/permission.model'
@@ -12,29 +12,34 @@ import { PrismaService } from 'src/shared/services/prisma.service'
 export class PermissionRepo {
   constructor(private prismaService: PrismaService) {}
 
-  async list(pagination: GetPermissionsQueryType): Promise<GetPermissionsResType> {
-    const skip = (pagination.page - 1) * pagination.limit
-    const take = pagination.limit
+  async list(pagination: PaginationQueryType) {
+    console.log('pagination', pagination)
+
+    const { where, orderBy } = parseQs(pagination.qs)
+
+    const skip = (pagination.currentPage - 1) * pagination.pageSize
+    const take = pagination.pageSize
+
     const [totalItems, data] = await Promise.all([
       this.prismaService.permission.count({
-        where: {
-          deletedAt: null
-        }
+        where: { deletedAt: null, ...where }
       }),
       this.prismaService.permission.findMany({
-        where: {
-          deletedAt: null
-        },
+        where: { deletedAt: null, ...where },
+        orderBy,
         skip,
         take
       })
     ])
+
     return {
-      data,
-      totalItems,
-      page: pagination.page,
-      limit: pagination.limit,
-      totalPages: Math.ceil(totalItems / pagination.limit)
+      results: data,
+      pagination: {
+        current: pagination.currentPage,
+        pageSize: pagination.pageSize,
+        totalPage: Math.ceil(totalItems / pagination.pageSize),
+        totalItem: totalItems
+      }
     }
   }
 

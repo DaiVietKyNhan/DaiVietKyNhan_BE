@@ -1,4 +1,6 @@
 import { ActiveUser } from '@/common/decorators/active-user.decorator'
+import { PaginationQueryDTO } from '@/shared/dtos/request.dto'
+import { PaginationResponseSchema } from '@/shared/models/response.model'
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 import { ZodSerializerDto } from 'nestjs-zod'
@@ -7,8 +9,6 @@ import {
   CreateRoleResDTO,
   GetRoleDetailResDTO,
   GetRoleParamsDTO,
-  GetRolesQueryDTO,
-  GetRolesResDTO,
   UpdateRoleBodyDTO,
   UpdateRoleResDTO
 } from 'src/modules/role/role.dto'
@@ -21,12 +21,9 @@ export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
   @Get()
-  @ZodSerializerDto(GetRolesResDTO)
-  list(@Query() query: GetRolesQueryDTO) {
-    return this.roleService.list({
-      page: query.page,
-      limit: query.limit
-    })
+  @ZodSerializerDto(PaginationResponseSchema)
+  list(@Query() query: PaginationQueryDTO) {
+    return this.roleService.list(query)
   }
 
   @Get(':roleId')

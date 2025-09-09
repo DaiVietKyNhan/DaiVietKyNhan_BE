@@ -35,7 +35,7 @@ export class GoogleService {
       include_granted_scopes: true,
       state: stateString
     })
-    return { url }
+    return { data: { url }, message: 'Lấy URL đăng nhập Google thành công' }
   }
 
   async googleCallback({ code, state }: { code: string; state: string }) {

@@ -1,14 +1,11 @@
 import { RoleName } from '@/common/constants/role.constant'
+import { PaginationQueryType } from '@/shared/models/request.model'
 import { Injectable } from '@nestjs/common'
 import {
   ProhibitedActionOnBaseRoleException,
   RoleAlreadyExistsException
 } from 'src/modules/role/role.error'
-import {
-  CreateRoleBodyType,
-  GetRolesQueryType,
-  UpdateRoleBodyType
-} from 'src/modules/role/role.model'
+import { CreateRoleBodyType, UpdateRoleBodyType } from 'src/modules/role/role.model'
 import { RoleRepo } from 'src/modules/role/role.repo'
 import { NotFoundRecordException } from 'src/shared/error'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
@@ -17,9 +14,12 @@ import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared
 export class RoleService {
   constructor(private roleRepo: RoleRepo) {}
 
-  async list(pagination: GetRolesQueryType) {
+  async list(pagination: PaginationQueryType) {
     const data = await this.roleRepo.list(pagination)
-    return data
+    return {
+      data,
+      message: 'Lấy danh sách vai trò thành công'
+    }
   }
 
   async findById(id: number) {
@@ -27,7 +27,10 @@ export class RoleService {
     if (!role) {
       throw NotFoundRecordException
     }
-    return role
+    return {
+      data: role,
+      message: 'Lấy chi tiết vai trò thành công'
+    }
   }
 
   async create({ data, createdById }: { data: CreateRoleBodyType; createdById: number }) {
@@ -101,7 +104,8 @@ export class RoleService {
         deletedById
       })
       return {
-        message: 'Delete successfully'
+        data: null,
+        message: 'Xóa thành công'
       }
     } catch (error) {
       if (isNotFoundPrismaError(error)) {

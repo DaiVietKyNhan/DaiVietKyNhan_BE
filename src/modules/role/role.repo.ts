@@ -1,8 +1,8 @@
+import { parseQs } from '@/common/utils/qs-parser'
+import { PaginationQueryType } from '@/shared/models/request.model'
 import { Injectable } from '@nestjs/common'
 import {
   CreateRoleBodyType,
-  GetRolesQueryType,
-  GetRolesResType,
   RoleWithPermissionsType,
   UpdateRoleBodyType
 } from 'src/modules/role/role.model'
@@ -13,29 +13,39 @@ import { PrismaService } from 'src/shared/services/prisma.service'
 export class RoleRepo {
   constructor(private prismaService: PrismaService) {}
 
-  async list(pagination: GetRolesQueryType): Promise<GetRolesResType> {
-    const skip = (pagination.page - 1) * pagination.limit
-    const take = pagination.limit
+  async list(pagination: PaginationQueryType) {
+    const { where, orderBy } = parseQs(pagination.qs)
+
+    const skip = (pagination.currentPage - 1) * pagination.pageSize
+    const take = pagination.pageSize
+
     const [totalItems, data] = await Promise.all([
       this.prismaService.role.count({
-        where: {
-          deletedAt: null
-        }
+        where: { deletedAt: null, ...where }
       }),
       this.prismaService.role.findMany({
-        where: {
-          deletedAt: null
-        },
+        where: { deletedAt: null, ...where },
+        orderBy,
         skip,
-        take
+        take,
+        include: {
+          permissions: {
+            where: {
+              deletedAt: null
+            }
+          }
+        }
       })
     ])
+
     return {
-      data,
-      totalItems,
-      page: pagination.page,
-      limit: pagination.limit,
-      totalPages: Math.ceil(totalItems / pagination.limit)
+      results: data,
+      pagination: {
+        current: pagination.currentPage,
+        pageSize: pagination.pageSize,
+        totalPage: Math.ceil(totalItems / pagination.pageSize),
+        totalItem: totalItems
+      }
     }
   }
 

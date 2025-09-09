@@ -6,6 +6,7 @@ import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core'
 import { ScheduleModule } from '@nestjs/schedule'
 import { ZodSerializerInterceptor } from 'nestjs-zod'
 import { MailModule } from './3rdService/mail/mail.module'
+import { TransformInterceptor } from './common/interceptor/transform.interceptor'
 import { AuthModule } from './modules/auth/auth.module'
 import { PermissionModule } from './modules/permission/permission.module'
 import { RoleModule } from './modules/role/role.module'
@@ -32,6 +33,7 @@ import { SharedModule } from './shared/shared.module'
       useClass: CustomZodValidationPipe
     },
     { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter

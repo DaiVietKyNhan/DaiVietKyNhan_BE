@@ -1,8 +1,8 @@
+import { PaginationQueryType } from '@/shared/models/request.model'
 import { Injectable } from '@nestjs/common'
 import { PermissionAlreadyExistsException } from 'src/modules/permission/permission.error'
 import {
   CreatePermissionBodyType,
-  GetPermissionsQueryType,
   UpdatePermissionBodyType
 } from 'src/modules/permission/permission.model'
 import { PermissionRepo } from 'src/modules/permission/permission.repo'
@@ -13,9 +13,12 @@ import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared
 export class PermissionService {
   constructor(private permissionRepo: PermissionRepo) {}
 
-  async list(pagination: GetPermissionsQueryType) {
+  async list(pagination: PaginationQueryType) {
     const data = await this.permissionRepo.list(pagination)
-    return data
+    return {
+      data,
+      message: 'Lấy danh sách quyền thành công'
+    }
   }
 
   async findById(id: number) {
@@ -23,7 +26,10 @@ export class PermissionService {
     if (!permission) {
       throw NotFoundRecordException
     }
-    return permission
+    return {
+      data: permission,
+      message: 'Lấy chi tiết quyền thành công'
+    }
   }
 
   async create({
@@ -87,6 +93,7 @@ export class PermissionService {
         deletedById
       })
       return {
+        data: null,
         message: 'Delete successfully'
       }
     } catch (error) {
