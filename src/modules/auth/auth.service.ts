@@ -74,6 +74,7 @@ export class AuthService {
     const user = await this.authRepository.findUniqueUserIncludeRole({
       email: body.email.toLowerCase()
     })
+
     if (!user) {
       throw EmailNotFoundException
     }

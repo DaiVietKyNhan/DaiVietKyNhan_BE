@@ -36,12 +36,14 @@ export const LoginResSchema = z
         id: true,
         name: true,
         email: true,
+        status: true,
         phoneNumber: true,
         roleId: true,
         avatar: true
       }).shape,
       role: RoleSchema
     }),
+
     message: z.string()
   })
   .strict()
