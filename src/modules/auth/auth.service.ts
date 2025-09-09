@@ -1,3 +1,4 @@
+import { BullQueueService } from '@/3rdService/bull/bull-queue.service'
 import {
   TypeOfVerificationCode,
   TypeOfVerificationCodeType
@@ -28,18 +29,24 @@ import { SharedUserRepository } from '@/shared/repositories/shared-user.repo'
 import { HashingService } from '@/shared/services/hashing.service'
 import { TokenService } from '@/shared/services/token.service'
 import { AccessTokenPayloadCreate } from '@/shared/types/jwt.type'
-import { HttpException, Injectable } from '@nestjs/common'
+import { InjectQueue } from '@nestjs/bull'
+import { HttpException, Injectable, Logger } from '@nestjs/common'
+import { Queue } from 'bull'
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(
     private readonly hashingService: HashingService,
     private readonly sharedRoleRepository: SharedRoleRepository,
     private readonly authRepository: AuthRepository,
     private readonly sharedUserRepository: SharedUserRepository,
     // private readonly emailService: EmailService,
+
+    private readonly bullQueueService: BullQueueService,
+    @InjectQueue('user-deletion') private readonly deletionQueue: Queue,
     private readonly tokenService: TokenService
-  ) {}
+  ) { }
 
   async validateVerificationCode({
     email,
@@ -66,34 +73,6 @@ export class AuthService {
     return vevificationCode
   }
 
-  async sendOTP(body: SendOTPBodyType) {
-    const user = await this.sharedUserRepository.findUnique({
-      email: body.email
-    })
-    if (body.type === TypeOfVerificationCode.REGISTER && user) {
-      throw EmailAlreadyExistsException
-    }
-    if (body.type === TypeOfVerificationCode.FORGOT_PASSWORD && !user) {
-      throw EmailNotFoundException
-    }
-    // // 2. Tạo mã OTP
-    // const code = generateOTP()
-    // await this.authRepository.createVerificationCode({
-    //   email: body.email,
-    //   code,
-    //   type: body.type,
-    //   expiresAt: addMilliseconds(new Date(), ms(envConfig.OTP_EXPIRES_IN))
-    // })
-    // // 3. Gửi mã OTP
-    // const { error } = await this.emailService.sendOTP({
-    //   email: body.email,
-    //   code
-    // })
-    // if (error) {
-    //   throw FailedToSendOTPException
-    // }
-    return { message: 'Gửi mã OTP thành công' }
-  }
 
   async login(body: LoginBodyType & { userAgent: string; ip: string }) {
     // 1. Lấy thông tin user, kiểm tra user có tồn tại hay không, mật khẩu có đúng không
@@ -155,6 +134,24 @@ export class AuthService {
           phoneNumber: body.phoneNumber
         })
       ])
+      // xóa những nhừng user không active sau 5 phút
+      // Thêm tác vụ xóa vào hàng đợi
+      const jobAdded = await this.bullQueueService.addJob(this.deletionQueue, 'delete-inactive-user', { userId: user.id }, {
+        delay: 5 * 60 * 1000,
+        attempts: 3,
+        backoff: { type: 'fixed', delay: 1000 },
+        removeOnComplete: true,
+        removeOnFail: true,
+      });
+
+      if (jobAdded) {
+        this.logger.log(`Đã tạo người dùng ID ${user.id} và lập lịch xóa sau 5 phút`);
+      } else {
+        this.logger.warn(`Đã tạo người dùng ID ${user.id} nhưng không thể lập lịch xóa do lỗi Redis`);
+      }
+
+
+
       // 3. Tạo mới device
       const device = await this.authRepository.createDevice({
         userId: user.id,

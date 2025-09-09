@@ -9,6 +9,8 @@ import { TokenService } from '@/shared/services/token.service'
 import { Global, Module } from '@nestjs/common'
 import { APP_GUARD } from '@nestjs/core'
 import { JwtModule } from '@nestjs/jwt'
+import { BullQueueModule } from '@/3rdService/bull/bull-queue.module'
+import { SharedUserDeletionProcessor } from './workers/user-deletion.processor'
 
 const sharedServices = [
   PrismaService,
@@ -20,12 +22,17 @@ const sharedServices = [
 ]
 @Global()
 @Module({
-  imports: [JwtModule],
+  imports: [
+    JwtModule,
+    BullQueueModule.forRoot(),
+    BullQueueModule.registerQueue('user-deletion')
+  ],
   controllers: [],
   providers: [
     ...sharedServices,
     AccessTokenGuard,
     APIKeyGuard,
+    SharedUserDeletionProcessor,
     {
       provide: APP_GUARD,
       useClass: AuthenticationGuard
@@ -33,4 +40,4 @@ const sharedServices = [
   ],
   exports: sharedServices
 })
-export class SharedModule {}
+export class SharedModule { }

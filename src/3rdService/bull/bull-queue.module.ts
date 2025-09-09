@@ -19,6 +19,7 @@ export class BullQueueModule {
     static registerQueue(queueName: string, options: any = {}): DynamicModule {
         return {
             module: BullQueueModule,
+            global: true,
             imports: [
                 RedisModule,
                 BullModule.registerQueueAsync({

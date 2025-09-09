@@ -1,6 +1,11 @@
 import { TypeOfVerificationCode } from '@/common/constants/auth.constant'
 import { UserSchema } from 'src/shared/models/shared-user.model'
 import { z } from 'zod'
+import { patchNestJsSwagger } from 'nestjs-zod'
+import { extendZodWithOpenApi } from '@anatine/zod-openapi'
+extendZodWithOpenApi(z)
+patchNestJsSwagger()
+
 
 export const VerificationCodeSchema = z.object({
   id: z.number(),
@@ -33,7 +38,7 @@ export const RegisterBodySchema = UserSchema.pick({
   name: true,
   email: true,
   password: true,
-  phoneNumber: true
+  phoneNumber: true,
 })
   .extend({
     confirmPassword: z.string().min(6).max(100)

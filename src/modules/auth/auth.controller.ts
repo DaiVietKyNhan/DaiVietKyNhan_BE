@@ -1,6 +1,7 @@
 import { IsPublic } from '@/common/decorators/auth.decorator'
 import { UserAgent } from '@/common/decorators/user-agent.decorator'
 import envConfig from '@/config/env.config'
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import {
   ForgotPasswordBodyDTO,
   GetAuthorizationUrlResDTO,
@@ -22,20 +23,22 @@ import {
   Ip,
   Post,
   Query,
-  Res
+  Res,
+  UseInterceptors
 } from '@nestjs/common'
-import { ApiBearerAuth } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger'
 import { Response } from 'express'
 import { ZodSerializerDto } from 'nestjs-zod'
 import { AuthService } from './auth.service'
 import { GoogleService } from './google.service'
+import { RegisterMultipartSwaggerDTO } from './dto/auth.dto'
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly googleService: GoogleService
-  ) {}
+  ) { }
 
   // @Post('otp')
   // @IsPublic()
@@ -57,7 +60,10 @@ export class AuthController {
 
   @Post('register')
   @IsPublic()
-  @ZodSerializerDto(RegisterResDTO)
+  // @ZodSerializerDto(RegisterResDTO)
+  @UseInterceptors(AnyFilesInterceptor())
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: RegisterMultipartSwaggerDTO }) // dùng class để render form đẹp
   register(
     @Body() body: RegisterBodyDTO,
     @UserAgent() userAgent: string,
