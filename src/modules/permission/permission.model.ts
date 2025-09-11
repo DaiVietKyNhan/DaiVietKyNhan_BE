@@ -55,3 +55,10 @@ export type CreatePermissionResType = z.infer<typeof CreatePermissionResSchema>
 export type GetPermissionParamsType = z.infer<typeof GetPermissionParamsSchema>
 export type UpdatePermissionBodyType = z.infer<typeof UpdatePermissionBodySchema>
 export type UpdatePermissionResType = z.infer<typeof UpdatePermissionResSchema>
+
+// field cho qs
+type PermissionFieldType = keyof z.infer<typeof PermissionSchema>
+
+export const PERMISSION_FIELDS = Object.keys(
+  PermissionSchema.shape
+) as PermissionFieldType[]

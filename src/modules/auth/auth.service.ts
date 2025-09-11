@@ -1,23 +1,26 @@
 import { BullQueueService } from '@/3rdService/bull/bull-queue.service'
-import { TypeOfVerificationCodeType } from '@/common/constants/auth.constant'
+import { TypeOfVerificationCodeType, UserStatus } from '@/common/constants/auth.constant'
 import { AUTH_MESSAGE } from '@/common/constants/message'
 import { RoleName } from '@/common/constants/role.constant'
+import { AuthRepository } from '@/modules/auth/auth.repo'
 import {
   EmailAlreadyExistsException,
   EmailNotFoundException,
   InvalidOTPException,
   OTPExpiredException,
   RefreshTokenAlreadyUsedException,
-  UnauthorizedAccessException
+  UnauthorizedAccessException,
+  UnVeryfiedAccountException
 } from '@/modules/auth/dto/auth.error'
 import {
   ForgotPasswordBodyType,
   LoginBodyType,
   RefreshTokenBodyType,
   RegisterBodyType,
-  UpdateMeBodyType
+  ResetPasswordBodyType,
+  UpdateMeBodyType,
+  VerifyEmailBodyType
 } from '@/modules/auth/entities/auth.entities'
-import { AuthRepository } from '@/modules/auth/auth.repo'
 import { InvalidPasswordException, NotFoundRecordException } from '@/shared/error'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from '@/shared/helpers'
 import { SharedRoleRepository } from '@/shared/repositories/shared-role.repo'
@@ -42,7 +45,7 @@ export class AuthService {
     private readonly bullQueueService: BullQueueService,
     @InjectQueue('user-deletion') private readonly deletionQueue: Queue,
     private readonly tokenService: TokenService
-  ) { }
+  ) {}
 
   async validateVerificationCode({
     email,
@@ -86,10 +89,12 @@ export class AuthService {
     if (!isPasswordMatch) {
       throw InvalidPasswordException
     }
-    // // 2. Nếu user đã bật mã 2FA thì kiểm tra mã 2FA TOTP Code hoặc OTP Code (email)
-    // if (user.status === 'INACTIVE') {
-    //   throw AccountIsBanned
-    // }
+    // usser verify chua ?
+    if (user.status === UserStatus.INACTIVE) {
+      //todo chưa: gửi lại email verify
+      // làm đi KuMo
+      throw UnVeryfiedAccountException
+    }
     // 3. Tạo mới device
     const device = await this.authRepository.createDevice({
       userId: user.id,
@@ -157,6 +162,7 @@ export class AuthService {
           `Đã tạo người dùng ID ${user.id} nhưng không thể lập lịch xóa do lỗi Redis`
         )
       }
+      //todo chưa: gửi email verify - làm đi KuMo
 
       // 3. Tạo mới device
       const device = await this.authRepository.createDevice({
@@ -299,14 +305,48 @@ export class AuthService {
     if (!user) {
       throw EmailNotFoundException
     }
-    //todo chưa: làm validate code
-    // //2. Kiểm tra mã OTP có hợp lệ không
-    // await this.validateVerificationCode({
-    //   email,
-    //   code,
-    //   type: TypeOfVerificationCode.FORGOT_PASSWORD
-    // })
-    //3. Cập nhật lại mật khẩu mới và xóa đi OTP
+    //todo chưa: làm validate code - chưa làm gửi mail - làm đi KuMo
+
+    //3. Cập nhật lại mật khẩu mới và xóa toàn bộ refreshToken của user đó
+    const hashedPassword = await this.hashingService.hash(newPassword)
+    await Promise.all([
+      this.sharedUserRepository.update(
+        { id: user.id },
+        {
+          password: hashedPassword,
+          updatedById: user.id
+        }
+      ),
+      this.authRepository.deleteManyRefreshTokenByUserId({ userId: user.id })
+    ])
+    return {
+      data: null,
+      message: AUTH_MESSAGE.FORGOT_PASSWORD_SUCCESS
+    }
+  }
+
+  async resetPassword(body: ResetPasswordBodyType, userId: number) {
+    const { code, newPassword } = body
+    // 1. Kiểm tra email đã tồn tại trong database chưa
+    const user = await this.sharedUserRepository.findUnique({
+      id: userId
+    })
+    if (!user) {
+      throw EmailNotFoundException
+    }
+    //2. Check password cũ có đúng không
+    const isPasswordMatch = await this.hashingService.compare(
+      body.password,
+      user.password
+    )
+    if (!isPasswordMatch) {
+      throw InvalidPasswordException
+    }
+
+    //todo chưa: làm validate code - chưa làm gửi mail - làm đi KuMo
+
+    //4. Tới đây là đúng rồi, đổi pass thôi
+
     const hashedPassword = await this.hashingService.hash(newPassword)
     await Promise.all([
       this.sharedUserRepository.update(
@@ -317,7 +357,9 @@ export class AuthService {
         }
       )
     ])
+
     return {
+      data: null,
       message: AUTH_MESSAGE.FORGOT_PASSWORD_SUCCESS
     }
   }
@@ -349,6 +391,34 @@ export class AuthService {
     return {
       data: updatedUser,
       message: AUTH_MESSAGE.UPDATE_PROFILE_SUCCESS
+    }
+  }
+
+  async verifiedEmail(body: VerifyEmailBodyType) {
+    try {
+      const data = await this.authRepository.verifyEmail(body.email)
+      return {
+        data,
+        message: 'Xác thực email thành công'
+      }
+    } catch (error) {
+      if (isNotFoundPrismaError(error)) {
+        throw EmailNotFoundException
+      }
+      throw error
+    }
+  }
+
+  async resendVerifiedEmail(body: VerifyEmailBodyType) {
+    // 1. Kiểm tra email đã tồn tại trong database chưa
+    const user = await this.sharedUserRepository.findUnique({
+      email: body.email
+    })
+
+    //todo chưa: gửi lại email verify - làm đi KuMo
+    return {
+      data: null,
+      message: 'Gửi lại email xác thực thành công'
     }
   }
 }

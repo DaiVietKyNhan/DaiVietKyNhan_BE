@@ -3,6 +3,7 @@ import { PaginationQueryType } from '@/shared/models/request.model'
 import { Injectable } from '@nestjs/common'
 import {
   CreateRoleBodyType,
+  ROLE_FIELDS,
   RoleWithPermissionsType,
   UpdateRoleBodyType
 } from 'src/modules/role/role.model'
@@ -14,7 +15,7 @@ export class RoleRepo {
   constructor(private prismaService: PrismaService) {}
 
   async list(pagination: PaginationQueryType) {
-    const { where, orderBy } = parseQs(pagination.qs)
+    const { where, orderBy } = parseQs(pagination.qs, ROLE_FIELDS)
 
     const skip = (pagination.currentPage - 1) * pagination.pageSize
     const take = pagination.pageSize

@@ -3,6 +3,7 @@ import { PaginationQueryType } from '@/shared/models/request.model'
 import { Injectable } from '@nestjs/common'
 import {
   CreatePermissionBodyType,
+  PERMISSION_FIELDS,
   PermissionType,
   UpdatePermissionBodyType
 } from 'src/modules/permission/permission.model'
@@ -13,9 +14,7 @@ export class PermissionRepo {
   constructor(private prismaService: PrismaService) {}
 
   async list(pagination: PaginationQueryType) {
-    console.log('pagination', pagination)
-
-    const { where, orderBy } = parseQs(pagination.qs)
+    const { where, orderBy } = parseQs(pagination.qs, PERMISSION_FIELDS)
 
     const skip = (pagination.currentPage - 1) * pagination.pageSize
     const take = pagination.pageSize

@@ -1,10 +1,5 @@
-import { NotFoundException, UnprocessableEntityException } from '@nestjs/common'
+import { NotFoundException, UnauthorizedException } from '@nestjs/common'
 
 export const NotFoundRecordException = new NotFoundException('Error.NotFound')
 
-export const InvalidPasswordException = new UnprocessableEntityException([
-  {
-    message: 'Error.InvalidPassword',
-    path: 'password'
-  }
-])
+export const InvalidPasswordException = new UnauthorizedException('Sai mật khẩu')

@@ -130,6 +130,24 @@ export const ForgotPasswordBodySchema = z
     }
   })
 
+export const ResetPasswordBodySchema = z
+  .object({
+    code: z.string().length(6),
+    password: z.string().min(6).max(100),
+    newPassword: z.string().min(6).max(100),
+    confirmNewPassword: z.string().min(6).max(100)
+  })
+  .strict()
+  .superRefine(({ confirmNewPassword, newPassword }, ctx) => {
+    if (confirmNewPassword !== newPassword) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Mật khẩu và mật khẩu xác nhận phải giống nhau',
+        path: ['confirmNewPassword']
+      })
+    }
+  })
+
 export const UpdateMeBodySchema = z
   .object({
     name: z.string().trim().min(2).max(256),
@@ -143,7 +161,12 @@ export const AccountResSchema = z.object({
   message: z.string()
 })
 
+export const VerifyEmailBodySchema = UserSchema.pick({
+  email: true
+}).strict()
+
 //type
+export type VerifyEmailBodyType = z.infer<typeof VerifyEmailBodySchema>
 export type RegisterBodyType = z.infer<typeof RegisterBodySchema>
 export type RegisterResType = z.infer<typeof RegisterResSchema>
 export type VerificationCodeType = z.infer<typeof VerificationCodeSchema>
@@ -158,5 +181,6 @@ export type LogoutBodyType = RefreshTokenBodyType
 export type GoogleAuthStateType = z.infer<typeof GoogleAuthStateSchema>
 export type GetAuthorizationUrlResType = z.infer<typeof GetAuthorizationUrlResSchema>
 export type ForgotPasswordBodyType = z.infer<typeof ForgotPasswordBodySchema>
+export type ResetPasswordBodyType = z.infer<typeof ResetPasswordBodySchema>
 export type UpdateMeBodyType = z.infer<typeof UpdateMeBodySchema>
 export type AccountResType = z.infer<typeof AccountResSchema>

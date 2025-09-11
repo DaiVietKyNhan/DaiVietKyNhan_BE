@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import {
   AccountResSchema,
   ForgotPasswordBodySchema,
@@ -10,30 +9,35 @@ import {
   RefreshTokenResSchema,
   RegisterBodySchema,
   RegisterResSchema,
+  ResetPasswordBodySchema,
   SendOTPBodySchema,
-  UpdateMeBodySchema
+  UpdateMeBodySchema,
+  VerifyEmailBodySchema
 } from '@/modules/auth/entities/auth.entities'
+import { createZodDto } from 'nestjs-zod'
 
-export class RegisterBodyDTO extends createZodDto(RegisterBodySchema) { }
+export class RegisterBodyDTO extends createZodDto(RegisterBodySchema) {}
 
-export class RegisterResDTO extends createZodDto(RegisterResSchema) { }
+export class RegisterResDTO extends createZodDto(RegisterResSchema) {}
 
-export class SendOTPBodyDTO extends createZodDto(SendOTPBodySchema) { }
+export class SendOTPBodyDTO extends createZodDto(SendOTPBodySchema) {}
 
-export class LoginBodyDTO extends createZodDto(LoginBodySchema) { }
+export class LoginBodyDTO extends createZodDto(LoginBodySchema) {}
 
-export class LoginResDTO extends createZodDto(LoginResSchema) { }
+export class LoginResDTO extends createZodDto(LoginResSchema) {}
 
-export class RefreshTokenBodyDTO extends createZodDto(RefreshTokenBodySchema) { }
+export class RefreshTokenBodyDTO extends createZodDto(RefreshTokenBodySchema) {}
 
-export class RefreshTokenResDTO extends createZodDto(RefreshTokenResSchema) { }
+export class RefreshTokenResDTO extends createZodDto(RefreshTokenResSchema) {}
 
-export class LogoutBodyDTO extends createZodDto(LogoutBodySchema) { }
+export class LogoutBodyDTO extends createZodDto(LogoutBodySchema) {}
 
 export class GetAuthorizationUrlResDTO extends createZodDto(
   GetAuthorizationUrlResSchema
-) { }
+) {}
 
-export class ForgotPasswordBodyDTO extends createZodDto(ForgotPasswordBodySchema) { }
-export class UpdateMeBodyDTO extends createZodDto(UpdateMeBodySchema) { }
-export class AccountResDTO extends createZodDto(AccountResSchema) { }
+export class ForgotPasswordBodyDTO extends createZodDto(ForgotPasswordBodySchema) {}
+export class ResetPasswordBodyDTO extends createZodDto(ResetPasswordBodySchema) {}
+export class UpdateMeBodyDTO extends createZodDto(UpdateMeBodySchema) {}
+export class AccountResDTO extends createZodDto(AccountResSchema) {}
+export class VerifyEmailBodyDTO extends createZodDto(VerifyEmailBodySchema) {}

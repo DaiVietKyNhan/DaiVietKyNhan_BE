@@ -39,14 +39,14 @@ export class AccessTokenGuard implements CanActivate {
       request[REQUEST_USER_KEY] = decodedAccessToken
       return decodedAccessToken
     } catch {
-      throw new UnauthorizedException('Error.InvalidAccessToken')
+      throw new UnauthorizedException('AccessToken không hợp lệ')
     }
   }
 
   private extractAccessTokenFromHeader(request: any): string {
     const accessToken = request.headers.authorization?.split(' ')[1]
     if (!accessToken) {
-      throw new UnauthorizedException('Error.MissingAccessToken')
+      throw new UnauthorizedException('Thiếu AccessToken')
     }
     return accessToken
   }
@@ -76,11 +76,11 @@ export class AccessTokenGuard implements CanActivate {
         }
       })
       .catch(() => {
-        throw new ForbiddenException()
+        throw new ForbiddenException('Bạn không có quyền truy cập tác vụ này')
       })
     const canAccess = role.permissions.length > 0
     if (!canAccess) {
-      throw new ForbiddenException()
+      throw new ForbiddenException('Bạn không có quyền truy cập tác vụ này')
     }
     request[REQUEST_ROLE_PERMISSIONS] = role
   }

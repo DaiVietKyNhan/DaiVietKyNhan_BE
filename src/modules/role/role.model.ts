@@ -64,3 +64,7 @@ export type CreateRoleBodyType = z.infer<typeof CreateRoleBodySchema>
 export type GetRoleParamsType = z.infer<typeof GetRoleParamsSchema>
 export type UpdateRoleBodyType = z.infer<typeof UpdateRoleBodySchema>
 export type UpdateRoleResType = z.infer<typeof UpdateRoleResSchema>
+
+// field cho qs
+type RoleFieldType = keyof z.infer<typeof RoleSchema>
+export const ROLE_FIELDS = Object.keys(RoleSchema.shape) as RoleFieldType[]

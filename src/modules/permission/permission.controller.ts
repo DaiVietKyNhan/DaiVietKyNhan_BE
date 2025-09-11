@@ -20,7 +20,7 @@ import { MessageResDTO } from 'src/shared/dtos/response.dto'
 export class PermissionController {
   constructor(private readonly permissionService: PermissionService) {}
 
-  //permissions?qs=sort:name,name:like:DELETE
+  //permissions?currentPage=1&pageSize=15&qs=name:like=POST,path:like=/auth/l,sort:-name
   @Get()
   @ZodSerializerDto(PaginationResponseSchema)
   list(@Query() query: PaginationQueryDTO) {

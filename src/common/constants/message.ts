@@ -6,5 +6,15 @@ export const AUTH_MESSAGE = {
   UPDATE_PROFILE_SUCCESS: 'Cập nhật thông tin cá nhân thành công',
   PHONE_IS_INVALID: 'Số điện thoại không hợp lệ',
   NAME_IS_REQUIRED: 'Tên không được để trống',
-  REFRESH_TOKEN_SUCCESS: 'Làm mới token thành công'
+  REFRESH_TOKEN_SUCCESS: 'Làm mới token thành công',
+  INVALID_OTP: 'Mã OTP không hợp lệ',
+  OTP_EXPIRED: 'Mã OTP đã hết hạn',
+  FAILED_TO_SEND_OTP: 'Gửi mã OTP thất bại',
+  EMAIL_ALREADY_EXISTS: 'Email đã tồn tại',
+  NOT_FOUND_EMAIL: 'Không tìm thấy email',
+  REFRESH_TOKEN_ALREADY_USED: 'Token làm mới đã được sử dụng',
+  UNAUTHORIZED_ACCESS: 'Truy cập không được phép',
+  ACCOUNT_IS_BANNED: 'Tài khoản đã bị khóa',
+  FAILD_TO_GET_GOOGLE_USER_INFO: 'Lấy thông tin người dùng Google thất bại',
+  RESET_PASSWORD_SUCCESS: 'Đặt lại mật khẩu thành công'
 }

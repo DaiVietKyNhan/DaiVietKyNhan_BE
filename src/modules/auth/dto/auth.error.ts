@@ -1,54 +1,43 @@
-import { UnauthorizedException, UnprocessableEntityException } from '@nestjs/common'
+import { AUTH_MESSAGE } from '@/common/constants/message'
+import {
+  BadRequestException,
+  NotFoundException,
+  UnauthorizedException,
+  UnprocessableEntityException
+} from '@nestjs/common'
 
 // OTP related errors
-export const InvalidOTPException = new UnprocessableEntityException([
-  {
-    message: 'Error.InvalidOTP',
-    path: 'code'
-  }
-])
+export const InvalidOTPException = new UnauthorizedException(AUTH_MESSAGE.INVALID_OTP)
 
-export const OTPExpiredException = new UnprocessableEntityException([
-  {
-    message: 'Error.OTPExpired',
-    path: 'code'
-  }
-])
+export const OTPExpiredException = new UnauthorizedException(AUTH_MESSAGE.OTP_EXPIRED)
 
-export const FailedToSendOTPException = new UnprocessableEntityException([
-  {
-    message: 'Error.FailedToSendOTP',
-    path: 'code'
-  }
-])
+export const FailedToSendOTPException = new BadRequestException(
+  AUTH_MESSAGE.FAILED_TO_SEND_OTP
+)
 
 // Email related errors
-export const EmailAlreadyExistsException = new UnprocessableEntityException([
-  {
-    message: 'Error.EmailAlreadyExists',
-    path: 'email'
-  }
-])
+export const EmailAlreadyExistsException = new UnprocessableEntityException(
+  AUTH_MESSAGE.EMAIL_ALREADY_EXISTS
+)
 
-export const EmailNotFoundException = new UnprocessableEntityException([
-  {
-    message: 'Error.EmailNotFound',
-    path: 'email'
-  }
-])
+export const EmailNotFoundException = new NotFoundException(AUTH_MESSAGE.NOT_FOUND_EMAIL)
 
 // Auth token related errors
 export const RefreshTokenAlreadyUsedException = new UnauthorizedException(
-  'Error.RefreshTokenAlreadyUsed'
+  AUTH_MESSAGE.REFRESH_TOKEN_ALREADY_USED
 )
 export const UnauthorizedAccessException = new UnauthorizedException(
-  'Error.UnauthorizedAccess'
+  AUTH_MESSAGE.UNAUTHORIZED_ACCESS
 )
 
-export const AccountIsBanned = new UnauthorizedException('Error.AccountIsBanned')
+export const AccountIsBanned = new UnauthorizedException(AUTH_MESSAGE.ACCOUNT_IS_BANNED)
+
+export const UnVeryfiedAccountException = new UnauthorizedException(
+  'Tài khoản chưa được xác thực'
+)
 
 // Google auth related errors
-export const GoogleUserInfoError = new Error('Error.FailedToGetGoogleUserInfo')
+export const GoogleUserInfoError = new Error(AUTH_MESSAGE.FAILD_TO_GET_GOOGLE_USER_INFO)
 
 export const InvalidTOTPException = new UnprocessableEntityException([
   {

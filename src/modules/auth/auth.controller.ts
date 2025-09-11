@@ -1,3 +1,4 @@
+import { ActiveUser } from '@/common/decorators/active-user.decorator'
 import { IsPublic } from '@/common/decorators/auth.decorator'
 import { UserAgent } from '@/common/decorators/user-agent.decorator'
 import envConfig from '@/config/env.config'
@@ -10,7 +11,9 @@ import {
   RefreshTokenBodyDTO,
   RefreshTokenResDTO,
   RegisterBodyDTO,
-  RegisterResDTO
+  RegisterResDTO,
+  ResetPasswordBodyDTO,
+  VerifyEmailBodyDTO
 } from '@/modules/auth/dto/auth.zod-dto'
 import { MessageResDTO } from '@/shared/dtos/response.dto'
 import {
@@ -38,7 +41,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly googleService: GoogleService
-  ) { }
+  ) {}
 
   // @Post('otp')
   // @IsPublic()
@@ -102,6 +105,29 @@ export class AuthController {
   @ZodSerializerDto(MessageResDTO)
   forgotPassword(@Body() body: ForgotPasswordBodyDTO) {
     return this.authService.forgotPassword(body)
+  }
+
+  @Post('reset-password')
+  @ZodSerializerDto(MessageResDTO)
+  resetPassword(
+    @Body() body: ResetPasswordBodyDTO,
+    @ActiveUser('userId') userId: number
+  ) {
+    return this.authService.resetPassword(body, userId)
+  }
+
+  @Post('verified-email')
+  @IsPublic()
+  @ZodSerializerDto(MessageResDTO)
+  verifiedEmail(@Body() body: VerifyEmailBodyDTO) {
+    return this.authService.verifiedEmail(body)
+  }
+
+  @Post('resend-verified-email')
+  @IsPublic()
+  @ZodSerializerDto(MessageResDTO)
+  resendVerifiedEmail(@Body() body: VerifyEmailBodyDTO) {
+    return this.authService.resendVerifiedEmail(body)
   }
 
   // @Get('me')
