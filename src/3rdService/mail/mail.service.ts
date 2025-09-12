@@ -28,11 +28,11 @@ export class MailService {
   }
 
   async sendOtpMail(to: string, otp: string, template: string, content: string, body: string): Promise<void> {
-    const subject = 'Mã OTP Code của bạn là ' + otp;
-    const context = { otp, content, body };
+    const subject = 'Hãy xác thực ' + otp;
+    const link = 'http://127.0.0.1:4000/auth/verified-email/' + to;
+    const context = { otp, content, body, link };
     await this.sendMail(to, subject, template, context);
   }
-
 
   async generateAndSendOtp(email: string, template: string, content: string, body: string): Promise<void> {
     const otp = Math.floor(100000 + Math.random() * 900000).toString(); // Tạo OTP 6 chữ số

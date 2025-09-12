@@ -12,6 +12,7 @@ export const AUTH_MESSAGE = {
   FAILED_TO_SEND_OTP: 'Gửi mã OTP thất bại',
   EMAIL_ALREADY_EXISTS: 'Email đã tồn tại',
   NOT_FOUND_EMAIL: 'Không tìm thấy email',
+  EMAIL_INACTIVE: 'Email chưa được kích hoạt',
   REFRESH_TOKEN_ALREADY_USED: 'Token làm mới đã được sử dụng',
   UNAUTHORIZED_ACCESS: 'Truy cập không được phép',
   ACCOUNT_IS_BANNED: 'Tài khoản đã bị khóa',

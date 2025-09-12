@@ -25,25 +25,27 @@ import {
   HttpCode,
   HttpStatus,
   Ip,
+  Param,
   Post,
   Query,
   Res,
   UseInterceptors
 } from '@nestjs/common'
 import { AnyFilesInterceptor } from '@nestjs/platform-express'
-import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiParam } from '@nestjs/swagger'
 import { Response } from 'express'
 import { ZodSerializerDto } from 'nestjs-zod'
 import { AuthService } from './auth.service'
 import { RegisterMultipartSwaggerDTO } from './dto/auth.dto'
 import { GoogleService } from './google.service'
+import { ResponseMessage } from '@/decorator/custom'
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly googleService: GoogleService
-  ) {}
+  ) { }
 
   // @Post('otp')
   // @IsPublic()
@@ -141,11 +143,14 @@ export class AuthController {
     return this.authService.changePassword(body, userId)
   }
 
-  @Post('verified-email')
+  @Get('verified-email/:email')
   @IsPublic()
-  @ZodSerializerDto(MessageResDTO)
-  verifiedEmail(@Query() params: VerifyEmailBodyDTO) {
-    return this.authService.verifiedEmail(params)
+  verifiedEmail(@Param('email') email: string, @Res() res: Response) {
+    const data = this.authService.verifiedEmail(email)
+    return res.redirect(
+      `https://localhost:3000/data=${data}`)
+
+    //TODO-Kumo: để data sau khi có front-end
   }
 
   @Post('resend-verified-email')

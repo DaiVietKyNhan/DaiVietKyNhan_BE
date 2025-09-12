@@ -4,6 +4,7 @@ import { TypeOfVerificationCodeType, UserStatus } from '@/common/constants/auth.
 import { AUTH_MESSAGE } from '@/common/constants/message'
 import { AuthRepository } from '@/modules/auth/auth.repo'
 import {
+  EmailActiveException,
   EmailAlreadyExistsException,
   EmailNotFoundException,
   InvalidOTPException,
@@ -53,7 +54,7 @@ export class AuthService {
     private readonly bullQueueService: BullQueueService,
     @InjectQueue('user-deletion') private readonly deletionQueue: Queue,
     private readonly tokenService: TokenService
-  ) {}
+  ) { }
 
   async validateVerificationCode({
     email,
@@ -164,12 +165,13 @@ export class AuthService {
           `Đã tạo người dùng ID ${user.id} nhưng không thể lập lịch xóa do lỗi Redis`
         )
       }
-      //todo chưa: gửi email verify - làm đi KuMo
+
       // 2. send mail de xác thực
-      const registerEmailLowerCase = user.email.toLowerCase()
-      const template = 'verify-email'
-      const content = 'Mã OTP của bạn là: '
-      const bodyContent = 'Vui lòng nhập mã OTP để xác thực tài khoản của bạn.'
+      const emailLower = body.email.toLowerCase();
+      const template = 'otp';
+      const content = 'XÁC THỰC MAIL CỦA BẠN: ';
+      const bodyContent = 'Vui lòng nhập nhấn nút XÁC THỰC để xác thực tài khoản của bạn.';
+      await this.mailService.generateAndSendOtp(emailLower, template, content, bodyContent)
 
       return {
         data: null,
@@ -294,6 +296,10 @@ export class AuthService {
     })
     if (!user) {
       throw EmailNotFoundException
+    }
+
+    if (user.status === UserStatus.INACTIVE) {
+      throw EmailActiveException
     }
 
     // Send email
@@ -474,9 +480,9 @@ export class AuthService {
     }
   }
 
-  async verifiedEmail(body: VerifyEmailBodyType) {
+  async verifiedEmail(email: string) {
     try {
-      const data = await this.authRepository.verifyEmail(body.email)
+      const data = await this.authRepository.verifyEmail(email)
       return {
         data,
         message: 'Xác thực email thành công'
