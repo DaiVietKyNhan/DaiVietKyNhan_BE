@@ -100,8 +100,7 @@ export class AuthService {
     }
     // usser verify chua ?
     if (user.status === UserStatus.INACTIVE) {
-      //todo chưa: gửi lại email verify
-      // làm đi KuMo
+      this.resendVerifiedEmail(user.email)
       throw UnVeryfiedAccountException
     }
     // 3. Tạo mới device
