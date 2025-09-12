@@ -54,7 +54,7 @@ export class AuthService {
     private readonly bullQueueService: BullQueueService,
     @InjectQueue('user-deletion') private readonly deletionQueue: Queue,
     private readonly tokenService: TokenService
-  ) { }
+  ) {}
 
   async validateVerificationCode({
     email,
@@ -167,11 +167,11 @@ export class AuthService {
       }
 
       // 2. send mail de xác thực
-      const emailLower = body.email.toLowerCase();
-      const template = 'otp';
-      const content = 'XÁC THỰC MAIL CỦA BẠN: ';
-      const bodyContent = 'Vui lòng nhập nhấn nút XÁC THỰC để xác thực tài khoản của bạn.';
-      await this.mailService.generateAndSendOtp(emailLower, template, content, bodyContent)
+      const emailLower = body.email.toLowerCase()
+      const template = 'otp'
+      const content = 'XÁC THỰC MAIL CỦA BẠN: '
+      const bodyContent = 'Vui lòng nhập nhấn nút XÁC THỰC để xác thực tài khoản của bạn.'
+      this.mailService.generateAndSendOtp(emailLower, template, content, bodyContent)
 
       return {
         data: null,
