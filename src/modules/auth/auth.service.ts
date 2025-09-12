@@ -98,6 +98,7 @@ export class AuthService {
     if (!isPasswordMatch) {
       throw FailToLoginException
     }
+
     // usser verify chua ?
     if (user.status === UserStatus.INACTIVE) {
       this.resendVerifiedEmail(user.email)
@@ -142,6 +143,7 @@ export class AuthService {
           phoneNumber: body.phoneNumber
         })
       ])
+      //Todo: sửa lại thành 30 ngày sau khi hoàn thiện chức năng
       // xóa những nhừng user không active sau 5 phút
       // Thêm tác vụ xóa vào hàng đợi
       const jobAdded = await this.bullQueueService.addJob(
@@ -471,22 +473,11 @@ export class AuthService {
   }
 
   async resendVerifiedEmail(email: string) {
-    const user = await this.sharedUserRepository.findUnique({
-      email
-    })
-    if (!user) {
-      throw EmailNotFoundException
-    }
-    if (user.status === UserStatus.ACTIVE) {
-      throw EmailAlreadyActiveException
-    }
-
     const template = 'otp'
     const content = 'XÁC THỰC MAIL CỦA BẠN: '
     const bodyContent = 'Vui lòng nhập nhấn nút XÁC THỰC để xác thực tài khoản của bạn.'
     this.mailService.generateAndSendOtp(email, template, content, bodyContent)
 
-    //todo chưa: gửi lại email verify - làm đi KuMo
     return {
       data: null,
       message: 'Gửi lại email xác thực thành công'
