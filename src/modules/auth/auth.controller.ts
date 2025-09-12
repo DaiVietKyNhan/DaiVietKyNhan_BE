@@ -147,7 +147,7 @@ export class AuthController {
   @IsPublic()
   async verifiedEmail(@Param('email') email: string, @Res() res: Response) {
     const data = await this.authService.verifiedEmail(email)
-    return res.redirect(`${envConfig.FE_URL}/data=${data}`)
+    return res.redirect(`${envConfig.FE_URL}/auth/login?message=${data.message}`)
 
     //TODO-Kumo: để data sau khi có front-end
   }
