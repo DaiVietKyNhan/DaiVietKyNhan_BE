@@ -22,6 +22,10 @@ export const EmailAlreadyExistsException = new UnprocessableEntityException(
 
 export const EmailNotFoundException = new NotFoundException(AUTH_MESSAGE.NOT_FOUND_EMAIL)
 
+export const InvalidOTPExceptionForEmail = new UnauthorizedException(
+  AUTH_MESSAGE.INVALID_OTP
+)
+
 // Auth token related errors
 export const RefreshTokenAlreadyUsedException = new UnauthorizedException(
   AUTH_MESSAGE.REFRESH_TOKEN_ALREADY_USED

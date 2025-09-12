@@ -16,5 +16,8 @@ export const AUTH_MESSAGE = {
   UNAUTHORIZED_ACCESS: 'Truy cập không được phép',
   ACCOUNT_IS_BANNED: 'Tài khoản đã bị khóa',
   FAILD_TO_GET_GOOGLE_USER_INFO: 'Lấy thông tin người dùng Google thất bại',
-  RESET_PASSWORD_SUCCESS: 'Đặt lại mật khẩu thành công'
+  RESET_PASSWORD_SUCCESS: 'Đặt lại mật khẩu thành công',
+  SEND_OTP_SUCCESS: 'Gửi mã OTP thành công',
+  VERIFY_OTP_FORGOT_PASSWORD_SUCCESS: 'Xác thực OTP thành công',
+  CHANGE_PASSWORD_SUCCESS: 'Đổi mật khẩu thành công'
 }

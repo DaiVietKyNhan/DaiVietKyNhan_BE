@@ -7,18 +7,32 @@ import { PrismaService } from 'src/shared/services/prisma.service'
 type UserIncludeRolePermissionsType = UserType & {
   role: RoleType & { permissions: PermissionType[] }
 }
+type UserIncludeRoleType = UserType & {
+  role: RoleType
+}
 
 export type WhereUniqueUserType = { id: number } | { email: string }
 
 @Injectable()
 export class SharedUserRepository {
-  constructor(private readonly prismaService: PrismaService) { }
+  constructor(private readonly prismaService: PrismaService) {}
 
   findUnique(where: WhereUniqueUserType): Promise<UserType | null> {
     return this.prismaService.user.findFirst({
       where: {
         ...where,
         deletedAt: null
+      }
+    })
+  }
+  findUniqueIncludeRole(where: WhereUniqueUserType): Promise<UserIncludeRoleType | null> {
+    return this.prismaService.user.findFirst({
+      where: {
+        ...where,
+        deletedAt: null
+      },
+      include: {
+        role: true
       }
     })
   }

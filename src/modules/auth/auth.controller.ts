@@ -3,6 +3,7 @@ import { IsPublic } from '@/common/decorators/auth.decorator'
 import { UserAgent } from '@/common/decorators/user-agent.decorator'
 import envConfig from '@/config/env.config'
 import {
+  ChangePasswordBodyDTO,
   ForgotPasswordBodyDTO,
   GetAuthorizationUrlResDTO,
   LoginBodyDTO,
@@ -11,9 +12,10 @@ import {
   RefreshTokenBodyDTO,
   RefreshTokenResDTO,
   RegisterBodyDTO,
-  RegisterResDTO,
   ResetPasswordBodyDTO,
-  VerifyEmailBodyDTO
+  VerifyEmailBodyDTO,
+  verifyForgotPasswordBodyDTO,
+  verifyForgotPasswordResDTO
 } from '@/modules/auth/dto/auth.zod-dto'
 import { MessageResDTO } from '@/shared/dtos/response.dto'
 import {
@@ -64,7 +66,7 @@ export class AuthController {
 
   @Post('register')
   @IsPublic()
-  @ZodSerializerDto(RegisterResDTO)
+  @ZodSerializerDto(MessageResDTO)
   @UseInterceptors(AnyFilesInterceptor())
   @ApiConsumes('multipart/form-data')
   @ApiBody({ type: RegisterMultipartSwaggerDTO }) // dùng class để render form đẹp
@@ -100,11 +102,24 @@ export class AuthController {
     return this.authService.logout(body.refreshToken)
   }
 
+  // gui otp qua email
   @Post('forgot-password')
   @IsPublic()
   @ZodSerializerDto(MessageResDTO)
   forgotPassword(@Body() body: ForgotPasswordBodyDTO) {
     return this.authService.forgotPassword(body)
+  }
+
+  @Post('verify-forgot-password')
+  @IsPublic()
+  @HttpCode(HttpStatus.OK)
+  @ZodSerializerDto(verifyForgotPasswordResDTO)
+  verifyForgotPassword(
+    @Body() body: verifyForgotPasswordBodyDTO,
+    @UserAgent() userAgent: string,
+    @Ip() ip: string
+  ) {
+    return this.authService.verifyForgotPassword(body, userAgent, ip)
   }
 
   @Post('reset-password')
@@ -116,11 +131,21 @@ export class AuthController {
     return this.authService.resetPassword(body, userId)
   }
 
+  // change-password
+  @Post('change-password')
+  @ZodSerializerDto(MessageResDTO)
+  changePassword(
+    @Body() body: ChangePasswordBodyDTO,
+    @ActiveUser('userId') userId: number
+  ) {
+    return this.authService.changePassword(body, userId)
+  }
+
   @Post('verified-email')
   @IsPublic()
   @ZodSerializerDto(MessageResDTO)
-  verifiedEmail(@Body() body: VerifyEmailBodyDTO) {
-    return this.authService.verifiedEmail(body)
+  verifiedEmail(@Query() params: VerifyEmailBodyDTO) {
+    return this.authService.verifiedEmail(params)
   }
 
   @Post('resend-verified-email')

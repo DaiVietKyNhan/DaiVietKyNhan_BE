@@ -114,39 +114,55 @@ export const GetAuthorizationUrlResSchema = z.object({
 
 export const ForgotPasswordBodySchema = z
   .object({
+    email: z.string().email()
+    // code: z.string().length(6),
+    // newPassword: z.string().min(6).max(100),
+    // confirmNewPassword: z.string().min(6).max(100)
+  })
+  .strict()
+// .superRefine(({ confirmNewPassword, newPassword }, ctx) => {
+//   if (confirmNewPassword !== newPassword) {
+//     ctx.addIssue({
+//       code: 'custom',
+//       message: 'Mật khẩu và mật khẩu xác nhận phải giống nhau',
+//       path: ['confirmNewPassword']
+//     })
+//   }
+// })
+
+export const verifyForgotPasswordBodySchema = z
+  .object({
     email: z.string().email(),
-    code: z.string().length(6),
+    code: z.string().length(6)
+  })
+  .strict()
+
+export const verifyForgotPasswordResSchema = z
+  .object({
+    data: z.object({
+      accessToken: z.string()
+    }),
+    message: z.string(),
+    statusCode: z.number()
+  })
+  .strict()
+
+export const ResetPasswordBodySchema = z
+  .object({
+    // code: z.string().length(6),
+    email: z.string().email(),
     newPassword: z.string().min(6).max(100),
     confirmNewPassword: z.string().min(6).max(100)
   })
   .strict()
-  .superRefine(({ confirmNewPassword, newPassword }, ctx) => {
-    if (confirmNewPassword !== newPassword) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Mật khẩu và mật khẩu xác nhận phải giống nhau',
-        path: ['confirmNewPassword']
-      })
-    }
-  })
 
-export const ResetPasswordBodySchema = z
+export const ChangePasswordBodySchema = z
   .object({
-    code: z.string().length(6),
     password: z.string().min(6).max(100),
     newPassword: z.string().min(6).max(100),
     confirmNewPassword: z.string().min(6).max(100)
   })
   .strict()
-  .superRefine(({ confirmNewPassword, newPassword }, ctx) => {
-    if (confirmNewPassword !== newPassword) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Mật khẩu và mật khẩu xác nhận phải giống nhau',
-        path: ['confirmNewPassword']
-      })
-    }
-  })
 
 export const UpdateMeBodySchema = z
   .object({
@@ -181,6 +197,9 @@ export type LogoutBodyType = RefreshTokenBodyType
 export type GoogleAuthStateType = z.infer<typeof GoogleAuthStateSchema>
 export type GetAuthorizationUrlResType = z.infer<typeof GetAuthorizationUrlResSchema>
 export type ForgotPasswordBodyType = z.infer<typeof ForgotPasswordBodySchema>
+export type verifyForgotPasswordBodyType = z.infer<typeof verifyForgotPasswordBodySchema>
+export type verifyForgotPasswordResType = z.infer<typeof verifyForgotPasswordResSchema>
 export type ResetPasswordBodyType = z.infer<typeof ResetPasswordBodySchema>
+export type ChangePasswordBodyType = z.infer<typeof ChangePasswordBodySchema>
 export type UpdateMeBodyType = z.infer<typeof UpdateMeBodySchema>
 export type AccountResType = z.infer<typeof AccountResSchema>

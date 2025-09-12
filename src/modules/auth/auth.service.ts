@@ -1,27 +1,35 @@
 import { BullQueueService } from '@/3rdService/bull/bull-queue.service'
+import { MailService } from '@/3rdService/mail/mail.service'
 import { TypeOfVerificationCodeType, UserStatus } from '@/common/constants/auth.constant'
 import { AUTH_MESSAGE } from '@/common/constants/message'
-import { RoleName } from '@/common/constants/role.constant'
 import { AuthRepository } from '@/modules/auth/auth.repo'
 import {
   EmailAlreadyExistsException,
   EmailNotFoundException,
   InvalidOTPException,
+  InvalidOTPExceptionForEmail,
   OTPExpiredException,
   RefreshTokenAlreadyUsedException,
   UnauthorizedAccessException,
   UnVeryfiedAccountException
 } from '@/modules/auth/dto/auth.error'
 import {
+  ChangePasswordBodyType,
   ForgotPasswordBodyType,
   LoginBodyType,
   RefreshTokenBodyType,
   RegisterBodyType,
   ResetPasswordBodyType,
   UpdateMeBodyType,
-  VerifyEmailBodyType
+  VerifyEmailBodyType,
+  verifyForgotPasswordBodyType
 } from '@/modules/auth/entities/auth.entities'
-import { InvalidPasswordException, NotFoundRecordException } from '@/shared/error'
+import {
+  InValidNewPasswordAndConfirmPasswordException,
+  InvalidOldPasswordException,
+  InvalidPasswordException,
+  NotFoundRecordException
+} from '@/shared/error'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from '@/shared/helpers'
 import { SharedRoleRepository } from '@/shared/repositories/shared-role.repo'
 import { SharedUserRepository } from '@/shared/repositories/shared-user.repo'
@@ -40,7 +48,7 @@ export class AuthService {
     private readonly sharedRoleRepository: SharedRoleRepository,
     private readonly authRepository: AuthRepository,
     private readonly sharedUserRepository: SharedUserRepository,
-    // private readonly emailService: EmailService,
+    private readonly mailService: MailService,
 
     private readonly bullQueueService: BullQueueService,
     @InjectQueue('user-deletion') private readonly deletionQueue: Queue,
@@ -122,12 +130,6 @@ export class AuthService {
 
   async register(body: RegisterBodyType, userAgent: string, ip: string) {
     try {
-      //todo chưa: làm validate code
-      // await this.validateVerificationCode({
-      //   email: body.email,
-      //   code: body.code,
-      //   type: TypeOfVerificationCode.REGISTER
-      // })
       const hashedPassword = await this.hashingService.hash(body.password)
 
       const roleId = await this.sharedRoleRepository.getCustomerRoleId()
@@ -163,26 +165,14 @@ export class AuthService {
         )
       }
       //todo chưa: gửi email verify - làm đi KuMo
+      // 2. send mail de xác thực
+      const registerEmailLowerCase = user.email.toLowerCase()
+      const template = 'verify-email'
+      const content = 'Mã OTP của bạn là: '
+      const bodyContent = 'Vui lòng nhập mã OTP để xác thực tài khoản của bạn.'
 
-      // 3. Tạo mới device
-      const device = await this.authRepository.createDevice({
-        userId: user.id,
-        userAgent: userAgent,
-        ip: ip
-      })
-      const tokens = await this.generateTokens({
-        userId: user.id,
-        deviceId: device.id,
-        roleId,
-        roleName: RoleName.Customer
-      })
-
-      const data = {
-        ...user,
-        ...tokens
-      }
       return {
-        data,
+        data: null,
         message: AUTH_MESSAGE.REGISTER_SUCCESS
       }
     } catch (error) {
@@ -297,7 +287,7 @@ export class AuthService {
   }
 
   async forgotPassword(body: ForgotPasswordBodyType) {
-    const { email, code, newPassword } = body
+    const { email } = body
     // 1. Kiểm tra email đã tồn tại trong database chưa
     const user = await this.sharedUserRepository.findUnique({
       email
@@ -305,48 +295,103 @@ export class AuthService {
     if (!user) {
       throw EmailNotFoundException
     }
-    //todo chưa: làm validate code - chưa làm gửi mail - làm đi KuMo
 
+    // Send email
+    const registerEmailLowerCase = user.email.toLowerCase()
+    const template = 'otp'
+    const content = 'Mã OTP của bạn là: '
+    const bodyContent = 'Vui lòng nhập mã OTP để xác thực tài khoản của bạn.'
+    this.mailService.generateAndSendOtp(
+      registerEmailLowerCase,
+      template,
+      content,
+      bodyContent
+    )
     //3. Cập nhật lại mật khẩu mới và xóa toàn bộ refreshToken của user đó
-    const hashedPassword = await this.hashingService.hash(newPassword)
-    await Promise.all([
-      this.sharedUserRepository.update(
-        { id: user.id },
-        {
-          password: hashedPassword,
-          updatedById: user.id
-        }
-      ),
-      this.authRepository.deleteManyRefreshTokenByUserId({ userId: user.id })
-    ])
+    // const hashedPassword = await this.hashingService.hash(newPassword)
+    // await Promise.all([
+    //   this.sharedUserRepository.update(
+    //     { id: user.id },
+    //     {
+    //       password: hashedPassword,
+    //       updatedById: user.id
+    //     }
+    //   ),
+    //   this.authRepository.deleteManyRefreshTokenByUserId({ userId: user.id })
+    // ])
     return {
       data: null,
-      message: AUTH_MESSAGE.FORGOT_PASSWORD_SUCCESS
+      message: AUTH_MESSAGE.SEND_OTP_SUCCESS
+    }
+  }
+
+  async verifyForgotPassword(
+    body: verifyForgotPasswordBodyType,
+    userAgent: string,
+    ip: string
+  ) {
+    const { email, code } = body
+    // 1. Kiểm tra email đã tồn tại trong database chưa
+    const user = await this.sharedUserRepository.findUniqueIncludeRole({
+      email
+    })
+    if (!user) {
+      throw InvalidOTPExceptionForEmail
+    }
+
+    // Verify OTP
+    await this.mailService.verifyOtpStrict(email, code)
+
+    // thành công hết thì: send token va gui mail
+    const device = await this.authRepository.createDevice({
+      userId: user.id,
+      userAgent: userAgent,
+      ip: ip
+    })
+    const accessToken = await this.tokenService.signAccessToken({
+      userId: user.id,
+      deviceId: device.id,
+      roleId: user.roleId,
+      roleName: user.role.name
+    })
+
+    // // Send email
+    // const registerEmailLowerCase = user.email.toLowerCase()
+    // const template = 'otp'
+    // const content = 'Mã OTP của bạn là: '
+    // const bodyContent = 'Vui lòng nhập mã OTP để thay đổi mật khẩu của bạn.'
+    // this.mailService.generateAndSendOtp(
+    //   registerEmailLowerCase,
+    //   template,
+    //   content,
+    //   bodyContent
+    // )
+
+    const data = {
+      accessToken
+    }
+
+    return {
+      data,
+      message: AUTH_MESSAGE.VERIFY_OTP_FORGOT_PASSWORD_SUCCESS
     }
   }
 
   async resetPassword(body: ResetPasswordBodyType, userId: number) {
-    const { code, newPassword } = body
+    const { newPassword, email, confirmNewPassword } = body
     // 1. Kiểm tra email đã tồn tại trong database chưa
-    const user = await this.sharedUserRepository.findUnique({
-      id: userId
-    })
-    if (!user) {
+    const user = await this.sharedUserRepository.findUnique({ email })
+
+    if (!user || user.id !== userId) {
       throw EmailNotFoundException
     }
-    //2. Check password cũ có đúng không
-    const isPasswordMatch = await this.hashingService.compare(
-      body.password,
-      user.password
-    )
-    if (!isPasswordMatch) {
-      throw InvalidPasswordException
+
+    //check password == password cu
+    if (newPassword !== confirmNewPassword) {
+      throw InValidNewPasswordAndConfirmPasswordException
     }
 
-    //todo chưa: làm validate code - chưa làm gửi mail - làm đi KuMo
-
-    //4. Tới đây là đúng rồi, đổi pass thôi
-
+    // tới đây đổi mật khẩu cho nó
     const hashedPassword = await this.hashingService.hash(newPassword)
     await Promise.all([
       this.sharedUserRepository.update(
@@ -360,7 +405,42 @@ export class AuthService {
 
     return {
       data: null,
-      message: AUTH_MESSAGE.FORGOT_PASSWORD_SUCCESS
+      message: AUTH_MESSAGE.RESET_PASSWORD_SUCCESS
+    }
+  }
+
+  async changePassword(body: ChangePasswordBodyType, userId: number) {
+    const { password, newPassword, confirmNewPassword } = body
+    // 1. Kiểm tra email đã tồn tại trong database chưa
+    const user = await this.sharedUserRepository.findUnique({ id: userId })
+
+    if (!user) {
+      throw EmailNotFoundException
+    }
+    //check password == password cu
+    if (newPassword !== confirmNewPassword) {
+      throw InValidNewPasswordAndConfirmPasswordException
+    }
+    const isPasswordMatch = await this.hashingService.compare(password, user.password)
+    if (!isPasswordMatch) {
+      throw InvalidOldPasswordException
+    }
+
+    // tới đây đổi mật khẩu cho nó
+    const hashedPassword = await this.hashingService.hash(newPassword)
+    await Promise.all([
+      this.sharedUserRepository.update(
+        { id: user.id },
+        {
+          password: hashedPassword,
+          updatedById: user.id
+        }
+      )
+    ])
+
+    return {
+      data: null,
+      message: AUTH_MESSAGE.CHANGE_PASSWORD_SUCCESS
     }
   }
 
