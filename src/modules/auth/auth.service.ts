@@ -4,9 +4,9 @@ import { TypeOfVerificationCodeType, UserStatus } from '@/common/constants/auth.
 import { AUTH_MESSAGE } from '@/common/constants/message'
 import { AuthRepository } from '@/modules/auth/auth.repo'
 import {
-  EmailActiveException,
   EmailAlreadyExistsException,
   EmailNotFoundException,
+  FailToLoginException,
   InvalidOTPException,
   InvalidOTPExceptionForEmail,
   OTPExpiredException,
@@ -28,7 +28,6 @@ import {
 import {
   InValidNewPasswordAndConfirmPasswordException,
   InvalidOldPasswordException,
-  InvalidPasswordException,
   NotFoundRecordException
 } from '@/shared/error'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from '@/shared/helpers'
@@ -88,7 +87,7 @@ export class AuthService {
     })
 
     if (!user) {
-      throw EmailNotFoundException
+      throw FailToLoginException
     }
 
     const isPasswordMatch = await this.hashingService.compare(
@@ -96,7 +95,7 @@ export class AuthService {
       user.password
     )
     if (!isPasswordMatch) {
-      throw InvalidPasswordException
+      throw FailToLoginException
     }
     // usser verify chua ?
     if (user.status === UserStatus.INACTIVE) {
@@ -299,7 +298,7 @@ export class AuthService {
     }
 
     if (user.status === UserStatus.INACTIVE) {
-      throw EmailActiveException
+      throw UnVeryfiedAccountException
     }
 
     // Send email
@@ -313,18 +312,6 @@ export class AuthService {
       content,
       bodyContent
     )
-    //3. Cập nhật lại mật khẩu mới và xóa toàn bộ refreshToken của user đó
-    // const hashedPassword = await this.hashingService.hash(newPassword)
-    // await Promise.all([
-    //   this.sharedUserRepository.update(
-    //     { id: user.id },
-    //     {
-    //       password: hashedPassword,
-    //       updatedById: user.id
-    //     }
-    //   ),
-    //   this.authRepository.deleteManyRefreshTokenByUserId({ userId: user.id })
-    // ])
     return {
       data: null,
       message: AUTH_MESSAGE.SEND_OTP_SUCCESS
@@ -360,18 +347,6 @@ export class AuthService {
       roleId: user.roleId,
       roleName: user.role.name
     })
-
-    // // Send email
-    // const registerEmailLowerCase = user.email.toLowerCase()
-    // const template = 'otp'
-    // const content = 'Mã OTP của bạn là: '
-    // const bodyContent = 'Vui lòng nhập mã OTP để thay đổi mật khẩu của bạn.'
-    // this.mailService.generateAndSendOtp(
-    //   registerEmailLowerCase,
-    //   template,
-    //   content,
-    //   bodyContent
-    // )
 
     const data = {
       accessToken

@@ -22,7 +22,7 @@ export const EmailAlreadyExistsException = new UnprocessableEntityException(
 
 export const EmailNotFoundException = new NotFoundException(AUTH_MESSAGE.NOT_FOUND_EMAIL)
 
-export const EmailActiveException = new UnauthorizedException(AUTH_MESSAGE.EMAIL_INACTIVE)
+export const FailToLoginException = new NotFoundException('Sai email hoặc mật khẩu')
 
 export const InvalidOTPExceptionForEmail = new UnauthorizedException(
   AUTH_MESSAGE.INVALID_OTP
@@ -39,7 +39,7 @@ export const UnauthorizedAccessException = new UnauthorizedException(
 export const AccountIsBanned = new UnauthorizedException(AUTH_MESSAGE.ACCOUNT_IS_BANNED)
 
 export const UnVeryfiedAccountException = new UnauthorizedException(
-  'Tài khoản chưa được xác thực'
+  'Tài khoản chưa được xác thực, vui lòng kiểm tra email để xác thực tài khoản'
 )
 
 // Google auth related errors

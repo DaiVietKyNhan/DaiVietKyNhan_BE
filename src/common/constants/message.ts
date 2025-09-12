@@ -7,7 +7,7 @@ export const AUTH_MESSAGE = {
   PHONE_IS_INVALID: 'Số điện thoại không hợp lệ',
   NAME_IS_REQUIRED: 'Tên không được để trống',
   REFRESH_TOKEN_SUCCESS: 'Làm mới token thành công',
-  INVALID_OTP: 'Mã OTP không hợp lệ',
+  INVALID_OTP: 'Mã OTP không hợp lệ hoặc hết hạn',
   OTP_EXPIRED: 'Mã OTP đã hết hạn',
   FAILED_TO_SEND_OTP: 'Gửi mã OTP thất bại',
   EMAIL_ALREADY_EXISTS: 'Email đã tồn tại',
