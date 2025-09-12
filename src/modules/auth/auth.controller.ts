@@ -44,7 +44,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly googleService: GoogleService
-  ) {}
+  ) { }
 
   // @Post('otp')
   // @IsPublic()
@@ -145,18 +145,18 @@ export class AuthController {
 
   @Get('verified-email/:email')
   @IsPublic()
-  verifiedEmail(@Param('email') email: string, @Res() res: Response) {
-    const data = this.authService.verifiedEmail(email)
+  async verifiedEmail(@Param('email') email: string, @Res() res: Response) {
+    const data = await this.authService.verifiedEmail(email)
     return res.redirect(`${envConfig.FE_URL}/data=${data}`)
 
     //TODO-Kumo: để data sau khi có front-end
   }
 
-  @Post('resend-verified-email')
+  @Post('resend-verified-email/:email')
   @IsPublic()
   @ZodSerializerDto(MessageResDTO)
-  resendVerifiedEmail(@Body() body: VerifyEmailBodyDTO) {
-    return this.authService.resendVerifiedEmail(body)
+  resendVerifiedEmail(@Param('email') email: string) {
+    return this.authService.resendVerifiedEmail(email)
   }
 
   // @Get('me')

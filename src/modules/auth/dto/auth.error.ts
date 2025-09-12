@@ -22,6 +22,8 @@ export const EmailAlreadyExistsException = new UnprocessableEntityException(
 
 export const EmailNotFoundException = new NotFoundException(AUTH_MESSAGE.NOT_FOUND_EMAIL)
 
+export const EmailAlreadyActiveException = new NotFoundException(AUTH_MESSAGE.EMAIL_ACTIVE)
+
 export const FailToLoginException = new NotFoundException('Sai email hoặc mật khẩu')
 
 export const InvalidOTPExceptionForEmail = new UnauthorizedException(

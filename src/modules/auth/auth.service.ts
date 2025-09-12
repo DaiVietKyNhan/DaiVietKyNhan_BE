@@ -4,6 +4,7 @@ import { TypeOfVerificationCodeType, UserStatus } from '@/common/constants/auth.
 import { AUTH_MESSAGE } from '@/common/constants/message'
 import { AuthRepository } from '@/modules/auth/auth.repo'
 import {
+  EmailAlreadyActiveException,
   EmailAlreadyExistsException,
   EmailNotFoundException,
   FailToLoginException,
@@ -53,7 +54,7 @@ export class AuthService {
     private readonly bullQueueService: BullQueueService,
     @InjectQueue('user-deletion') private readonly deletionQueue: Queue,
     private readonly tokenService: TokenService
-  ) {}
+  ) { }
 
   async validateVerificationCode({
     email,
@@ -470,11 +471,21 @@ export class AuthService {
     }
   }
 
-  async resendVerifiedEmail(body: VerifyEmailBodyType) {
-    // 1. Kiểm tra email đã tồn tại trong database chưa
+  async resendVerifiedEmail(email: string) {
     const user = await this.sharedUserRepository.findUnique({
-      email: body.email
+      email
     })
+    if (!user) {
+      throw EmailNotFoundException
+    }
+    if (user.status === UserStatus.ACTIVE) {
+      throw EmailAlreadyActiveException
+    }
+
+    const template = 'otp'
+    const content = 'XÁC THỰC MAIL CỦA BẠN: '
+    const bodyContent = 'Vui lòng nhập nhấn nút XÁC THỰC để xác thực tài khoản của bạn.'
+    this.mailService.generateAndSendOtp(email, template, content, bodyContent)
 
     //todo chưa: gửi lại email verify - làm đi KuMo
     return {
