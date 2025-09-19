@@ -129,6 +129,51 @@ model Role {
   @@index([deletedAt])
 }
 
+model KyNhan {
+  id        Int     @id @default(autoincrement())
+  name      String  @db.VarChar(500)
+  thoiKy    String  @db.VarChar(500)
+  chienCong String  @db.Text()
+  imgUrl    String? @db.VarChar(1000)
+  active    Boolean @default(false)
+
+  chiTietKyNhans ChiTietKyNhan[] @relation("KyNhanToChiTietKyNhan")
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([deletedAt])
+}
+
+model ChiTietKyNhan {
+  id Int @id @default(autoincrement())
+
+  kyNhanId Int
+  kyNhan   KyNhan @relation("KyNhanToChiTietKyNhan", fields: [kyNhanId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  tinhCach  String  @db.Text()
+  quanHe    String? @db.Text()
+  trichDoan String  @db.Text()
+  media     Media[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([deletedAt])
+}
+
+model Media {
+  id        Int           @id @default(autoincrement())
+  chiTietId Int
+  chiTiet   ChiTietKyNhan @relation(fields: [chiTietId], references: [id], onDelete: Cascade)
+  type      MediaType
+  url       String        @db.VarChar(1000)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
 enum VerificationCodeType {
   REGISTER
   FORGOT_PASSWORD

@@ -10,6 +10,9 @@ import { TransformInterceptor } from './common/interceptor/transform.interceptor
 import { AuthModule } from './modules/auth/auth.module'
 import { PermissionModule } from './modules/permission/permission.module'
 import { RoleModule } from './modules/role/role.module'
+import { KyNhanModule } from './modules/kynhan/kynhan.module'
+import { ChiTietKyNhanModule } from './modules/chitietkynhan/chitietkynhan.module'
+import { MediaModule } from './modules/media/media.module'
 import { SharedModule } from './shared/shared.module'
 
 @Module({
@@ -23,7 +26,10 @@ import { SharedModule } from './shared/shared.module'
     SharedModule,
     AuthModule,
     RoleModule,
-    PermissionModule
+    PermissionModule,
+    KyNhanModule,
+    ChiTietKyNhanModule,
+    MediaModule
   ],
 
   controllers: [],

@@ -1,16 +1,29 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { Role } from "@prisma/client";
 
 export class RegisterMultipartSwaggerDTO {
-    @ApiProperty({ example: 'John Doe', description: 'Tên của người dùng' })
+    @ApiProperty({
+        example: 'John Doe',
+        description: 'Tên của người dùng'
+    })
     name: string;
 
-    @ApiProperty({ example: 'user@example.com', description: 'Địa chỉ email của người dùng' })
+    @ApiProperty({
+        example: 'user@example.com',
+        description: 'Địa chỉ email của người dùng'
+    })
     email: string;
 
-    @ApiProperty({ example: 'password123', description: 'Mật khẩu' })
+    @ApiProperty({
+        example: 'password123',
+        description: 'Mật khẩu'
+    })
     password: string;
 
-    @ApiProperty({ example: '0986056438', description: 'Số điện thoại' })
+    @ApiProperty({
+        example: '0986056438',
+        description: 'Số điện thoại'
+    })
     phoneNumber: string;
 
 }
