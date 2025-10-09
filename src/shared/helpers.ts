@@ -1,3 +1,4 @@
+import { WeekDay, WeekDayType } from '@/common/constants/attendence-config.constant'
 import { Prisma } from '@prisma/client'
 import { randomInt } from 'crypto'
 import path from 'path'
@@ -29,4 +30,18 @@ export const generateOTP = () => {
 export const generateRandomFilename = (filename: string) => {
   const ext = path.extname(filename)
   return `${uuidv4()}${ext}`
+}
+
+export function getWeekDay(date: Date): WeekDayType {
+  const days: WeekDayType[] = [
+    WeekDay.SUNDAY, // 0
+    WeekDay.MONDAY, // 1
+    WeekDay.TUESDAY, // 2
+    WeekDay.WEDNESDAY, // 3
+    WeekDay.THURSDAY, // 4
+    WeekDay.FRIDAY, // 5
+    WeekDay.SATURDAY // 6
+  ]
+
+  return days[date.getDay()]
 }

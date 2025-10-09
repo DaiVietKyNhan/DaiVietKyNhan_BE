@@ -8,27 +8,48 @@ datasource db {
 }
 
 model User {
-  id                 Int            @id @default(autoincrement())
-  email              String         @unique @db.VarChar(500)
-  name               String         @db.VarChar(500)
-  password           String         @db.VarChar(500)
-  phoneNumber        String         @db.VarChar(50)
-  avatar             String?        @db.VarChar(1000)
-  status             UserStatus     @default(INACTIVE)
-  roleId             Int
-  role               Role           @relation(fields: [roleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  devices            Device[] // Liên kết 1-n với Device
-  refreshTokens      RefreshToken[]
-  createdPermissions Permission[]   @relation("PermissionCreatedBy")
-  updatedPermissions Permission[]   @relation("PermissionUpdatedBy")
-  deletedPermissions Permission[]   @relation("PermissionDeletedBy")
-  createdRoles       Role[]         @relation("RoleCreatedBy")
-  updatedRoles       Role[]         @relation("RoleUpdatedBy")
-  deletedRoles       Role[]         @relation("RoleDeletedBy")
+  id          Int        @id @default(autoincrement())
+  email       String     @unique @db.VarChar(500)
+  name        String     @db.VarChar(500)
+  password    String     @db.VarChar(500)
+  phoneNumber String     @db.VarChar(50)
+  gender      Gender?
+  birthDate   DateTime?
+  avatar      String?    @db.VarChar(1000)
+  status      UserStatus @default(INACTIVE)
+  roleId      Int
+  role        Role       @relation(fields: [roleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  devices       Device[] // Liên kết 1-n với Device
+  refreshTokens RefreshToken[]
+  attendances   Attendance[]
+
+  createdPermissions       Permission[]       @relation("PermissionCreatedBy")
+  updatedPermissions       Permission[]       @relation("PermissionUpdatedBy")
+  deletedPermissions       Permission[]       @relation("PermissionDeletedBy")
+  createdRoles             Role[]             @relation("RoleCreatedBy")
+  updatedRoles             Role[]             @relation("RoleUpdatedBy")
+  deletedRoles             Role[]             @relation("RoleDeletedBy")
+  createdKyNhans           KyNhan[]           @relation("KyNhanCreatedBy")
+  updatedKyNhans           KyNhan[]           @relation("KyNhanUpdatedBy")
+  deletedKyNhans           KyNhan[]           @relation("KyNhanDeletedBy")
+  createdChiTiets          ChiTietKyNhan[]    @relation("ChiTietKyNhanCreatedBy")
+  updatedChiTiets          ChiTietKyNhan[]    @relation("ChiTietKyNhanUpdatedBy")
+  deletedChiTiets          ChiTietKyNhan[]    @relation("ChiTietKyNhanDeletedBy")
+  createdSystemConfigs     SystemConfig[]     @relation("SystemConfigCreatedBy")
+  updatedSystemConfigs     SystemConfig[]     @relation("SystemConfigUpdatedBy")
+  deletedSystemConfigs     SystemConfig[]     @relation("SystemConfigDeletedBy")
+  createdAttendances       Attendance[]       @relation("AttendanceCreatedBy")
+  updatedAttendances       Attendance[]       @relation("AttendanceUpdatedBy")
+  deletedAttendances       Attendance[]       @relation("AttendanceDeletedBy")
+  createdAttendanceConfigs AttendanceConfig[] @relation("AttendanceConfigCreatedBy")
+  updatedAttendanceConfigs AttendanceConfig[] @relation("AttendanceConfigUpdatedBy")
+  deletedAttendanceConfigs AttendanceConfig[] @relation("AttendanceConfigDeletedBy")
 
   // 1 user có thể tạo ra nhiều user khác
   // 1 user chỉ có thể được tạo ra bởi 1 user khác
   // Tự quan hệ 1-n
+
   createdById  Int?
   createdBy    User?  @relation("CreatorUsers", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
   createdUsers User[] @relation("CreatorUsers")
@@ -45,19 +66,7 @@ model User {
   updatedAt DateTime  @updatedAt
 
   @@index([deletedAt])
-}
-
-model VerificationCode {
-  id    Int                  @id @default(autoincrement())
-  email String               @db.VarChar(500)
-  code  String               @db.VarChar(50)
-  type  VerificationCodeType
-
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  @@unique([email, code, type])
-  @@index([expiresAt])
+  @@index(email)
 }
 
 model Device {
@@ -139,6 +148,13 @@ model KyNhan {
 
   chiTietKyNhans ChiTietKyNhan[] @relation("KyNhanToChiTietKyNhan")
 
+  createdById Int?
+  createdBy   User? @relation("KyNhanCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  updatedById Int?
+  updatedBy   User? @relation("KyNhanUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  deletedById Int?
+  deletedBy   User? @relation("KyNhanDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -157,11 +173,33 @@ model ChiTietKyNhan {
   trichDoan String  @db.Text()
   media     Media[]
 
+  createdById Int?
+  createdBy   User? @relation("ChiTietKyNhanCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  updatedById Int?
+  updatedBy   User? @relation("ChiTietKyNhanUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  deletedById Int?
+  deletedBy   User? @relation("ChiTietKyNhanDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
   @@index([deletedAt])
+}
+
+model SystemConfig {
+  id          Int      @id @default(autoincrement())
+  launchDate  DateTime // Ngày trang web chính thức mở
+  createdById Int?
+  createdBy   User?    @relation("SystemConfigCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  updatedById Int?
+  updatedBy   User?    @relation("SystemConfigUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  deletedById Int?
+  deletedBy   User?    @relation("SystemConfigDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Media {
@@ -172,6 +210,47 @@ model Media {
   url       String        @db.VarChar(1000)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+}
+
+model Attendance {
+  id        Int              @id @default(autoincrement())
+  date      DateTime
+  status    AttendanceStatus
+  coin      Int              @default(0)
+  bonusCoin Int              @default(0)
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  createdById Int?
+  createdBy   User? @relation("AttendanceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  updatedById Int?
+  updatedBy   User? @relation("AttendanceUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  deletedById Int?
+  deletedBy   User? @relation("AttendanceDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([userId, date])
+}
+
+model AttendanceConfig {
+  id          Int     @id @default(autoincrement())
+  dayOfWeek   WeekDay @unique // 0=CN, 1=T2, ..., 6=T7
+  baseCoin    Int     @default(0) // điểm cơ bản
+  bonusCoin   Int     @default(0) // coin thưởng ngày đó
+  createdById Int?
+  createdBy   User?   @relation("AttendanceConfigCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  updatedById Int?
+  updatedBy   User?   @relation("AttendanceConfigUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  deletedById Int?
+  deletedBy   User?   @relation("AttendanceConfigDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 enum VerificationCodeType {
@@ -197,4 +276,27 @@ enum HTTPMethod {
 enum MediaType {
   IMAGE
   VIDEO
+  AUDIO
+  DOCUMENT
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+}
+
+enum WeekDay {
+  SUNDAY
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
 }

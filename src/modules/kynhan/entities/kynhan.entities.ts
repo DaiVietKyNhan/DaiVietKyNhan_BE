@@ -5,29 +5,35 @@ import { z } from 'zod'
 extendZodWithOpenApi(z)
 patchNestJsSwagger()
 
-export const KyNhanSchema = z.object({
+export const KyNhanSchema = z
+  .object({
     id: z.number(),
     name: z.string().max(500),
     thoiKy: z.string().max(500),
     chienCong: z.string(),
-    imgUrl: z.string().max(1000).optional(),
+    imgUrl: z.string().max(1000).nullable(),
     active: z.boolean().default(false),
-    deletedAt: z.date().optional(),
+    createdById: z.number().nullable(),
+    updatedById: z.number().nullable(),
+    deletedById: z.number().nullable(),
+    deletedAt: z.date().nullable(),
     createdAt: z.date(),
     updatedAt: z.date()
-}).strict()
+  })
+  .strict()
 
 export const CreateKyNhanBodySchema = KyNhanSchema.pick({
-    name: true,
-    thoiKy: true,
-    chienCong: true,
-    imgUrl: true,
-    active: true
+  name: true,
+  thoiKy: true,
+  chienCong: true,
+  imgUrl: true,
+  active: true
 }).strict()
 
 export const UpdateKyNhanBodySchema = CreateKyNhanBodySchema.partial().strict()
 
-export const QueryKyNhanSchema = z.object({
+export const QueryKyNhanSchema = z
+  .object({
     page: z.number().int().min(1).default(1),
     limit: z.number().int().min(1).default(10),
     search: z.string().optional(),
@@ -35,27 +41,32 @@ export const QueryKyNhanSchema = z.object({
     active: z.boolean().optional(),
     sortBy: z.string().default('createdAt'),
     sortOrder: z.enum(['asc', 'desc']).default('desc')
-}).strict()
+  })
+  .strict()
 
-export const KyNhanResSchema = z.object({
+export const KyNhanResSchema = z
+  .object({
     statusCode: z.number(),
     data: KyNhanSchema,
     message: z.string()
-}).strict()
+  })
+  .strict()
 
-export const KyNhanListResSchema = z.object({
+export const KyNhanListResSchema = z
+  .object({
     statusCode: z.number(),
     data: z.object({
-        data: z.array(KyNhanSchema),
-        pagination: z.object({
-            page: z.number(),
-            limit: z.number(),
-            total: z.number(),
-            totalPages: z.number()
-        })
+      data: z.array(KyNhanSchema),
+      pagination: z.object({
+        page: z.number(),
+        limit: z.number(),
+        total: z.number(),
+        totalPages: z.number()
+      })
     }),
     message: z.string()
-}).strict()
+  })
+  .strict()
 
 // Types
 export type KyNhanType = z.infer<typeof KyNhanSchema>

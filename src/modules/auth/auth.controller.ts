@@ -13,11 +13,12 @@ import {
   RefreshTokenResDTO,
   RegisterBodyDTO,
   ResetPasswordBodyDTO,
-  VerifyEmailBodyDTO,
+  UpdateMeBodyDTO,
   verifyForgotPasswordBodyDTO,
   verifyForgotPasswordResDTO
 } from '@/modules/auth/dto/auth.zod-dto'
 import { MessageResDTO } from '@/shared/dtos/response.dto'
+import { GetAccountProfileResDTO } from '@/shared/dtos/shared-user.dto'
 import {
   Body,
   Controller,
@@ -27,6 +28,7 @@ import {
   Ip,
   Param,
   Post,
+  Put,
   Query,
   Res,
   UseInterceptors
@@ -44,7 +46,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly googleService: GoogleService
-  ) { }
+  ) {}
 
   // @Post('otp')
   // @IsPublic()
@@ -159,20 +161,20 @@ export class AuthController {
     return this.authService.resendVerifiedEmail(email)
   }
 
-  // @Get('me')
-  // @ZodSerializerDto(GetAccountProfileResDTO)
-  // me(@ActiveUser('userId') userId: number) {
-  //   return this.authService.getMe(userId)
-  // }
+  @Get('me')
+  @ZodSerializerDto(GetAccountProfileResDTO)
+  me(@ActiveUser('userId') userId: number) {
+    return this.authService.getMe(userId)
+  }
 
-  // @Put('me')
-  // @ZodSerializerDto(AccountResDTO)
-  // updateMe(@Body() body: UpdateMeBodyDTO, @ActiveUser('userId') userId: number) {
-  //   return this.authService.updateMe({
-  //     userId,
-  //     data: body
-  //   })
-  // }
+  @Put('me')
+  @ZodSerializerDto(GetAccountProfileResDTO)
+  updateMe(@Body() body: UpdateMeBodyDTO, @ActiveUser('userId') userId: number) {
+    return this.authService.updateMe({
+      userId,
+      data: body
+    })
+  }
 
   //oauth
   @Get('google-link')
