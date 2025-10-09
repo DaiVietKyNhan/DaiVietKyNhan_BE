@@ -7,14 +7,15 @@ import { ScheduleModule } from '@nestjs/schedule'
 import { ZodSerializerInterceptor } from 'nestjs-zod'
 import { MailModule } from './3rdService/mail/mail.module'
 import { TransformInterceptor } from './common/interceptor/transform.interceptor'
+import { AttendanceModule } from './modules/attendance/attendance.module'
+import { AttendenceConfigModule } from './modules/attendence-config/attendence-config.module'
 import { AuthModule } from './modules/auth/auth.module'
+import { ChiTietKyNhanModule } from './modules/chitietkynhan/chitietkynhan.module'
+import { KyNhanModule } from './modules/kynhan/kynhan.module'
+import { MediaModule } from './modules/media/media.module'
 import { PermissionModule } from './modules/permission/permission.module'
 import { RoleModule } from './modules/role/role.module'
-import { KyNhanModule } from './modules/kynhan/kynhan.module'
-import { ChiTietKyNhanModule } from './modules/chitietkynhan/chitietkynhan.module'
-import { MediaModule } from './modules/media/media.module'
 import { SharedModule } from './shared/shared.module'
-import { AttendenceConfigModule } from './modules/attendence-config/attendence-config.module';
 
 @Module({
   imports: [
@@ -31,7 +32,8 @@ import { AttendenceConfigModule } from './modules/attendence-config/attendence-c
     KyNhanModule,
     ChiTietKyNhanModule,
     MediaModule,
-    AttendenceConfigModule
+    AttendenceConfigModule,
+    AttendanceModule
   ],
 
   controllers: [],

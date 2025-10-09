@@ -213,11 +213,11 @@ model Media {
 }
 
 model Attendance {
-  id     Int              @id @default(autoincrement())
-  date   DateTime
-  status AttendanceStatus
-  points Int              @default(0)
-  coin   Int              @default(0)
+  id        Int              @id @default(autoincrement())
+  date      DateTime
+  status    AttendanceStatus
+  coin      Int              @default(0)
+  bonusCoin Int              @default(0)
 
   userId Int
   user   User @relation(fields: [userId], references: [id])
@@ -239,7 +239,7 @@ model Attendance {
 model AttendanceConfig {
   id          Int     @id @default(autoincrement())
   dayOfWeek   WeekDay @unique // 0=CN, 1=T2, ..., 6=T7
-  basePoints  Int     @default(0) // điểm cơ bản
+  baseCoin    Int     @default(0) // điểm cơ bản
   bonusCoin   Int     @default(0) // coin thưởng ngày đó
   createdById Int?
   createdBy   User?   @relation("AttendanceConfigCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)

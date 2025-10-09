@@ -5,6 +5,7 @@ import { AttendenceConfigService } from './attendence-config.service'
 
 @Module({
   controllers: [AttendenceConfigController],
-  providers: [AttendenceConfigService, AttendenceConfigRepo]
+  providers: [AttendenceConfigService, AttendenceConfigRepo],
+  exports: [AttendenceConfigService, AttendenceConfigRepo]
 })
 export class AttendenceConfigModule {}

@@ -1,10 +1,11 @@
+import { ENTITY_MESSAGE } from '@/common/constants/message'
 import {
   NotFoundException,
   UnauthorizedException,
   UnprocessableEntityException
 } from '@nestjs/common'
 
-export const NotFoundRecordException = new NotFoundException('Error.NotFound')
+export const NotFoundRecordException = new NotFoundException(ENTITY_MESSAGE.NOT_FOUND)
 
 export const InvalidPasswordException = new UnauthorizedException('Sai mật khẩu')
 

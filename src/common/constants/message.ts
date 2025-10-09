@@ -34,3 +34,9 @@ export const ENTITY_MESSAGE = {
   GET_LIST_SUCCESS: 'Lấy danh sách thành công',
   ID_INVALID: 'ID không hợp lệ'
 }
+
+export const ATTENDANCE_MESSAGE = {
+  CHECKIN_SUCCESS: 'Điểm danh thành công',
+  CHECKIN_ALREADY: 'Bạn đã điểm danh hôm nay rồi',
+  CHECKIN_FAILD: 'Điểm danh thất bại'
+}

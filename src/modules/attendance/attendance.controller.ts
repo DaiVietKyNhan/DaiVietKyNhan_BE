@@ -1,0 +1,80 @@
+import { ActiveUser } from '@/common/decorators/active-user.decorator'
+import { PaginationQueryDTO } from '@/shared/dtos/request.dto'
+import { PaginationResponseSchema } from '@/shared/models/response.model'
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
+import { ApiBearerAuth } from '@nestjs/swagger'
+import { ZodSerializerDto } from 'nestjs-zod'
+import {
+  CreateAttendanceResDTO,
+  GetAttendanceResDTO,
+  GetAttendanceWithUserStreakResDTO,
+  GetParamsAttendanceDTO,
+  GetParamsDateAttendanceDTO,
+  UpdateAttendanceBodyDTO,
+  UpdateAttendanceResDTO
+} from 'src/modules/attendance/dto/attendance.zod-dto'
+
+import { MessageResDTO } from 'src/shared/dtos/response.dto'
+import { AttendanceService } from './attendance.service'
+
+@Controller('attendance')
+@ApiBearerAuth()
+export class AttendanceController {
+  constructor(private readonly attendanceService: AttendanceService) {}
+
+  @Get()
+  @ZodSerializerDto(PaginationResponseSchema)
+  list(@Query() query: PaginationQueryDTO) {
+    return this.attendanceService.list(query)
+  }
+
+  @Get('user')
+  @ZodSerializerDto(GetAttendanceWithUserStreakResDTO)
+  findByUser(
+    @Param() params: GetParamsDateAttendanceDTO,
+    @ActiveUser('userId') userId: number
+  ) {
+    return this.attendanceService.findByUser(
+      userId,
+      params.date ? new Date(params.date) : new Date()
+    )
+  }
+  @Get(':attendanceId')
+  @ZodSerializerDto(GetAttendanceResDTO)
+  findById(@Param() params: GetParamsAttendanceDTO) {
+    console.log('sai roi')
+
+    return this.attendanceService.findById(params.attendanceId)
+  }
+
+  @Post()
+  @ZodSerializerDto(CreateAttendanceResDTO)
+  create(@ActiveUser('userId') userId: number) {
+    return this.attendanceService.create({
+      createdById: userId
+    })
+  }
+
+  @Put(':attendanceId')
+  @ZodSerializerDto(UpdateAttendanceResDTO)
+  update(
+    @Body() body: UpdateAttendanceBodyDTO,
+    @Param() params: GetParamsAttendanceDTO,
+    @ActiveUser('userId') userId: number
+  ) {
+    return this.attendanceService.update({
+      data: body,
+      id: params.attendanceId,
+      updatedById: userId
+    })
+  }
+
+  @Delete(':attendanceId')
+  @ZodSerializerDto(MessageResDTO)
+  delete(@Param() params: GetParamsAttendanceDTO, @ActiveUser('userId') userId: number) {
+    return this.attendanceService.delete({
+      id: params.attendanceId,
+      deletedById: userId
+    })
+  }
+}

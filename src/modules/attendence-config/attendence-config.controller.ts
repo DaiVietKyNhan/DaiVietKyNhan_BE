@@ -16,7 +16,7 @@ import {
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
 import { AttendenceConfigService } from './attendence-config.service'
 
-@Controller('atttendence-config')
+@Controller('attendence-config')
 @ApiBearerAuth()
 export class AttendenceConfigController {
   constructor(private readonly atttendenceConfigService: AttendenceConfigService) {}

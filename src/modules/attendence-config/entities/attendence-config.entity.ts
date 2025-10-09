@@ -18,7 +18,7 @@ export const AttendanceConfigSchema = z.object({
     WeekDay.FRIDAY,
     WeekDay.SATURDAY
   ]),
-  basePoints: z.number().min(0).default(0),
+  baseCoin: z.number().min(0).default(0),
   bonusCoin: z.number().min(0).default(0),
 
   createdById: z.number().nullable(),
@@ -30,9 +30,9 @@ export const AttendanceConfigSchema = z.object({
 })
 export const CreateAttendanceConfigBodySchema = AttendanceConfigSchema.pick({
   dayOfWeek: true,
-  basePoints: true,
+  baseCoin: true,
   bonusCoin: true
-})
+}).strict()
 
 export const CreateAttendanceConfigResSchema = z.object({
   statusCode: z.number(),
@@ -40,7 +40,8 @@ export const CreateAttendanceConfigResSchema = z.object({
   message: z.string()
 })
 
-export const UpdateAttendanceConfigBodySchema = CreateAttendanceConfigBodySchema.partial()
+export const UpdateAttendanceConfigBodySchema =
+  CreateAttendanceConfigBodySchema.partial().strict()
 
 export const UpdateAttendanceConfigResSchema = CreateAttendanceConfigResSchema
 
@@ -70,7 +71,7 @@ export type GetParamsAttendanceConfigType = z.infer<
 export type GetAttendanceConfigResType = z.infer<typeof GetAttendanceConfigResSchema>
 
 //field
-type AttendanceFieldType = keyof z.infer<typeof AttendanceConfigSchema>
-export const ATTENDANCE_FIELDS = Object.keys(
+type AttendanceConfigFieldType = keyof z.infer<typeof AttendanceConfigSchema>
+export const ATTENDANCE_CONFIG_FIELDS = Object.keys(
   AttendanceConfigSchema.shape
-) as AttendanceFieldType[]
+) as AttendanceConfigFieldType[]

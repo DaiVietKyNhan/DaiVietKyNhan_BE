@@ -1,18 +1,17 @@
 import { PaginationQueryType } from '@/shared/models/request.model'
 import { Injectable } from '@nestjs/common'
 
-import { WeekDayType } from '@/common/constants/attendence-config.constant'
 import { parseQs } from '@/common/utils/qs-parser'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import {
-  ATTENDANCE_CONFIG_FIELDS,
-  AttendanceConfigType,
-  CreateAttendanceConfigBodyType,
-  UpdateAttendanceConfigBodyType
-} from './entities/attendence-config.entity'
+  ATTENDANCE_FIELDS,
+  AttendanceType,
+  CreateAttendanceBodyType,
+  UpdateAttendanceBodyType
+} from './entities/attendance.entity'
 
 @Injectable()
-export class AttendenceConfigRepo {
+export class AttendanceRepo {
   constructor(private prismaService: PrismaService) {}
 
   create({
@@ -20,12 +19,13 @@ export class AttendenceConfigRepo {
     data
   }: {
     createdById: number | null
-    data: CreateAttendanceConfigBodyType
-  }): Promise<AttendanceConfigType> {
-    return this.prismaService.attendanceConfig.create({
+    data: CreateAttendanceBodyType
+  }): Promise<AttendanceType> {
+    return this.prismaService.attendance.create({
       data: {
         ...data,
-        createdById
+        createdById,
+        deletedAt: null
       }
     })
   }
@@ -37,9 +37,9 @@ export class AttendenceConfigRepo {
   }: {
     id: number
     updatedById: number
-    data: UpdateAttendanceConfigBodyType
-  }): Promise<AttendanceConfigType> {
-    return this.prismaService.attendanceConfig.update({
+    data: UpdateAttendanceBodyType
+  }): Promise<AttendanceType> {
+    return this.prismaService.attendance.update({
       where: {
         id,
         deletedAt: null
@@ -60,14 +60,14 @@ export class AttendenceConfigRepo {
       deletedById: number
     },
     isHard?: boolean
-  ): Promise<AttendanceConfigType> {
+  ): Promise<AttendanceType> {
     return isHard
-      ? this.prismaService.attendanceConfig.delete({
+      ? this.prismaService.attendance.delete({
           where: {
             id
           }
         })
-      : this.prismaService.attendanceConfig.update({
+      : this.prismaService.attendance.update({
           where: {
             id,
             deletedAt: null
@@ -80,16 +80,16 @@ export class AttendenceConfigRepo {
   }
 
   async list(pagination: PaginationQueryType) {
-    const { where, orderBy } = parseQs(pagination.qs, ATTENDANCE_CONFIG_FIELDS)
+    const { where, orderBy } = parseQs(pagination.qs, ATTENDANCE_FIELDS)
 
     const skip = (pagination.currentPage - 1) * pagination.pageSize
     const take = pagination.pageSize
 
     const [totalItems, data] = await Promise.all([
-      this.prismaService.attendanceConfig.count({
+      this.prismaService.attendance.count({
         where: { deletedAt: null, ...where }
       }),
-      this.prismaService.attendanceConfig.findMany({
+      this.prismaService.attendance.findMany({
         where: { deletedAt: null, ...where },
 
         orderBy,
@@ -109,8 +109,8 @@ export class AttendenceConfigRepo {
     }
   }
 
-  findById(id: number): Promise<AttendanceConfigType | null> {
-    return this.prismaService.attendanceConfig.findUnique({
+  findById(id: number): Promise<AttendanceType | null> {
+    return this.prismaService.attendance.findUnique({
       where: {
         id,
         deletedAt: null
@@ -118,11 +118,29 @@ export class AttendenceConfigRepo {
     })
   }
 
-  findByDateOfWeek(dayOfWeek: WeekDayType): Promise<AttendanceConfigType | null> {
-    return this.prismaService.attendanceConfig.findFirst({
+  findStreakWithStartEndDay(
+    userId: number,
+    startOfWeek: Date,
+    endOfWeek: Date
+  ): Promise<AttendanceType[]> {
+    return this.prismaService.attendance.findMany({
       where: {
-        dayOfWeek,
+        userId,
+        date: {
+          gte: startOfWeek,
+          lte: endOfWeek
+        },
         deletedAt: null
+      },
+      orderBy: { date: 'desc' }
+    })
+  }
+
+  findByUserIdAndDate(userId: number, date: Date): Promise<AttendanceType | null> {
+    return this.prismaService.attendance.findFirst({
+      where: {
+        userId,
+        date
       }
     })
   }
