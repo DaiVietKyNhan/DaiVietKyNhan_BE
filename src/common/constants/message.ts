@@ -21,5 +21,6 @@ export const AUTH_MESSAGE = {
   RESET_PASSWORD_SUCCESS: 'Đặt lại mật khẩu thành công',
   SEND_OTP_SUCCESS: 'Gửi mã OTP thành công',
   VERIFY_OTP_FORGOT_PASSWORD_SUCCESS: 'Xác thực OTP thành công',
-  CHANGE_PASSWORD_SUCCESS: 'Đổi mật khẩu thành công'
+  CHANGE_PASSWORD_SUCCESS: 'Đổi mật khẩu thành công',
+  GET_PROFILE_SUCCESS: 'Lấy thông tin cá nhân thành công'
 }

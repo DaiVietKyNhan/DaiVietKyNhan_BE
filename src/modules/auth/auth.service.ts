@@ -1,16 +1,13 @@
 import { BullQueueService } from '@/3rdService/bull/bull-queue.service'
 import { MailService } from '@/3rdService/mail/mail.service'
-import { TypeOfVerificationCodeType, UserStatus } from '@/common/constants/auth.constant'
+import { UserStatus } from '@/common/constants/auth.constant'
 import { AUTH_MESSAGE } from '@/common/constants/message'
 import { AuthRepository } from '@/modules/auth/auth.repo'
 import {
-  EmailAlreadyActiveException,
   EmailAlreadyExistsException,
   EmailNotFoundException,
   FailToLoginException,
-  InvalidOTPException,
   InvalidOTPExceptionForEmail,
-  OTPExpiredException,
   RefreshTokenAlreadyUsedException,
   UnauthorizedAccessException,
   UnVeryfiedAccountException
@@ -23,7 +20,6 @@ import {
   RegisterBodyType,
   ResetPasswordBodyType,
   UpdateMeBodyType,
-  VerifyEmailBodyType,
   verifyForgotPasswordBodyType
 } from '@/modules/auth/entities/auth.entities'
 import {
@@ -38,7 +34,7 @@ import { HashingService } from '@/shared/services/hashing.service'
 import { TokenService } from '@/shared/services/token.service'
 import { AccessTokenPayloadCreate } from '@/shared/types/jwt.type'
 import { InjectQueue } from '@nestjs/bull'
-import { HttpException, Injectable, Logger } from '@nestjs/common'
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common'
 import { Queue } from 'bull'
 
 @Injectable()
@@ -54,32 +50,7 @@ export class AuthService {
     private readonly bullQueueService: BullQueueService,
     @InjectQueue('user-deletion') private readonly deletionQueue: Queue,
     private readonly tokenService: TokenService
-  ) { }
-
-  async validateVerificationCode({
-    email,
-    code,
-    type
-  }: {
-    email: string
-    code: string
-    type: TypeOfVerificationCodeType
-  }) {
-    const vevificationCode = await this.authRepository.findUniqueVerificationCode({
-      email_code_type: {
-        email,
-        code,
-        type
-      }
-    })
-    if (!vevificationCode) {
-      throw InvalidOTPException
-    }
-    if (vevificationCode.expiresAt < new Date()) {
-      throw OTPExpiredException
-    }
-    return vevificationCode
-  }
+  ) {}
 
   async login(body: LoginBodyType & { userAgent: string; ip: string }) {
     // 1. Lấy thông tin user, kiểm tra user có tồn tại hay không, mật khẩu có đúng không
@@ -428,13 +399,17 @@ export class AuthService {
   }
 
   async getMe(userId: number) {
-    const user = await this.sharedUserRepository.findUniqueIncludeRolePermissions({
+    const user = await this.sharedUserRepository.findUniqueIncludeRole({
       id: userId
     })
     if (!user) {
       throw EmailNotFoundException
     }
-    return user
+    return {
+      data: user,
+      message: AUTH_MESSAGE.GET_PROFILE_SUCCESS,
+      statusCode: HttpStatus.OK
+    }
   }
 
   async updateMe({ data, userId }: { data: UpdateMeBodyType; userId: number }) {
@@ -452,6 +427,7 @@ export class AuthService {
       }
     )
     return {
+      statusCode: HttpStatus.OK,
       data: updatedUser,
       message: AUTH_MESSAGE.UPDATE_PROFILE_SUCCESS
     }

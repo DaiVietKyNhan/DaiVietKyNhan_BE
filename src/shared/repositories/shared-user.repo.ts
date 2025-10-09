@@ -59,13 +59,27 @@ export class SharedUserRepository {
     })
   }
 
-  update(where: { id: number }, data: Partial<UserType>): Promise<UserType | null> {
+  update(
+    where: { id: number },
+    data: Partial<UserType>
+  ): Promise<UserIncludeRoleType | null> {
     return this.prismaService.user.update({
       where: {
         ...where,
         deletedAt: null
       },
-      data
+      data,
+      include: {
+        role: {
+          include: {
+            permissions: {
+              where: {
+                deletedAt: null
+              }
+            }
+          }
+        }
+      }
     })
   }
 }

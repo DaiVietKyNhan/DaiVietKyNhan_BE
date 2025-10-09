@@ -1,9 +1,5 @@
-import { TypeOfVerificationCodeType, UserStatus } from '@/common/constants/auth.constant'
-import {
-  DeviceType,
-  RefreshTokenType,
-  VerificationCodeType
-} from '@/modules/auth/entities/auth.entities'
+import { UserStatus } from '@/common/constants/auth.constant'
+import { DeviceType, RefreshTokenType } from '@/modules/auth/entities/auth.entities'
 import { Injectable } from '@nestjs/common'
 import { RoleType } from 'src/shared/models/shared-role.model'
 import { UserType } from 'src/shared/models/shared-user.model'
@@ -12,7 +8,7 @@ import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
 export class AuthRepository {
-  constructor(private readonly prismaService: PrismaService) { }
+  constructor(private readonly prismaService: PrismaService) {}
 
   async findUniqueUser(where: WhereUniqueUserType): Promise<UserType | null> {
     return this.prismaService.user.findFirst({
@@ -67,7 +63,9 @@ export class AuthRepository {
   ): Promise<Omit<UserType, 'password'>> {
     const { password, ...userData } = user
     const createdUser = await this.prismaService.user.create({
-      data: user,
+      data: {
+        ...user
+      },
       include: {
         role: true
       }
@@ -75,41 +73,6 @@ export class AuthRepository {
     // Loại bỏ password khỏi kết quả trả về
     const { password: _, ...result } = createdUser
     return result as Omit<UserType, 'password'>
-  }
-
-  async createVerificationCode(
-    payload: Pick<VerificationCodeType, 'email' | 'type' | 'code' | 'expiresAt'>
-  ): Promise<VerificationCodeType> {
-    return this.prismaService.verificationCode.upsert({
-      where: {
-        email_code_type: {
-          email: payload.email,
-          code: payload.code,
-          type: payload.type
-        }
-      },
-      create: payload,
-      update: {
-        code: payload.code,
-        expiresAt: payload.expiresAt
-      }
-    })
-  }
-
-  async findUniqueVerificationCode(
-    uniqueValue:
-      | { id: number }
-      | {
-        email_code_type: {
-          email: string
-          code: string
-          type: TypeOfVerificationCodeType
-        }
-      }
-  ): Promise<VerificationCodeType | null> {
-    return this.prismaService.verificationCode.findUnique({
-      where: uniqueValue
-    })
   }
 
   createRefreshToken(data: {
@@ -173,22 +136,6 @@ export class AuthRepository {
   deleteRefreshToken(where: { token: string }): Promise<RefreshTokenType> {
     return this.prismaService.refreshToken.delete({
       where
-    })
-  }
-
-  deleteVerificationCode(
-    uniqueValue:
-      | { id: number }
-      | {
-        email_code_type: {
-          email: string
-          code: string
-          type: TypeOfVerificationCodeType
-        }
-      }
-  ): Promise<VerificationCodeType> {
-    return this.prismaService.verificationCode.delete({
-      where: uniqueValue
     })
   }
 

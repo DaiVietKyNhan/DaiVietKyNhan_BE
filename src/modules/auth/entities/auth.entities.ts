@@ -38,6 +38,8 @@ export const LoginResSchema = z
         email: true,
         status: true,
         phoneNumber: true,
+        gender: true,
+        birthDate: true,
         roleId: true,
         avatar: true
       }).shape,
@@ -164,15 +166,18 @@ export const ChangePasswordBodySchema = z
   })
   .strict()
 
-export const UpdateMeBodySchema = z
-  .object({
-    name: z.string().trim().min(2).max(256),
-    phoneNumber: z.string().min(9).max(15),
-    avatar: z.string().url().optional()
-  })
+export const UpdateMeBodySchema = UserSchema.pick({
+  name: true,
+  phoneNumber: true,
+  gender: true,
+  birthDate: true,
+  avatar: true
+})
+  .partial()
   .strict()
 
 export const AccountResSchema = z.object({
+  statusCode: z.number(),
   data: UserSchema.omit({ password: true }),
   message: z.string()
 })
