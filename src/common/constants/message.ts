@@ -24,3 +24,13 @@ export const AUTH_MESSAGE = {
   CHANGE_PASSWORD_SUCCESS: 'Đổi mật khẩu thành công',
   GET_PROFILE_SUCCESS: 'Lấy thông tin cá nhân thành công'
 }
+export const ENTITY_MESSAGE = {
+  CREATE_SUCCESS: 'Tạo mới thành công',
+  UPDATE_SUCCESS: 'Cập nhật thành công',
+  DELETE_SUCCESS: 'Xoá thành công',
+  NOT_FOUND: 'Không tìm thấy bản ghi',
+  ALREADY_EXISTS: 'Bản ghi đã tồn tại',
+  GET_SUCCESS: 'Lấy thông tin thành công',
+  GET_LIST_SUCCESS: 'Lấy danh sách thành công',
+  ID_INVALID: 'ID không hợp lệ'
+}

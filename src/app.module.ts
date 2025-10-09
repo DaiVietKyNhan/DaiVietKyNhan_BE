@@ -14,6 +14,7 @@ import { KyNhanModule } from './modules/kynhan/kynhan.module'
 import { ChiTietKyNhanModule } from './modules/chitietkynhan/chitietkynhan.module'
 import { MediaModule } from './modules/media/media.module'
 import { SharedModule } from './shared/shared.module'
+import { AttendenceConfigModule } from './modules/attendence-config/attendence-config.module';
 
 @Module({
   imports: [
@@ -29,7 +30,8 @@ import { SharedModule } from './shared/shared.module'
     PermissionModule,
     KyNhanModule,
     ChiTietKyNhanModule,
-    MediaModule
+    MediaModule,
+    AttendenceConfigModule
   ],
 
   controllers: [],
