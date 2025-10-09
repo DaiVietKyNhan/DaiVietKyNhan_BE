@@ -16,6 +16,7 @@ import { MediaModule } from './modules/media/media.module'
 import { PermissionModule } from './modules/permission/permission.module'
 import { RoleModule } from './modules/role/role.module'
 import { SharedModule } from './shared/shared.module'
+import { SystemConfigModule } from './modules/system-config/system-config.module';
 
 @Module({
   imports: [
@@ -33,7 +34,8 @@ import { SharedModule } from './shared/shared.module'
     ChiTietKyNhanModule,
     MediaModule,
     AttendenceConfigModule,
-    AttendanceModule
+    AttendanceModule,
+    SystemConfigModule
   ],
 
   controllers: [],

@@ -2,7 +2,6 @@ import { ActiveUser } from '@/common/decorators/active-user.decorator'
 import { PaginationQueryDTO } from '@/shared/dtos/request.dto'
 import { PaginationResponseSchema } from '@/shared/models/response.model'
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
-import { ApiBearerAuth } from '@nestjs/swagger'
 import { ZodSerializerDto } from 'nestjs-zod'
 import {
   CreateAttendanceResDTO,
@@ -14,6 +13,7 @@ import {
   UpdateAttendanceResDTO
 } from 'src/modules/attendance/dto/attendance.zod-dto'
 
+import { ApiBearerAuth } from '@nestjs/swagger'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
 import { AttendanceService } from './attendance.service'
 
@@ -42,8 +42,6 @@ export class AttendanceController {
   @Get(':attendanceId')
   @ZodSerializerDto(GetAttendanceResDTO)
   findById(@Param() params: GetParamsAttendanceDTO) {
-    console.log('sai roi')
-
     return this.attendanceService.findById(params.attendanceId)
   }
 

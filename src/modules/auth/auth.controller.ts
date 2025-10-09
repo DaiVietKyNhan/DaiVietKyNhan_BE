@@ -193,6 +193,7 @@ export class AuthController {
   ) {
     try {
       const data = await this.googleService.googleCallback({ code, state })
+      console.log('Google callback data:', data)
       return res.redirect(
         `${envConfig.GOOGLE_CLIENT_REDIRECT_URI}?accessToken=${data.accessToken}&refreshToken=${data.refreshToken}`
       )
