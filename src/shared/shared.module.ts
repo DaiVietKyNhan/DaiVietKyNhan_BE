@@ -1,4 +1,5 @@
 import { BullQueueModule } from '@/3rdService/bull/bull-queue.module'
+import { BullQueue } from '@/common/constants/bull-action.constant'
 import { AccessTokenGuard } from '@/common/guards/access-token.guard'
 import { APIKeyGuard } from '@/common/guards/api-key.guard'
 import { AuthenticationGuard } from '@/common/guards/authentication.guard'
@@ -10,6 +11,7 @@ import { TokenService } from '@/shared/services/token.service'
 import { Global, Module } from '@nestjs/common'
 import { APP_GUARD } from '@nestjs/core'
 import { JwtModule } from '@nestjs/jwt'
+import { SharedRoleActivationProcessor } from './workers/role-action.processor'
 import { SharedUserDeletionProcessor } from './workers/user-deletion.processor'
 
 const sharedServices = [
@@ -25,7 +27,8 @@ const sharedServices = [
   imports: [
     JwtModule,
     BullQueueModule.forRoot(),
-    BullQueueModule.registerQueue('user-deletion')
+    BullQueueModule.registerQueue(BullQueue.USER_DELETION),
+    BullQueueModule.registerQueue(BullQueue.ROLE_ACTIVATION)
   ],
   controllers: [],
   providers: [
@@ -33,6 +36,7 @@ const sharedServices = [
     AccessTokenGuard,
     APIKeyGuard,
     SharedUserDeletionProcessor,
+    SharedRoleActivationProcessor,
     {
       provide: APP_GUARD,
       useClass: AuthenticationGuard

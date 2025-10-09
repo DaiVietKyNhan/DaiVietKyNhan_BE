@@ -50,4 +50,10 @@ export class SharedRoleRepository {
     this.clientRoleId = role.id
     return role.id
   }
+  async updateActiveById(id: number, isActive: boolean) {
+    return this.prismaService.role.update({
+      where: { id, deletedAt: null },
+      data: { isActive }
+    })
+  }
 }
