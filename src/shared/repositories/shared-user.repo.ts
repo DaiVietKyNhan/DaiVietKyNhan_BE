@@ -93,4 +93,43 @@ export class SharedUserRepository {
       }
     })
   }
+  addCoinByUserId({
+    userId,
+    amount
+  }: {
+    userId: number
+    amount: number
+  }): Promise<UserType | null> {
+    return this.prismaService.user.update({
+      where: {
+        id: userId,
+        deletedAt: null
+      },
+      data: {
+        coin: {
+          increment: amount
+        }
+      }
+    })
+  }
+
+  minusCoinByUserId({
+    userId,
+    amount
+  }: {
+    userId: number
+    amount: number
+  }): Promise<UserType | null> {
+    return this.prismaService.user.update({
+      where: {
+        id: userId,
+        deletedAt: null
+      },
+      data: {
+        coin: {
+          decrement: amount
+        }
+      }
+    })
+  }
 }

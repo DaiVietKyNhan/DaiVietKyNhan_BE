@@ -32,7 +32,8 @@ export const ENTITY_MESSAGE = {
   ALREADY_EXISTS: 'Bản ghi đã tồn tại',
   GET_SUCCESS: 'Lấy thông tin thành công',
   GET_LIST_SUCCESS: 'Lấy danh sách thành công',
-  ID_INVALID: 'ID không hợp lệ'
+  ID_INVALID: 'ID không hợp lệ',
+  INVALID_PARAMS: 'Tham số không hợp lệ'
 }
 
 export const ATTENDANCE_MESSAGE = {
@@ -43,4 +44,9 @@ export const ATTENDANCE_MESSAGE = {
 
 export const SYSTEM_CONFIG_MESSAGE = {
   HAS_ACTIVE: 'Đã có cấu hình hệ thống còn hiệu lực'
+}
+
+export const USER_MESSAGE = {
+  EMAIL_INVALID: 'Email không hợp lệ',
+  EMAIL_ALREADY_EXISTS: 'Email đã tồn tại'
 }
