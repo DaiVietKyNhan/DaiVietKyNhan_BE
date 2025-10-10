@@ -50,7 +50,7 @@ export class AuthService {
     private readonly bullQueueService: BullQueueService,
     @InjectQueue('user-deletion') private readonly deletionQueue: Queue,
     private readonly tokenService: TokenService
-  ) {}
+  ) { }
 
   async login(body: LoginBodyType & { userAgent: string; ip: string }) {
     // 1. Lấy thông tin user, kiểm tra user có tồn tại hay không, mật khẩu có đúng không
@@ -426,6 +426,17 @@ export class AuthService {
         updatedById: userId
       }
     )
+
+    try {
+      const nextJsAppUrl = process.env.NEXTJS_APP_URL || 'http://localhost:3000';
+      await fetch(`${nextJsAppUrl}/api/revalidate?tag=userProfile`, {
+        method: 'POST',
+      });
+      console.log('Sent revalidation request to Next.js');
+    } catch (err) {
+      console.error('Failed to send revalidation request:', err);
+    }
+
     return {
       statusCode: HttpStatus.OK,
       data: updatedUser,
