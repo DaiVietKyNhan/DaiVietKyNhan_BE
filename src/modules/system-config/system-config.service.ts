@@ -100,7 +100,7 @@ export class SystemConfigService {
         const time = vnDate.getTime()
         const delay = new Date(systemConfig.launchDate).getTime() - time
         if (delay > 0) {
-          await this.addBullJobSystemConfigActivation(delay)
+          await this.addBullJobSystemConfigActivation(delay, systemConfig.id)
         }
       }
 
@@ -151,7 +151,7 @@ export class SystemConfigService {
         //update update bull
         const delay = new Date(updatedSystemConfigg.launchDate).getTime() - time
         if (delay > 0) {
-          await this.addBullJobSystemConfigActivation(delay)
+          await this.addBullJobSystemConfigActivation(delay, updatedSystemConfigg.id)
         }
         return {
           statusCode: HttpStatus.OK,
@@ -231,7 +231,7 @@ export class SystemConfigService {
     }
   }
 
-  async addBullJobSystemConfigActivation(delay: number) {
+  async addBullJobSystemConfigActivation(delay: number, systemConfigId: number) {
     const roleCustomerId = await this.shareRoledRepo.getCustomerRoleId()
     if (!roleCustomerId) {
       throw NotFoundRecordException
@@ -249,7 +249,7 @@ export class SystemConfigService {
     await this.bullQueueService.addJob(
       this.systemConfigQueue,
       BullAction.UPDATE_STATUS_ROLE, // tên job
-      { roleId: roleCustomerId }, // ✅ dữ liệu mà processor cần
+      { roleId: roleCustomerId, systemConfigId }, // ✅ dữ liệu mà processor cần
       {
         delay, // ✅ delay thực sự
         attempts: 3,
