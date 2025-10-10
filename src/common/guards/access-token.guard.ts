@@ -14,6 +14,12 @@ import { PrismaService } from 'src/shared/services/prisma.service'
 import { TokenService } from 'src/shared/services/token.service'
 import { AccessTokenPayload } from 'src/shared/types/jwt.type'
 
+// Các endpoint được phép truy cập ngay cả khi role inactive
+const ROLE_INACTIVE_WHITELIST = [
+  { path: '/auth/me', method: 'GET' },
+  { path: '/auth/me', method: 'PUT' }
+]
+
 @Injectable()
 export class AccessTokenGuard implements CanActivate {
   constructor(
@@ -58,12 +64,19 @@ export class AccessTokenGuard implements CanActivate {
     const roleId: number = decodedAccessToken.roleId
     const path: string = request.route.path
     const method = request.method as keyof typeof HTTPMethod
+
+    // Kiểm tra xem endpoint có trong whitelist không
+    const isWhitelistedEndpoint = ROLE_INACTIVE_WHITELIST.some(
+      (endpoint) => endpoint.path === path && endpoint.method === method
+    )
+
     const role = await this.prismaService.role
       .findUniqueOrThrow({
         where: {
           id: roleId,
           deletedAt: null,
-          isActive: true
+          // Không kiểm tra isActive cho endpoint trong whitelist
+          ...(isWhitelistedEndpoint ? {} : { isActive: true })
         },
         include: {
           permissions: {
@@ -78,6 +91,13 @@ export class AccessTokenGuard implements CanActivate {
       .catch(() => {
         throw new ForbiddenException('Bạn không có quyền truy cập tác vụ này')
       })
+
+    // Đối với endpoint trong whitelist, chỉ cần role tồn tại, không cần permission
+    if (isWhitelistedEndpoint) {
+      request[REQUEST_ROLE_PERMISSIONS] = role
+      return
+    }
+
     const canAccess = role.permissions.length > 0
     if (!canAccess) {
       throw new ForbiddenException('Bạn không có quyền truy cập tác vụ này')
