@@ -7,7 +7,9 @@ import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared
 
 import { BullQueueService } from '@/3rdService/bull/bull-queue.service'
 import { BullAction, BullQueue } from '@/common/constants/bull-action.constant'
+import { RoleName } from '@/common/constants/role.constant'
 import { SharedRoleRepository } from '@/shared/repositories/shared-role.repo'
+import { SharedUserRepository } from '@/shared/repositories/shared-user.repo'
 import { InjectQueue } from '@nestjs/bull'
 import { Queue } from 'bull'
 import {
@@ -26,6 +28,7 @@ export class SystemConfigService {
     private systemConfigRepo: SystemConfigRepo,
     private readonly bullQueueService: BullQueueService,
     private readonly shareRoledRepo: SharedRoleRepository,
+    private readonly sharedUserRepo: SharedUserRepository,
     @InjectQueue(BullQueue.ROLE_ACTIVATION) private readonly systemConfigQueue: Queue
   ) {}
 
@@ -51,8 +54,19 @@ export class SystemConfigService {
     }
   }
 
-  async findByUser(userId: number, date: Date = new Date()) {
-    return {}
+  async findByActiveWithAmountUser(isActive: boolean) {
+    const [systemConfig, amountUser] = await Promise.all([
+      this.systemConfigRepo.findByActive(isActive),
+      await this.sharedUserRepo.countByRoleName(RoleName.Customer)
+    ])
+    return {
+      statusCode: HttpStatus.OK,
+      data: {
+        systemConfig: systemConfig,
+        amountUser: systemConfig !== null ? amountUser : 0
+      },
+      message: ENTITY_MESSAGE.GET_SUCCESS
+    }
   }
 
   async create({
@@ -64,24 +78,30 @@ export class SystemConfigService {
   }) {
     try {
       const date = new Date()
-      const vnString = date.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' })
+      const vnString = date.toLocaleString('en-US', {
+        timeZone: 'Asia/Ho_Chi_Minh'
+      })
       const vnDate = new Date(vnString)
       vnDate.setHours(vnDate.getHours() + 7)
+
       // check xem truoc do co cai nao toi ngay hien tai con hieu luc khong
       const existingConfig = await this.systemConfigRepo.findActiveConfig(vnDate)
-      if (existingConfig) {
+
+      if (data.isActive && existingConfig) {
         throw SystemConfiggHasActiveExistsException
       }
       const systemConfig = await this.systemConfigRepo.create({
         createdById,
         data: data
       })
-      // add bull
+      if (systemConfig.isActive) {
+        // add bull
 
-      const time = vnDate.getTime()
-      const delay = new Date(systemConfig.launchDate).getTime() - time
-      if (delay > 0) {
-        await this.addBullJobSystemConfigActivation(delay)
+        const time = vnDate.getTime()
+        const delay = new Date(systemConfig.launchDate).getTime() - time
+        if (delay > 0) {
+          await this.addBullJobSystemConfigActivation(delay)
+        }
       }
 
       return {
@@ -107,23 +127,48 @@ export class SystemConfigService {
     updatedById: number
   }) {
     try {
-      const updatedSystemConfigg = await this.systemConfigRepo.update({
-        id,
-        updatedById,
-        data
-      })
-
       // add bull
-
       const date = new Date()
       const vnString = date.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' })
       const vnDate = new Date(vnString)
       vnDate.setHours(vnDate.getHours() + 7)
       const time = vnDate.getTime()
-      const delay = new Date(updatedSystemConfigg.launchDate).getTime() - time
-      if (delay > 0) {
-        await this.addBullJobSystemConfigActivation(delay)
+
+      //lay ra cai dang hieu luc
+      const existingConfig = await this.systemConfigRepo.findActiveConfig(vnDate)
+      //check active === true
+      if (data.isActive === true) {
+        // nếu có cái đang hiệu lực, và không phải là chính nó -> thì không cho update
+        if (existingConfig && id !== existingConfig.id) {
+          throw SystemConfiggHasActiveExistsException
+        }
+        //neu khong thi update dong thoi update bull,
+        const updatedSystemConfigg = await this.systemConfigRepo.update({
+          id,
+          updatedById,
+          data
+        })
+        //update update bull
+        const delay = new Date(updatedSystemConfigg.launchDate).getTime() - time
+        if (delay > 0) {
+          await this.addBullJobSystemConfigActivation(delay)
+        }
+        return {
+          statusCode: HttpStatus.OK,
+          data: updatedSystemConfigg,
+          message: ENTITY_MESSAGE.UPDATE_SUCCESS
+        }
       }
+      // neu khong phai active, thi cho update thoai mai, del bull
+      // xem cai hieu luc co phai la no khong, neu phai thi xoa bull
+      if (existingConfig && existingConfig.id === id) {
+        await this.removeBullJobSystemConfigActivation()
+      }
+      const updatedSystemConfigg = await this.systemConfigRepo.update({
+        id,
+        updatedById,
+        data
+      })
 
       return {
         statusCode: HttpStatus.OK,
@@ -213,5 +258,30 @@ export class SystemConfigService {
         removeOnFail: true
       }
     )
+  }
+
+  async removeBullJobSystemConfigActivation() {
+    // 🧩 1. Lấy roleCustomerId (hoặc data liên quan tới job)
+    const roleCustomerId = await this.shareRoledRepo.getCustomerRoleId()
+    if (!roleCustomerId) {
+      throw NotFoundRecordException
+    }
+    // 🧩 2. Tìm job trong queue có data trùng khớp để xóa
+    const jobs = await this.systemConfigQueue.getJobs(['delayed', 'waiting', 'active'])
+    const jobToRemove = jobs.find((job) => {
+      if (!job || !job.data) return false
+      return job.data.roleId === roleCustomerId
+    })
+
+    if (jobToRemove) {
+      const roleCustomerId = await this.shareRoledRepo.getCustomerRoleId()
+      if (!roleCustomerId) {
+        throw NotFoundRecordException
+      }
+      const [,] = await Promise.all([
+        this.shareRoledRepo.updateActiveById(roleCustomerId, true),
+        jobToRemove.remove()
+      ])
+    }
   }
 }

@@ -2,9 +2,10 @@ import { createZodDto } from 'nestjs-zod'
 import {
   CreateSystemConfigBodySchema,
   CreateSystemConfigResSchema,
-  GetParamsByDateSystemConfigSchema,
+  GetParamsByActiveSystemConfigSchema,
   GetParamsSystemConfigSchema,
-  GetSystemConfigResSchema
+  GetSystemConfigResSchema,
+  GetSystemConfigWithAmountUserResSchema
 } from '../entities/system-config.entity'
 
 export class CreateSystemConfigDTO extends createZodDto(CreateSystemConfigBodySchema) {}
@@ -12,8 +13,12 @@ export class CreateSystemConfigResDTO extends createZodDto(CreateSystemConfigRes
 export class UpdateSystemConfigDTO extends createZodDto(CreateSystemConfigBodySchema) {}
 export class UpdateSystemConfigResDTO extends createZodDto(CreateSystemConfigResSchema) {}
 export class GetParamsSystemConfigDTO extends createZodDto(GetParamsSystemConfigSchema) {}
-export class GetParamsByDateSystemConfigDTO extends createZodDto(
-  GetParamsByDateSystemConfigSchema
+export class GetParamsByActiveSystemConfigDTO extends createZodDto(
+  GetParamsByActiveSystemConfigSchema
 ) {}
 
 export class GetSystemConfigDTO extends createZodDto(GetSystemConfigResSchema) {}
+
+export class GetSystemConfigWithAmountUserDTO extends createZodDto(
+  GetSystemConfigWithAmountUserResSchema
+) {}
