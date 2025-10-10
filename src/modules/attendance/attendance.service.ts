@@ -110,6 +110,13 @@ export class AttendanceService {
         createdById,
         data: data
       })
+      // toi day -> diem danh thanh cong-> tang coin cho user
+      if (attendance) {
+        await this.shareUserRepo.addCoinByUserId({
+          userId: createdById,
+          amount: attendance.coin + attendance.bonusCoin
+        })
+      }
       return {
         statusCode: HttpStatus.CREATED,
         data: attendance,

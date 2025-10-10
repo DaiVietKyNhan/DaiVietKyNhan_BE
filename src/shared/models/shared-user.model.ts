@@ -13,6 +13,7 @@ export const UserSchema = z.object({
   gender: z.enum([Gender.MALE, Gender.FEMALE, Gender.OTHER]).nullable(),
   birthDate: z.coerce.date().nullable(),
   avatar: z.string().nullable(),
+  coin: z.number().min(0).default(0),
   status: z.enum([UserStatus.ACTIVE, UserStatus.INACTIVE]),
   roleId: z.number().positive(),
   createdById: z.number().nullable(),

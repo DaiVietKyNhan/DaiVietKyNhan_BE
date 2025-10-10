@@ -39,6 +39,7 @@ export const LoginResSchema = z
         status: true,
         phoneNumber: true,
         gender: true,
+        coin: true,
         birthDate: true,
         roleId: true,
         avatar: true

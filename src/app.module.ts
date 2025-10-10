@@ -17,6 +17,7 @@ import { PermissionModule } from './modules/permission/permission.module'
 import { RoleModule } from './modules/role/role.module'
 import { SharedModule } from './shared/shared.module'
 import { SystemConfigModule } from './modules/system-config/system-config.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
@@ -35,7 +36,8 @@ import { SystemConfigModule } from './modules/system-config/system-config.module
     MediaModule,
     AttendenceConfigModule,
     AttendanceModule,
-    SystemConfigModule
+    SystemConfigModule,
+    UserModule
   ],
 
   controllers: [],
