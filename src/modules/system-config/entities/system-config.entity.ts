@@ -9,6 +9,7 @@ patchNestJsSwagger()
 export const SystemConfigSchema = z.object({
   id: z.number(),
   launchDate: z.coerce.date(),
+  isActive: z.boolean().default(true),
   createdById: z.number().nullable(),
   updatedById: z.number().nullable(),
   deletedById: z.number().nullable(),
@@ -18,8 +19,13 @@ export const SystemConfigSchema = z.object({
 })
 
 export const CreateSystemConfigBodySchema = SystemConfigSchema.pick({
-  launchDate: true
-}).strict()
+  launchDate: true,
+  isActive: true
+})
+  .extend({
+    isActive: z.boolean().optional().default(true)
+  })
+  .strict()
 
 export const CreateSystemConfigResSchema = z.object({
   statusCode: z.number(),
@@ -27,18 +33,27 @@ export const CreateSystemConfigResSchema = z.object({
   data: SystemConfigSchema
 })
 
-export const UpdateSystemConfigBodySchema = CreateSystemConfigBodySchema
+export const UpdateSystemConfigBodySchema =
+  CreateSystemConfigBodySchema.partial().strict()
+
 export const UpdateSystemConfigResSchema = CreateSystemConfigResSchema
 
 export const GetParamsSystemConfigSchema = z.object({
   systemConfigId: checkIdSchema(ENTITY_MESSAGE.ID_INVALID)
 })
 
-export const GetParamsByDateSystemConfigSchema = z.object({
-  date: checkIdSchema(ENTITY_MESSAGE.ID_INVALID)
+export const GetParamsByActiveSystemConfigSchema = z.object({
+  isActive: z.coerce.boolean().default(true)
 })
 
 export const GetSystemConfigResSchema = CreateSystemConfigResSchema
+
+export const GetSystemConfigWithAmountUserResSchema = CreateSystemConfigResSchema.extend({
+  data: z.object({
+    systemConfig: SystemConfigSchema.nullable(),
+    amountUser: z.number().int().nonnegative()
+  })
+})
 
 //type
 
@@ -46,8 +61,8 @@ export type SystemConfigType = z.infer<typeof SystemConfigSchema>
 export type CreateSystemConfigBodyType = z.infer<typeof CreateSystemConfigBodySchema>
 export type UpdateSystemConfigBodyType = z.infer<typeof UpdateSystemConfigBodySchema>
 export type GetParamsSystemConfigType = z.infer<typeof GetParamsSystemConfigSchema>
-export type GetParamsDateSystemConfigType = z.infer<
-  typeof GetParamsByDateSystemConfigSchema
+export type GetParamsActiveSystemConfigType = z.infer<
+  typeof GetParamsByActiveSystemConfigSchema
 >
 
 // field

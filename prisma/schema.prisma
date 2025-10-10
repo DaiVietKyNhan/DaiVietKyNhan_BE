@@ -190,6 +190,7 @@ model ChiTietKyNhan {
 model SystemConfig {
   id          Int      @id @default(autoincrement())
   launchDate  DateTime // Ngày trang web chính thức mở
+  isActive    Boolean  @default(true)
   createdById Int?
   createdBy   User?    @relation("SystemConfigCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
   updatedById Int?

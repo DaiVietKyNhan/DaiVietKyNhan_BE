@@ -7,11 +7,14 @@ import { ZodSerializerDto } from 'nestjs-zod'
 import { ApiBearerAuth } from '@nestjs/swagger'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
 
+import { IsPublic } from '@/common/decorators/auth.decorator'
 import {
   CreateSystemConfigDTO,
   CreateSystemConfigResDTO,
+  GetParamsByActiveSystemConfigDTO,
   GetParamsSystemConfigDTO,
   GetSystemConfigDTO,
+  GetSystemConfigWithAmountUserDTO,
   UpdateSystemConfigDTO,
   UpdateSystemConfigResDTO
 } from './dto/system-config.zod-dto'
@@ -28,17 +31,13 @@ export class SystemConfigController {
     return this.systemConfigService.list(query)
   }
 
-  // @Get(':date')
-  // @ZodSerializerDto(GetSystemConfigDTO)
-  // findByUser(
-  //   @Param() params: GetParamsByDateSystemConfigDTO,
-  //   @ActiveUser('userId') userId: number
-  // ) {
-  //   return this.systemConfigService.findByUser(
-  //     userId,
-  //     params.date ? new Date(params.date) : new Date()
-  //   )
-  // }
+  @Get('active/:isActive')
+  @ZodSerializerDto(GetSystemConfigWithAmountUserDTO)
+  @IsPublic()
+  findByActiveWithAmountUser(@Param() params: GetParamsByActiveSystemConfigDTO) {
+    return this.systemConfigService.findByActiveWithAmountUser(params.isActive)
+  }
+
   @Get(':systemConfigId')
   @ZodSerializerDto(GetSystemConfigDTO)
   findById(@Param() params: GetParamsSystemConfigDTO) {

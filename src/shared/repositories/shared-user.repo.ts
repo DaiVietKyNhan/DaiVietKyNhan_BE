@@ -82,4 +82,15 @@ export class SharedUserRepository {
       }
     })
   }
+
+  countByRoleName(roleName: string): Promise<number> {
+    return this.prismaService.user.count({
+      where: {
+        deletedAt: null,
+        role: {
+          name: roleName
+        }
+      }
+    })
+  }
 }

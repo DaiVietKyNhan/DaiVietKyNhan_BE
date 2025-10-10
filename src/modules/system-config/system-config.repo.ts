@@ -25,7 +25,8 @@ export class SystemConfigRepo {
       data: {
         ...data,
         createdById,
-        deletedAt: null
+        deletedAt: null,
+        isActive: data.isActive ?? true
       }
     })
   }
@@ -122,7 +123,17 @@ export class SystemConfigRepo {
     return this.prismaService.systemConfig.findFirst({
       where: {
         launchDate: { gt: date },
-        deletedAt: null
+        deletedAt: null,
+        isActive: true
+      },
+      orderBy: { launchDate: 'desc' }
+    })
+  }
+  findByActive(isActive: boolean): Promise<SystemConfigType | null> {
+    return this.prismaService.systemConfig.findFirst({
+      where: {
+        deletedAt: null,
+        isActive: isActive
       },
       orderBy: { launchDate: 'desc' }
     })
