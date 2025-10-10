@@ -2,6 +2,7 @@ import { BullQueueService } from '@/3rdService/bull/bull-queue.service'
 import { MailService } from '@/3rdService/mail/mail.service'
 import { UserStatus } from '@/common/constants/auth.constant'
 import { AUTH_MESSAGE } from '@/common/constants/message'
+import envConfig from '@/config/env.config'
 import { AuthRepository } from '@/modules/auth/auth.repo'
 import {
   EmailAlreadyExistsException,
@@ -50,7 +51,7 @@ export class AuthService {
     private readonly bullQueueService: BullQueueService,
     @InjectQueue('user-deletion') private readonly deletionQueue: Queue,
     private readonly tokenService: TokenService
-  ) { }
+  ) {}
 
   async login(body: LoginBodyType & { userAgent: string; ip: string }) {
     // 1. Lấy thông tin user, kiểm tra user có tồn tại hay không, mật khẩu có đúng không
@@ -427,14 +428,20 @@ export class AuthService {
       }
     )
 
-    try {
-      const nextJsAppUrl = process.env.NEXTJS_APP_URL || 'http://localhost:3000';
-      await fetch(`${nextJsAppUrl}/api/revalidate?tag=userProfile`, {
-        method: 'POST',
-      });
-      console.log('Sent revalidation request to Next.js');
-    } catch (err) {
-      console.error('Failed to send revalidation request:', err);
+    // Gửi revalidation request đến Next.js (nếu có cấu hình)
+    if (envConfig.NEXTJS_APP_URL) {
+      try {
+        await fetch(`${envConfig.NEXTJS_APP_URL}/api/revalidate?tag=userProfile`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        console.log('Sent revalidation request to Next.js')
+      } catch (err) {
+        // Log error nhưng không throw để không ảnh hưởng đến response chính
+        console.warn('Failed to send revalidation request to Next.js:', err.message)
+      }
     }
 
     return {

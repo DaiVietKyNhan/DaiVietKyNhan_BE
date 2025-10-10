@@ -17,6 +17,7 @@ export class SharedRoleActivationProcessor {
   ): Promise<void> {
     const { roleId } = job.data
     console.log(`Kích hoạt vai trò với ID: ${roleId}`)
+    console.log(`Kích hoạt vai trò với ID: ${job.data.systemConfigId}`)
     try {
       await this.prisma.role.update({
         where: { id: roleId },
