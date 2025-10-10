@@ -41,8 +41,6 @@ export class SystemConfigController {
   @Get(':systemConfigId')
   @ZodSerializerDto(GetSystemConfigDTO)
   findById(@Param() params: GetParamsSystemConfigDTO) {
-    console.log('don e')
-
     return this.systemConfigService.findById(params.systemConfigId)
   }
 
