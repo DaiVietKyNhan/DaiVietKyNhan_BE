@@ -3,7 +3,8 @@ import {
   CreateSystemConfigBodySchema,
   CreateSystemConfigResSchema,
   GetParamsByDateSystemConfigSchema,
-  GetParamsSystemConfigSchema
+  GetParamsSystemConfigSchema,
+  GetSystemConfigResSchema
 } from '../entities/system-config.entity'
 
 export class CreateSystemConfigDTO extends createZodDto(CreateSystemConfigBodySchema) {}
@@ -15,4 +16,4 @@ export class GetParamsByDateSystemConfigDTO extends createZodDto(
   GetParamsByDateSystemConfigSchema
 ) {}
 
-export class GetSystemConfigDTO extends createZodDto(CreateSystemConfigBodySchema) {}
+export class GetSystemConfigDTO extends createZodDto(GetSystemConfigResSchema) {}

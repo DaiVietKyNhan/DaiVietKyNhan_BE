@@ -10,7 +10,6 @@ import { MessageResDTO } from 'src/shared/dtos/response.dto'
 import {
   CreateSystemConfigDTO,
   CreateSystemConfigResDTO,
-  GetParamsByDateSystemConfigDTO,
   GetParamsSystemConfigDTO,
   GetSystemConfigDTO,
   UpdateSystemConfigDTO,
@@ -29,20 +28,22 @@ export class SystemConfigController {
     return this.systemConfigService.list(query)
   }
 
-  @Get(':date')
-  @ZodSerializerDto(GetSystemConfigDTO)
-  findByUser(
-    @Param() params: GetParamsByDateSystemConfigDTO,
-    @ActiveUser('userId') userId: number
-  ) {
-    return this.systemConfigService.findByUser(
-      userId,
-      params.date ? new Date(params.date) : new Date()
-    )
-  }
+  // @Get(':date')
+  // @ZodSerializerDto(GetSystemConfigDTO)
+  // findByUser(
+  //   @Param() params: GetParamsByDateSystemConfigDTO,
+  //   @ActiveUser('userId') userId: number
+  // ) {
+  //   return this.systemConfigService.findByUser(
+  //     userId,
+  //     params.date ? new Date(params.date) : new Date()
+  //   )
+  // }
   @Get(':systemConfigId')
   @ZodSerializerDto(GetSystemConfigDTO)
   findById(@Param() params: GetParamsSystemConfigDTO) {
+    console.log('don e')
+
     return this.systemConfigService.findById(params.systemConfigId)
   }
 
