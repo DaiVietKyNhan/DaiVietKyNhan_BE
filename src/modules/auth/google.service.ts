@@ -102,7 +102,13 @@ export class GoogleService {
         roleId: user.roleId,
         roleName: user.role.name
       })
-      return authTokens
+      return {
+        ...authTokens,
+        user: {
+          email: user.email,
+          name: user.name,
+        }
+      }
     } catch (error) {
       console.error('Error in googleCallback', error)
       throw error
