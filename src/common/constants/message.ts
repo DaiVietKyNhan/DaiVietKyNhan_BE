@@ -40,3 +40,7 @@ export const ATTENDANCE_MESSAGE = {
   CHECKIN_ALREADY: 'Bạn đã điểm danh hôm nay rồi',
   CHECKIN_FAILD: 'Điểm danh thất bại'
 }
+
+export const SYSTEM_CONFIG_MESSAGE = {
+  HAS_ACTIVE: 'Đã có cấu hình hệ thống còn hiệu lực'
+}

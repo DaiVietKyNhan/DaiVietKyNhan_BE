@@ -1,4 +1,4 @@
-import { ATTENDANCE_MESSAGE, ENTITY_MESSAGE } from '@/common/constants/message'
+import { ENTITY_MESSAGE } from '@/common/constants/message'
 import { PaginationQueryType } from '@/shared/models/request.model'
 import { HttpStatus, Injectable } from '@nestjs/common'
 
@@ -10,7 +10,10 @@ import { BullAction, BullQueue } from '@/common/constants/bull-action.constant'
 import { SharedRoleRepository } from '@/shared/repositories/shared-role.repo'
 import { InjectQueue } from '@nestjs/bull'
 import { Queue } from 'bull'
-import { SystemConfiggAlreadyExistsException } from './dto/system-config.error'
+import {
+  SystemConfiggAlreadyExistsException,
+  SystemConfiggHasActiveExistsException
+} from './dto/system-config.error'
 import {
   CreateSystemConfigBodyType,
   UpdateSystemConfigBodyType
@@ -40,6 +43,7 @@ export class SystemConfigService {
     if (!systemConfig) {
       throw NotFoundRecordException
     }
+
     return {
       statusCode: HttpStatus.OK,
       data: systemConfig,
@@ -59,14 +63,23 @@ export class SystemConfigService {
     data: CreateSystemConfigBodyType
   }) {
     try {
+      const date = new Date()
+      const vnString = date.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' })
+      const vnDate = new Date(vnString)
+      vnDate.setHours(vnDate.getHours() + 7)
+      // check xem truoc do co cai nao toi ngay hien tai con hieu luc khong
+      const existingConfig = await this.systemConfigRepo.findActiveConfig(vnDate)
+      if (existingConfig) {
+        throw SystemConfiggHasActiveExistsException
+      }
       const systemConfig = await this.systemConfigRepo.create({
         createdById,
         data: data
       })
       // add bull
 
-      const delay =
-        new Date(systemConfig.launchDate).getTime() - systemConfig.createdAt.getTime()
+      const time = vnDate.getTime()
+      const delay = new Date(systemConfig.launchDate).getTime() - time
       if (delay > 0) {
         await this.addBullJobSystemConfigActivation(delay)
       }
@@ -74,7 +87,7 @@ export class SystemConfigService {
       return {
         statusCode: HttpStatus.CREATED,
         data: systemConfig,
-        message: ATTENDANCE_MESSAGE.CHECKIN_SUCCESS
+        message: ENTITY_MESSAGE.CREATE_SUCCESS
       }
     } catch (error) {
       if (isUniqueConstraintPrismaError(error)) {
@@ -102,9 +115,12 @@ export class SystemConfigService {
 
       // add bull
 
-      const delay =
-        new Date(updatedSystemConfigg.launchDate).getTime() -
-        updatedSystemConfigg.createdAt.getTime()
+      const date = new Date()
+      const vnString = date.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' })
+      const vnDate = new Date(vnString)
+      vnDate.setHours(vnDate.getHours() + 7)
+      const time = vnDate.getTime()
+      const delay = new Date(updatedSystemConfigg.launchDate).getTime() - time
       if (delay > 0) {
         await this.addBullJobSystemConfigActivation(delay)
       }
@@ -127,10 +143,36 @@ export class SystemConfigService {
 
   async delete({ id, deletedById }: { id: number; deletedById: number }) {
     try {
+      // 🧩 1. Lấy roleCustomerId (hoặc data liên quan tới job)
+      const roleCustomerId = await this.shareRoledRepo.getCustomerRoleId()
+      if (!roleCustomerId) {
+        throw NotFoundRecordException
+      }
+
+      // 🧩 2. Tìm job trong queue có data trùng khớp để xóa
+      const jobs = await this.systemConfigQueue.getJobs(['delayed', 'waiting', 'active'])
+      const jobToRemove = jobs.find((job) => {
+        if (!job || !job.data) return false
+        return job.data.roleId === roleCustomerId
+      })
+
+      if (jobToRemove) {
+        const roleCustomerId = await this.shareRoledRepo.getCustomerRoleId()
+        if (!roleCustomerId) {
+          throw NotFoundRecordException
+        }
+        const [,] = await Promise.all([
+          this.shareRoledRepo.updateActiveById(roleCustomerId, true),
+          jobToRemove.remove()
+        ])
+      }
+
+      // 🧩 3. Xóa system config trong DB
       await this.systemConfigRepo.delete({
         id,
         deletedById
       })
+
       return {
         statusCode: HttpStatus.OK,
         data: null,
@@ -150,7 +192,10 @@ export class SystemConfigService {
       throw NotFoundRecordException
     }
     const jobs = await this.systemConfigQueue.getJobs(['delayed'])
-    const jobToUpdate = jobs.find((job) => job.data.roleId === roleCustomerId)
+    const jobToUpdate = jobs.find((job) => {
+      if (!job || !job.data) return false
+      return job.data.roleId === roleCustomerId
+    })
     if (jobToUpdate) {
       await jobToUpdate.remove() // xóa job cũ
     }

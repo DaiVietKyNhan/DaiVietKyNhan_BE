@@ -117,4 +117,14 @@ export class SystemConfigRepo {
       }
     })
   }
+
+  findActiveConfig(date: Date): Promise<SystemConfigType | null> {
+    return this.prismaService.systemConfig.findFirst({
+      where: {
+        launchDate: { gt: date },
+        deletedAt: null
+      },
+      orderBy: { launchDate: 'desc' }
+    })
+  }
 }
