@@ -30,16 +30,17 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 ENV PORT=8080
 ENV NODE_ENV=Production
-RUN pnpm install --frozen-lockfile --prod
-# Copy Prisma schema and generated client
+# Copy Prisma schema first (needed before installing deps)
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+# Install ALL dependencies (including devDependencies for prisma)
+RUN pnpm install --frozen-lockfile
+# Generate Prisma client with correct version
+RUN pnpm exec prisma generate
+# Remove devDependencies to reduce image size
+RUN pnpm prune --prod
+# Copy built application
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/tsconfig.json ./
 EXPOSE ${PORT}
 
-# Generate Prisma client in production (for safety)
-RUN pnpm prisma:generate
-
-CMD ["pnpm", "run", "start"]
+CMD ["node", "dist/main.js"]

@@ -3,13 +3,20 @@ import fs from 'fs'
 import path from 'path'
 import { z } from 'zod'
 
-config({
-  path: '.env'
-})
+// Try to load .env.production first, then .env, or skip if env vars already loaded (Docker)
+const envFile = fs.existsSync(path.resolve('.env.production'))
+  ? '.env.production'
+  : fs.existsSync(path.resolve('.env'))
+    ? '.env'
+    : null
 
-if (!fs.existsSync(path.resolve('.env'))) {
-  console.error('Not found .env file')
-  process.exit(1)
+if (envFile) {
+  config({
+    path: envFile
+  })
+} else {
+  // In Docker, environment variables are already loaded from docker-compose env_file
+  console.log('Loading environment variables from system (Docker mode)')
 }
 
 const configSchema = z.object({
