@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # NestJS Backend
+  backend:
+    container_name: daivietkynhan-backend
+    build:
+      context: .
+      dockerfile: dockerfile
+    env_file:
+      - .env.production
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - daivietkynhan-network
+    restart: unless-stopped
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: daivietkynhan-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234554321
+      POSTGRES_DB: daivietkynhan
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - daivietkynhan-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: daivietkynhan-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - daivietkynhan-network
+
+networks:
+  daivietkynhan-network:
+    driver: bridge
+
+volumes:
+  pgdata:
+  redisdata:
