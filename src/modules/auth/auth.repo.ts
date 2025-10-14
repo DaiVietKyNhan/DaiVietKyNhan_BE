@@ -1,4 +1,4 @@
-import { UserStatus } from '@/common/constants/auth.constant'
+import { UserStatus, UserStatusType } from '@/common/constants/auth.constant'
 import { DeviceType, RefreshTokenType } from '@/modules/auth/entities/auth.entities'
 import { Injectable } from '@nestjs/common'
 import { RoleType } from 'src/shared/models/shared-role.model'
@@ -38,7 +38,9 @@ export class AuthRepository {
     user: Pick<
       UserType,
       'email' | 'name' | 'password' | 'phoneNumber' | 'avatar' | 'roleId'
-    >
+    > & {
+      status?: UserStatusType
+    }
   ): Promise<UserType & { role: RoleType }> {
     return this.prismaService.user.create({
       data: {
@@ -47,7 +49,8 @@ export class AuthRepository {
         password: user.password,
         phoneNumber: user.phoneNumber,
         avatar: user.avatar,
-        roleId: user.roleId
+        roleId: user.roleId,
+        status: user.status || UserStatus.INACTIVE
       },
       include: {
         role: true

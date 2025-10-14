@@ -95,6 +95,7 @@ export class AuthService {
       ...userWithoutPassword,
       ...tokens
     }
+
     return {
       data,
       message: 'Đăng nhập thành công'
@@ -112,7 +113,7 @@ export class AuthService {
           password: hashedPassword,
           roleId,
           name: body.name,
-          phoneNumber: body.phoneNumber
+          phoneNumber: body.phoneNumber ?? ''
         })
       ])
       //Todo: sửa lại thành 30 ngày sau khi hoàn thiện chức năng

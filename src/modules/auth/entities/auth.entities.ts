@@ -29,24 +29,23 @@ export const LoginBodySchema = UserSchema.pick({
 export const LoginResSchema = z
   .object({
     statusCode: z.number(),
-    data: z.object({
+    data: UserSchema.pick({
+      id: true,
+      name: true,
+      email: true,
+      status: true,
+      phoneNumber: true,
+      gender: true,
+      coin: true,
+      birthDate: true,
+      roleId: true,
+      avatar: true
+    }).extend({
+      phoneNumber: z.string().nullable(),
       accessToken: z.string(),
       refreshToken: z.string(),
-      ...UserSchema.pick({
-        id: true,
-        name: true,
-        email: true,
-        status: true,
-        phoneNumber: true,
-        gender: true,
-        coin: true,
-        birthDate: true,
-        roleId: true,
-        avatar: true
-      }).shape,
       role: RoleSchema
     }),
-
     message: z.string()
   })
   .strict()

@@ -1,3 +1,4 @@
+import { UserStatus } from '@/common/constants/auth.constant'
 import envConfig from '@/config/env.config'
 import { AuthRepository } from '@/modules/auth/auth.repo'
 import { SharedRoleRepository } from '@/shared/repositories/shared-role.repo'
@@ -83,7 +84,8 @@ export class GoogleService {
           password: hashedPassword,
           phoneNumber: '', // Set to null instead of empty string
           roleId: roleId,
-          avatar: data.picture ?? null
+          avatar: data.picture ?? null,
+          status: UserStatus.ACTIVE
         })
         user = {
           ...createdUser,
