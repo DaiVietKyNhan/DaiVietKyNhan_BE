@@ -2,6 +2,7 @@ import { UserStatus } from '@/common/constants/auth.constant'
 import envConfig from '@/config/env.config'
 import { AuthRepository } from '@/modules/auth/auth.repo'
 import { SharedRoleRepository } from '@/shared/repositories/shared-role.repo'
+import { NotificationService } from '@/websockets/notification.service'
 import { Injectable } from '@nestjs/common'
 import { google } from 'googleapis'
 import { AuthService } from 'src/modules/auth/auth.service'
@@ -16,7 +17,8 @@ export class GoogleService {
     private readonly hashingService: HashingService,
     private readonly authService: AuthService,
     private readonly authRepository: AuthRepository,
-    private readonly sharedRoleRepo: SharedRoleRepository
+    private readonly sharedRoleRepo: SharedRoleRepository,
+    private readonly notificationService: NotificationService
   ) {
     this.oauth2Client = new google.auth.OAuth2(
       envConfig.GOOGLE_CLIENT_ID,
@@ -91,6 +93,9 @@ export class GoogleService {
           ...createdUser,
           password: hashedPassword
         }
+
+        // 🔔 Gọi WebSocket để thông báo có user mới đăng nhập với Google
+        await this.notificationService.notifyNewUserRegistered()
       }
       // 4. Tạo mới device
       const device = await this.authRepository.createDevice({
@@ -104,7 +109,14 @@ export class GoogleService {
         roleId: user.roleId,
         roleName: user.role.name
       })
-      return authTokens
+
+      return {
+        user: {
+          email: user.email,
+          name: user.name
+        },
+        ...authTokens
+      }
     } catch (error) {
       console.error('Error in googleCallback', error)
       throw error
