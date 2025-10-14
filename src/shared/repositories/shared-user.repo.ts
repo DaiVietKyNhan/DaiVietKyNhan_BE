@@ -87,6 +87,7 @@ export class SharedUserRepository {
     return this.prismaService.user.count({
       where: {
         deletedAt: null,
+        status: 'ACTIVE',
         role: {
           name: roleName
         }

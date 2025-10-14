@@ -149,6 +149,7 @@ export class AuthController {
   @IsPublic()
   async verifiedEmail(@Param('email') email: string, @Res() res: Response) {
     const data = await this.authService.verifiedEmail(email)
+
     return res.redirect(`${envConfig.FE_URL}/auth/login?message=${data.message}`)
 
     //TODO-Kumo: để data sau khi có front-end
@@ -193,9 +194,9 @@ export class AuthController {
   ) {
     try {
       const data = await this.googleService.googleCallback({ code, state })
-      console.log('Google callback data:', data)
+
       return res.redirect(
-        `${envConfig.GOOGLE_CLIENT_REDIRECT_URI}?accessToken=${data.accessToken}&refreshToken=${data.refreshToken}`
+        `${envConfig.GOOGLE_CLIENT_REDIRECT_URI}?accessToken=${data.accessToken}&refreshToken=${data.refreshToken}&user=${JSON.stringify(data.user)}`
       )
     } catch (error) {
       const message =

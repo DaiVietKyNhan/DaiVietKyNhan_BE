@@ -34,6 +34,7 @@ import { SharedUserRepository } from '@/shared/repositories/shared-user.repo'
 import { HashingService } from '@/shared/services/hashing.service'
 import { TokenService } from '@/shared/services/token.service'
 import { AccessTokenPayloadCreate } from '@/shared/types/jwt.type'
+import { NotificationService } from '@/websockets/notification.service'
 import { InjectQueue } from '@nestjs/bull'
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common'
 import { Queue } from 'bull'
@@ -47,8 +48,8 @@ export class AuthService {
     private readonly authRepository: AuthRepository,
     private readonly sharedUserRepository: SharedUserRepository,
     private readonly mailService: MailService,
-
     private readonly bullQueueService: BullQueueService,
+    private readonly notificationService: NotificationService,
     @InjectQueue('user-deletion') private readonly deletionQueue: Queue,
     private readonly tokenService: TokenService
   ) {}
@@ -455,6 +456,10 @@ export class AuthService {
   async verifiedEmail(email: string) {
     try {
       const data = await this.authRepository.verifyEmail(email)
+
+      // 🔔 Gọi WebSocket để thông báo có user mới verify thành công
+      await this.notificationService.notifyNewUserRegistered()
+
       return {
         data,
         message: 'Xác thực email thành công'

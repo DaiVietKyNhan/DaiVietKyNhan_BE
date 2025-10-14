@@ -15,9 +15,10 @@ import { KyNhanModule } from './modules/kynhan/kynhan.module'
 import { MediaModule } from './modules/media/media.module'
 import { PermissionModule } from './modules/permission/permission.module'
 import { RoleModule } from './modules/role/role.module'
+import { SystemConfigModule } from './modules/system-config/system-config.module'
+import { UserModule } from './modules/user/user.module'
 import { SharedModule } from './shared/shared.module'
-import { SystemConfigModule } from './modules/system-config/system-config.module';
-import { UserModule } from './modules/user/user.module';
+import { WebsocketsModule } from './websockets/websockets.module'
 
 @Module({
   imports: [
@@ -37,7 +38,8 @@ import { UserModule } from './modules/user/user.module';
     AttendenceConfigModule,
     AttendanceModule,
     SystemConfigModule,
-    UserModule
+    UserModule,
+    WebsocketsModule
   ],
 
   controllers: [],
