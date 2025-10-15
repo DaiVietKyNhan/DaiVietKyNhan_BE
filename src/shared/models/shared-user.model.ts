@@ -14,6 +14,7 @@ export const UserSchema = z.object({
   birthDate: z.coerce.date().nullable(),
   avatar: z.string().nullable(),
   coin: z.number().min(0).default(0),
+  point: z.number().min(0).default(0),
   status: z.enum([UserStatus.ACTIVE, UserStatus.INACTIVE]),
   roleId: z.number().positive(),
   createdById: z.number().nullable(),

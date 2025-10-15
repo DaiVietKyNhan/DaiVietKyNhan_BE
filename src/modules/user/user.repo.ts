@@ -79,7 +79,58 @@ export class UserRepo {
         })
   }
 
-  async list(pagination: PaginationQueryType) {
+  async list(pagination: PaginationQueryType, customerId?: number) {
+    const { where, orderBy } = parseQs(pagination.qs, USER_FIELDS)
+
+    const skip = (pagination.currentPage - 1) * pagination.pageSize
+    const take = pagination.pageSize
+
+    const [totalItems, data] = await Promise.all([
+      this.prismaService.user.count({
+        where: {
+          deletedAt: null,
+          ...where,
+          ...(customerId ? { roleId: customerId } : {})
+        }
+      }),
+      this.prismaService.user.findMany({
+        where: { deletedAt: null, ...where },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phoneNumber: true,
+          gender: true,
+          birthDate: true,
+          status: true,
+          avatar: true,
+          coin: true,
+          point: true,
+          roleId: true,
+          createdAt: true,
+          updatedAt: true,
+          role: {
+            select: { id: true, name: true, description: true }
+          }
+        },
+        orderBy,
+        skip,
+        take
+      })
+    ])
+
+    return {
+      results: data,
+      pagination: {
+        current: pagination.currentPage,
+        pageSize: pagination.pageSize,
+        totalPage: Math.ceil(totalItems / pagination.pageSize),
+        totalItem: totalItems
+      }
+    }
+  }
+
+  async getUserActiveList(pagination: PaginationQueryType) {
     const { where, orderBy } = parseQs(pagination.qs, USER_FIELDS)
 
     const skip = (pagination.currentPage - 1) * pagination.pageSize
@@ -101,6 +152,7 @@ export class UserRepo {
           status: true,
           avatar: true,
           coin: true,
+          point: true,
           roleId: true,
           createdAt: true,
           updatedAt: true,

@@ -28,6 +28,12 @@ export class UserController {
     return this.userService.list(query)
   }
 
+  @Get('user-list')
+  @ZodSerializerDto(PaginationResponseSchema)
+  getUserActiveList(@Query() query: PaginationQueryDTO) {
+    return this.userService.getUserList(query)
+  }
+
   @Get(':identifier')
   @ZodSerializerDto(GetUserWithRoleResDTO)
   findById(@Param() params: GetParamsIdOrEmailDTO) {

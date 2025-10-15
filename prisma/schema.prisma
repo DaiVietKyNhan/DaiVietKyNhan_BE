@@ -18,6 +18,7 @@ model User {
   avatar      String?    @db.VarChar(1000)
   status      UserStatus @default(INACTIVE)
   coin        Int        @default(0)
+  point       Int        @default(0)
 
   roleId Int
   role   Role @relation(fields: [roleId], references: [id], onDelete: NoAction, onUpdate: NoAction)

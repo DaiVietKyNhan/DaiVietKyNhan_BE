@@ -5,6 +5,7 @@ import { HttpStatus, Injectable } from '@nestjs/common'
 import { NotFoundRecordException } from 'src/shared/error'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
 
+import { SharedRoleRepository } from '@/shared/repositories/shared-role.repo'
 import { HashingService } from '@/shared/services/hashing.service'
 import { EmailAlreadyExistsException } from '../auth/dto/auth.error'
 import { CreateUserBodyType, UpdateUserBodyType } from './entities/user.entity'
@@ -14,11 +15,25 @@ import { UserRepo } from './user.repo'
 export class UserService {
   constructor(
     private userRepo: UserRepo,
-    private readonly hashingService: HashingService
+    private readonly hashingService: HashingService,
+    private readonly sharedRoleRepo: SharedRoleRepository
   ) {}
 
   async list(pagination: PaginationQueryType) {
     const data = await this.userRepo.list(pagination)
+    return {
+      statusCode: HttpStatus.OK,
+      data,
+      message: ENTITY_MESSAGE.GET_LIST_SUCCESS
+    }
+  }
+
+  async getUserList(pagination: PaginationQueryType) {
+    const customerId = await this.sharedRoleRepo.getCustomerRoleId()
+    if (!customerId) {
+      throw NotFoundRecordException
+    }
+    const data = await this.userRepo.list(pagination, customerId)
     return {
       statusCode: HttpStatus.OK,
       data,
