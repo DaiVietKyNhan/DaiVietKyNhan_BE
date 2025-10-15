@@ -16,6 +16,7 @@ import { MediaModule } from './modules/media/media.module'
 import { PermissionModule } from './modules/permission/permission.module'
 import { RoleModule } from './modules/role/role.module'
 import { SystemConfigModule } from './modules/system-config/system-config.module'
+import { TestQuestionHomeModule } from './modules/test-question-home/test-question-home.module'
 import { UserModule } from './modules/user/user.module'
 import { SharedModule } from './shared/shared.module'
 import { WebsocketsModule } from './websockets/websockets.module'
@@ -39,7 +40,8 @@ import { WebsocketsModule } from './websockets/websockets.module'
     AttendanceModule,
     SystemConfigModule,
     UserModule,
-    WebsocketsModule
+    WebsocketsModule,
+    TestQuestionHomeModule
   ],
 
   controllers: [],
