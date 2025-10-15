@@ -26,27 +26,42 @@ model User {
   refreshTokens RefreshToken[]
   attendances   Attendance[]
 
-  createdPermissions       Permission[]       @relation("PermissionCreatedBy")
-  updatedPermissions       Permission[]       @relation("PermissionUpdatedBy")
-  deletedPermissions       Permission[]       @relation("PermissionDeletedBy")
-  createdRoles             Role[]             @relation("RoleCreatedBy")
-  updatedRoles             Role[]             @relation("RoleUpdatedBy")
-  deletedRoles             Role[]             @relation("RoleDeletedBy")
-  createdKyNhans           KyNhan[]           @relation("KyNhanCreatedBy")
-  updatedKyNhans           KyNhan[]           @relation("KyNhanUpdatedBy")
-  deletedKyNhans           KyNhan[]           @relation("KyNhanDeletedBy")
-  createdChiTiets          ChiTietKyNhan[]    @relation("ChiTietKyNhanCreatedBy")
-  updatedChiTiets          ChiTietKyNhan[]    @relation("ChiTietKyNhanUpdatedBy")
-  deletedChiTiets          ChiTietKyNhan[]    @relation("ChiTietKyNhanDeletedBy")
-  createdSystemConfigs     SystemConfig[]     @relation("SystemConfigCreatedBy")
-  updatedSystemConfigs     SystemConfig[]     @relation("SystemConfigUpdatedBy")
-  deletedSystemConfigs     SystemConfig[]     @relation("SystemConfigDeletedBy")
-  createdAttendances       Attendance[]       @relation("AttendanceCreatedBy")
-  updatedAttendances       Attendance[]       @relation("AttendanceUpdatedBy")
-  deletedAttendances       Attendance[]       @relation("AttendanceDeletedBy")
-  createdAttendanceConfigs AttendanceConfig[] @relation("AttendanceConfigCreatedBy")
-  updatedAttendanceConfigs AttendanceConfig[] @relation("AttendanceConfigUpdatedBy")
-  deletedAttendanceConfigs AttendanceConfig[] @relation("AttendanceConfigDeletedBy")
+  createdPermissions       Permission[]           @relation("PermissionCreatedBy")
+  updatedPermissions       Permission[]           @relation("PermissionUpdatedBy")
+  deletedPermissions       Permission[]           @relation("PermissionDeletedBy")
+  createdRoles             Role[]                 @relation("RoleCreatedBy")
+  updatedRoles             Role[]                 @relation("RoleUpdatedBy")
+  deletedRoles             Role[]                 @relation("RoleDeletedBy")
+  createdKyNhans           KyNhan[]               @relation("KyNhanCreatedBy")
+  updatedKyNhans           KyNhan[]               @relation("KyNhanUpdatedBy")
+  deletedKyNhans           KyNhan[]               @relation("KyNhanDeletedBy")
+  createdChiTiets          ChiTietKyNhan[]        @relation("ChiTietKyNhanCreatedBy")
+  updatedChiTiets          ChiTietKyNhan[]        @relation("ChiTietKyNhanUpdatedBy")
+  deletedChiTiets          ChiTietKyNhan[]        @relation("ChiTietKyNhanDeletedBy")
+  createdKyNhanSummaries   KyNhanSummary[]        @relation("KyNhanSummaryCreatedBy")
+  updatedKyNhanSummaries   KyNhanSummary[]        @relation("KyNhanSummaryUpdatedBy")
+  deletedKyNhanSummaries   KyNhanSummary[]        @relation("KyNhanSummaryDeletedBy")
+  createdSystemConfigs     SystemConfig[]         @relation("SystemConfigCreatedBy")
+  updatedSystemConfigs     SystemConfig[]         @relation("SystemConfigUpdatedBy")
+  deletedSystemConfigs     SystemConfig[]         @relation("SystemConfigDeletedBy")
+  createdAttendances       Attendance[]           @relation("AttendanceCreatedBy")
+  updatedAttendances       Attendance[]           @relation("AttendanceUpdatedBy")
+  deletedAttendances       Attendance[]           @relation("AttendanceDeletedBy")
+  createdAttendanceConfigs AttendanceConfig[]     @relation("AttendanceConfigCreatedBy")
+  updatedAttendanceConfigs AttendanceConfig[]     @relation("AttendanceConfigUpdatedBy")
+  deletedAttendanceConfigs AttendanceConfig[]     @relation("AttendanceConfigDeletedBy")
+  createdQuestions         Question[]             @relation("QuestionCreatedBy")
+  updatedQuestions         Question[]             @relation("QuestionUpdatedBy")
+  deletedQuestions         Question[]             @relation("QuestionDeletedBy")
+  createdAnswers           Answer[]               @relation("AnswerCreatedBy")
+  updatedAnswers           Answer[]               @relation("AnswerUpdatedBy")
+  deletedAnswers           Answer[]               @relation("AnswerDeletedBy")
+  createdValidTextInputs   ValidTextInputAnswer[] @relation("ValidTextInputAnswerCreatedBy")
+  updatedValidTextInputs   ValidTextInputAnswer[] @relation("ValidTextInputAnswerUpdatedBy")
+  deletedValidTextInputs   ValidTextInputAnswer[] @relation("ValidTextInputAnswerDeletedBy")
+  createdUserAnswerLogs    UserAnswerLog[]        @relation("UserAnswerLogCreatedBy")
+  updatedUserAnswerLogs    UserAnswerLog[]        @relation("UserAnswerLogUpdatedBy")
+  deletedUserAnswerLogs    UserAnswerLog[]        @relation("UserAnswerLogDeletedBy")
 
   // 1 user có thể tạo ra nhiều user khác
   // 1 user chỉ có thể được tạo ra bởi 1 user khác
@@ -157,9 +172,10 @@ model KyNhan {
   deletedById Int?
   deletedBy   User? @relation("KyNhanDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  deletedAt     DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  KyNhanSummary KyNhanSummary[]
 
   @@index([deletedAt])
 }
@@ -181,6 +197,31 @@ model ChiTietKyNhan {
   updatedBy   User? @relation("ChiTietKyNhanUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
   deletedById Int?
   deletedBy   User? @relation("ChiTietKyNhanDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([deletedAt])
+}
+
+model KyNhanSummary {
+  id Int @id @default(autoincrement())
+
+  kyNhanId Int
+  kyNhan   KyNhan @relation(fields: [kyNhanId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  summary  String? @db.VarChar()
+  imageUrl String? @db.VarChar(1000)
+
+  questions Question[]
+
+  createdById Int?
+  createdBy   User? @relation("KyNhanSummaryCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  updatedById Int?
+  updatedBy   User? @relation("KyNhanSummaryUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  deletedById Int?
+  deletedBy   User? @relation("KyNhanSummaryDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())
@@ -256,6 +297,101 @@ model AttendanceConfig {
   updatedAt DateTime  @updatedAt
 }
 
+model Question {
+  id                  Int                @id @default(autoincrement())
+  text                String             @db.VarChar()
+  questionType        QuestionType       @default(MULTIPLE_CHOICE)
+  status              QuestionStatus     @default(DRAFT)
+  questionDifficulty  QuestionDifficulty @default(EASY)
+  allowSimilarAnswers Boolean            @default(false)
+
+  kynhanSummaryId Int
+  kynhanSummary   KyNhanSummary @relation(fields: [kynhanSummaryId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  answers               Answer[]
+  validTextInputAnswers ValidTextInputAnswer[]
+  userAnswerLogs        UserAnswerLog[]
+
+  createdById Int?
+  createdBy   User? @relation("QuestionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  updatedById Int?
+  updatedBy   User? @relation("QuestionUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  deletedById Int?
+  deletedBy   User? @relation("QuestionDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Answer {
+  id        Int     @id @default(autoincrement())
+  text      String  @db.VarChar()
+  isCorrect Boolean @default(false)
+
+  questionId Int
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  createdById Int?
+  createdBy   User? @relation("AnswerCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  updatedById Int?
+  updatedBy   User? @relation("AnswerUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  deletedById Int?
+  deletedBy   User? @relation("AnswerDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  deletedAt     DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  UserAnswerLog UserAnswerLog[]
+}
+
+model ValidTextInputAnswer {
+  id   Int    @id @default(autoincrement())
+  text String @db.VarChar()
+
+  questionId Int
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  createdById Int?
+  createdBy   User? @relation("ValidTextInputAnswerCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  updatedById Int?
+  updatedBy   User? @relation("ValidTextInputAnswerUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  deletedById Int?
+  deletedBy   User? @relation("ValidTextInputAnswerDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  deletedAt     DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  UserAnswerLog UserAnswerLog[]
+}
+
+model UserAnswerLog {
+  id   Int    @id @default(autoincrement())
+  text String @db.VarChar()
+
+  questionId Int
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  selectedAnswerId Int?
+  answerChoice     Answer? @relation(fields: [selectedAnswerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  inputTextAnswerId Int?
+  answerInputText   ValidTextInputAnswer? @relation(fields: [inputTextAnswerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  isCorrect Boolean
+
+  createdById Int?
+  createdBy   User? @relation("UserAnswerLogCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  updatedById Int?
+  updatedBy   User? @relation("UserAnswerLogUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  deletedById Int?
+  deletedBy   User? @relation("UserAnswerLogDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
 enum VerificationCodeType {
   REGISTER
   FORGOT_PASSWORD
@@ -302,4 +438,21 @@ enum WeekDay {
   THURSDAY
   FRIDAY
   SATURDAY
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TEXT_INPUT
+}
+
+enum QuestionStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+}
+
+enum QuestionDifficulty {
+  EASY
+  MEDIUM
+  HARD
 }
