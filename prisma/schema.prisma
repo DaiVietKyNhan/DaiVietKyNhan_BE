@@ -72,6 +72,9 @@ model User {
   createdUserTestQHs       UserTestQuestionHome[] @relation("UserTestQuestionHomeCreatedBy")
   updatedUserTestQHs       UserTestQuestionHome[] @relation("UserTestQuestionHomeUpdatedBy")
   deletedUserTestQHs       UserTestQuestionHome[] @relation("UserTestQuestionHomeDeletedBy")
+  createdLands             Land[]                 @relation("LandCreatedBy")
+  updatedLands             Land[]                 @relation("LandUpdatedBy")
+  deletedLands             Land[]                 @relation("LandDeletedBy")
 
   // 1 user có thể tạo ra nhiều user khác
   // 1 user chỉ có thể được tạo ra bởi 1 user khác
@@ -196,7 +199,19 @@ model Land {
   description String @db.VarChar(1000)
   order       Int    @unique
 
-  @@map("lands")
+  createdById Int?
+  createdBy   User? @relation("LandCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  updatedById Int?
+  updatedBy   User? @relation("LandUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  deletedById Int?
+  deletedBy   User? @relation("LandDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([deletedAt])
+  @@map("Lands")
 }
 
 model ChiTietKyNhan {
