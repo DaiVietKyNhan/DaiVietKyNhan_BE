@@ -94,7 +94,11 @@ export class UserRepo {
         }
       }),
       this.prismaService.user.findMany({
-        where: { deletedAt: null, ...where },
+        where: {
+          deletedAt: null,
+          ...where,
+          ...(customerId ? { roleId: customerId } : {})
+        },
         select: {
           id: true,
           name: true,

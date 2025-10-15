@@ -8,6 +8,7 @@
   "license": "LICENSED",
   "scripts": {
     "init-seed-data": "ts-node initialScript/index.ts",
+    "reset-sequences": "ts-node initialScript/reset-sequences.ts",
     "create-permissions": "ts-node initialScript/create-permissions.ts",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
