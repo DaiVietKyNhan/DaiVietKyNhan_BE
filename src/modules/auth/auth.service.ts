@@ -52,7 +52,7 @@ export class AuthService {
     private readonly notificationService: NotificationService,
     @InjectQueue('user-deletion') private readonly deletionQueue: Queue,
     private readonly tokenService: TokenService
-  ) {}
+  ) { }
 
   async login(body: LoginBodyType & { userAgent: string; ip: string }) {
     // 1. Lấy thông tin user, kiểm tra user có tồn tại hay không, mật khẩu có đúng không
@@ -279,7 +279,7 @@ export class AuthService {
 
     // Send email
     const registerEmailLowerCase = user.email.toLowerCase()
-    const template = 'otp'
+    const template = 'forgot-password'
     const content = 'Mã OTP của bạn là: '
     const bodyContent = 'Vui lòng nhập mã OTP để xác thực tài khoản của bạn.'
     this.mailService.generateAndSendOtp(
