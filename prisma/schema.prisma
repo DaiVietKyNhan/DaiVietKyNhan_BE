@@ -190,6 +190,15 @@ model KyNhan {
   @@index([deletedAt])
 }
 
+model Land {
+  id          Int    @id @default(autoincrement())
+  name        String @db.VarChar(500)
+  description String @db.VarChar(1000)
+  order       Int    @unique
+
+  @@map("lands")
+}
+
 model ChiTietKyNhan {
   id Int @id @default(autoincrement())
 

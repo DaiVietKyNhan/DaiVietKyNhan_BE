@@ -12,6 +12,7 @@ import { AttendenceConfigModule } from './modules/attendence-config/attendence-c
 import { AuthModule } from './modules/auth/auth.module'
 import { ChiTietKyNhanModule } from './modules/chitietkynhan/chitietkynhan.module'
 import { KyNhanModule } from './modules/kynhan/kynhan.module'
+import { LandModule } from './modules/land/land.module'
 import { MediaModule } from './modules/media/media.module'
 import { PermissionModule } from './modules/permission/permission.module'
 import { RoleModule } from './modules/role/role.module'
@@ -39,6 +40,7 @@ import { WebsocketsModule } from './websockets/websockets.module'
     AttendanceModule,
     SystemConfigModule,
     UserModule,
+    LandModule,
     WebsocketsModule
   ],
 
