@@ -8,24 +8,27 @@ datasource db {
 }
 
 model User {
-  id          Int        @id @default(autoincrement())
-  email       String     @unique @db.VarChar(500)
-  name        String     @db.VarChar(500)
-  password    String     @db.VarChar(500)
-  phoneNumber String?    @db.VarChar(50)
-  gender      Gender?
-  birthDate   DateTime?
-  avatar      String?    @db.VarChar(1000)
-  status      UserStatus @default(INACTIVE)
-  coin        Int        @default(0)
-  point       Int        @default(0)
+  id            Int        @id @default(autoincrement())
+  email         String     @unique @db.VarChar(500)
+  name          String     @db.VarChar(500)
+  password      String     @db.VarChar(500)
+  phoneNumber   String?    @db.VarChar(50)
+  gender        Gender?
+  birthDate     DateTime?
+  avatar        String?    @db.VarChar(1000)
+  status        UserStatus @default(INACTIVE)
+  coin          Int        @default(0)
+  point         Int        @default(0)
+  pointTestHome Int?
 
   roleId Int
   role   Role @relation(fields: [roleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  devices       Device[] // Liên kết 1-n với Device
-  refreshTokens RefreshToken[]
-  attendances   Attendance[]
+  devices               Device[] // Liên kết 1-n với Device
+  refreshTokens         RefreshToken[]
+  attendances           Attendance[]
+  userTestQuestionHomes UserTestQuestionHome[]
+  userAnswerLogs        UserAnswerLog[]
 
   createdPermissions       Permission[]           @relation("PermissionCreatedBy")
   updatedPermissions       Permission[]           @relation("PermissionUpdatedBy")
@@ -63,6 +66,12 @@ model User {
   createdUserAnswerLogs    UserAnswerLog[]        @relation("UserAnswerLogCreatedBy")
   updatedUserAnswerLogs    UserAnswerLog[]        @relation("UserAnswerLogUpdatedBy")
   deletedUserAnswerLogs    UserAnswerLog[]        @relation("UserAnswerLogDeletedBy")
+  createdTestQuestionHomes TestQuestionHome[]     @relation("TestQuestionHomeCreatedBy")
+  updatedTestQuestionHomes TestQuestionHome[]     @relation("TestQuestionHomeUpdatedBy")
+  deletedTestQuestionHomes TestQuestionHome[]     @relation("TestQuestionHomeDeletedBy")
+  createdUserTestQHs       UserTestQuestionHome[] @relation("UserTestQuestionHomeCreatedBy")
+  updatedUserTestQHs       UserTestQuestionHome[] @relation("UserTestQuestionHomeUpdatedBy")
+  deletedUserTestQHs       UserTestQuestionHome[] @relation("UserTestQuestionHomeDeletedBy")
 
   // 1 user có thể tạo ra nhiều user khác
   // 1 user chỉ có thể được tạo ra bởi 1 user khác
@@ -215,7 +224,8 @@ model KyNhanSummary {
   summary  String? @db.VarChar()
   imageUrl String? @db.VarChar(1000)
 
-  questions Question[]
+  questionId Int?
+  question   Question? @relation(fields: [questionId], references: [id])
 
   createdById Int?
   createdBy   User? @relation("KyNhanSummaryCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
@@ -301,13 +311,12 @@ model AttendanceConfig {
 model Question {
   id                  Int                @id @default(autoincrement())
   text                String             @db.VarChar()
-  questionType        QuestionType       @default(MULTIPLE_CHOICE)
+  questionType        QuestionType       @default(TEXT_INPUT)
   status              QuestionStatus     @default(DRAFT)
   questionDifficulty  QuestionDifficulty @default(EASY)
   allowSimilarAnswers Boolean            @default(false)
 
-  kynhanSummaryId Int
-  kynhanSummary   KyNhanSummary @relation(fields: [kynhanSummaryId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  kynhanSummaries KyNhanSummary[]
 
   answers               Answer[]
   validTextInputAnswers ValidTextInputAnswer[]
@@ -319,6 +328,44 @@ model Question {
   updatedBy   User? @relation("QuestionUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
   deletedById Int?
   deletedBy   User? @relation("QuestionDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model TestQuestionHome {
+  id                   Int                  @id @default(autoincrement())
+  text                 String               @db.VarChar()
+  testQuestionHomeType TestQuestionHomeType @default(NORMAL)
+
+  answer AnswerScale
+
+  createdById Int?
+  createdBy   User? @relation("TestQuestionHomeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  updatedById Int?
+  updatedBy   User? @relation("TestQuestionHomeUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  deletedById Int?
+  deletedBy   User? @relation("TestQuestionHomeDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model UserTestQuestionHome {
+  id     Int  @id @default(autoincrement())
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  answer AnswerScale
+
+  createdById Int?
+  createdBy   User? @relation("UserTestQuestionHomeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  updatedById Int?
+  updatedBy   User? @relation("UserTestQuestionHomeUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  deletedById Int?
+  deletedBy   User? @relation("UserTestQuestionHomeDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())
@@ -360,10 +407,9 @@ model ValidTextInputAnswer {
   deletedById Int?
   deletedBy   User? @relation("ValidTextInputAnswerDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
-  deletedAt     DateTime?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  UserAnswerLog UserAnswerLog[]
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model UserAnswerLog {
@@ -376,10 +422,12 @@ model UserAnswerLog {
   selectedAnswerId Int?
   answerChoice     Answer? @relation(fields: [selectedAnswerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
-  inputTextAnswerId Int?
-  answerInputText   ValidTextInputAnswer? @relation(fields: [inputTextAnswerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  inputTextAnswer String?
 
   isCorrect Boolean
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   createdById Int?
   createdBy   User? @relation("UserAnswerLogCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
@@ -456,4 +504,17 @@ enum QuestionDifficulty {
   EASY
   MEDIUM
   HARD
+}
+
+enum TestQuestionHomeType {
+  NORMAL
+  CONVERT
+}
+
+enum AnswerScale {
+  STRONGLY_DISAGREE // Tương ứng với 0: Hoàn toàn không đồng ý
+  DISAGREE // Tương ứng với 1: Không đồng ý
+  NEUTRAL // Tương ứng với 2: Trung lập
+  AGREE // Tương ứng với 3: Đồng ý
+  STRONGLY_AGREE // Tương ứng với 4: Hoàn toàn đồng ý
 }

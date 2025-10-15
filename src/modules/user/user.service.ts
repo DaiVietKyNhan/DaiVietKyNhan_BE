@@ -5,6 +5,7 @@ import { HttpStatus, Injectable } from '@nestjs/common'
 import { NotFoundRecordException } from 'src/shared/error'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
 
+import envConfig from '@/config/env.config'
 import { SharedRoleRepository } from '@/shared/repositories/shared-role.repo'
 import { HashingService } from '@/shared/services/hashing.service'
 import { EmailAlreadyExistsException } from '../auth/dto/auth.error'
@@ -76,6 +77,21 @@ export class UserService {
         createdById,
         data: userData
       })
+
+      if (envConfig.NEXTJS_APP_URL) {
+        try {
+          await fetch(`${envConfig.NEXTJS_APP_URL}/api/revalidate?tag=modifyUser`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+          console.log('Sent revalidation request to Next.js')
+        } catch (err) {
+          // Log error nhưng không throw để không ảnh hưởng đến response chính
+          console.warn('Failed to send revalidation request to Next.js:', err.message)
+        }
+      }
       return {
         statusCode: HttpStatus.CREATED,
         data: user,
@@ -107,6 +123,20 @@ export class UserService {
         updatedById,
         data
       })
+      if (envConfig.NEXTJS_APP_URL) {
+        try {
+          await fetch(`${envConfig.NEXTJS_APP_URL}/api/revalidate?tag=modifyUser`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+          console.log('Sent revalidation request to Next.js')
+        } catch (err) {
+          // Log error nhưng không throw để không ảnh hưởng đến response chính
+          console.warn('Failed to send revalidation request to Next.js:', err.message)
+        }
+      }
       return {
         statusCode: HttpStatus.OK,
         data: updatedUser,

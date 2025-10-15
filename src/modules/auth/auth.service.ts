@@ -52,7 +52,7 @@ export class AuthService {
     private readonly notificationService: NotificationService,
     @InjectQueue('user-deletion') private readonly deletionQueue: Queue,
     private readonly tokenService: TokenService
-  ) { }
+  ) {}
 
   async login(body: LoginBodyType & { userAgent: string; ip: string }) {
     // 1. Lấy thông tin user, kiểm tra user có tồn tại hay không, mật khẩu có đúng không
@@ -147,7 +147,20 @@ export class AuthService {
       const content = 'XÁC THỰC MAIL CỦA BẠN: '
       const bodyContent = 'Vui lòng nhập nhấn nút XÁC THỰC để xác thực tài khoản của bạn.'
       this.mailService.generateAndSendOtp(emailLower, template, content, bodyContent)
-
+      if (envConfig.NEXTJS_APP_URL) {
+        try {
+          await fetch(`${envConfig.NEXTJS_APP_URL}/api/revalidate?tag=modifyUser`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+          console.log('Sent revalidation request to Next.js')
+        } catch (err) {
+          // Log error nhưng không throw để không ảnh hưởng đến response chính
+          console.warn('Failed to send revalidation request to Next.js:', err.message)
+        }
+      }
       return {
         data: null,
         message: AUTH_MESSAGE.REGISTER_SUCCESS
@@ -433,7 +446,7 @@ export class AuthService {
     // Gửi revalidation request đến Next.js (nếu có cấu hình)
     if (envConfig.NEXTJS_APP_URL) {
       try {
-        await fetch(`${envConfig.NEXTJS_APP_URL}/api/revalidate?tag=userProfile`, {
+        await fetch(`${envConfig.NEXTJS_APP_URL}/api/revalidate?tag=modifyUser`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
