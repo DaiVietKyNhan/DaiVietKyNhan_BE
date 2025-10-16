@@ -14,6 +14,7 @@ export const KyNhanSchema = z
     chienCong: z.string().min(1),
     imgUrl: z.string().max(1000).nullable(),
     active: z.boolean().default(false),
+    landId: z.number().nullable(),
     createdById: z.number().nullable(),
     updatedById: z.number().nullable(),
     deletedById: z.number().nullable(),
@@ -27,6 +28,7 @@ export const CreateKyNhanBodySchema = KyNhanSchema.pick({
   name: true,
   thoiKy: true,
   chienCong: true,
+  landId: true,
   imgUrl: true,
   active: true
 }).strict()
