@@ -1,106 +1,129 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateKyNhanBodyType, UpdateKyNhanBodyType, QueryKyNhanType } from './entities/kynhan.entities';
-import { KyNhanRepository } from './kynhan.repo';
-import { KYNHAN_MESSAGE } from '../../common/constants/kynhan.constant';
+import { ENTITY_MESSAGE } from '@/common/constants/message'
+import { PaginationQueryType } from '@/shared/models/request.model'
+import { HttpStatus, Injectable } from '@nestjs/common'
+
+import { UploadService } from '@/3rdService/upload/upload.service'
+import { NotFoundRecordException } from 'src/shared/error'
+import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
+import { KynhanAlreadyExistsException } from './dto/kynhan.error'
+import { CreateKyNhanBodyType, UpdateKyNhanBodyType } from './entities/kynhan.entities'
+import { KynhanRepo } from './kynhan.repo'
 
 @Injectable()
-export class KyNhanService {
-    constructor(private readonly kyNhanRepo: KyNhanRepository) { }
+export class KynhanService {
+  constructor(
+    private kynhanRepo: KynhanRepo,
+    private readonly uploadService: UploadService
+  ) {}
 
-    //#region create
-    async create(createKyNhanDto: CreateKyNhanBodyType) {
-        const data = await this.kyNhanRepo.create(createKyNhanDto);
-        return {
-            data,
-            message: KYNHAN_MESSAGE.CREATE_SUCCESS
-        };
+  async list(pagination: PaginationQueryType) {
+    const data = await this.kynhanRepo.list(pagination)
+    return {
+      statusCode: HttpStatus.OK,
+      data,
+      message: ENTITY_MESSAGE.GET_LIST_SUCCESS
     }
-    //#endregion
+  }
 
-    //#region update
-    async update(id: number, updateKyNhanDto: UpdateKyNhanBodyType) {
-        const existingKyNhan = await this.findOne(id);
-
-        const data = await this.kyNhanRepo.update(id, updateKyNhanDto);
-        return {
-            data,
-            message: KYNHAN_MESSAGE.UPDATE_SUCCESS
-        };
+  async findById(id: number) {
+    const attendenceConfig = await this.kynhanRepo.findById(id)
+    if (!attendenceConfig) {
+      throw NotFoundRecordException
     }
-    //#endregion
-
-    //#region remove
-    async remove(id: number) {
-        const existingKyNhan = await this.findOne(id);
-
-        const data = await this.kyNhanRepo.softDelete(id);
-        return {
-            data,
-            message: KYNHAN_MESSAGE.DELETE_SUCCESS
-        };
+    return {
+      statusCode: HttpStatus.OK,
+      data: attendenceConfig,
+      message: ENTITY_MESSAGE.GET_SUCCESS
     }
-    //#endregion
+  }
 
-    //#region restore
-    async restore(id: number) {
-        const kyNhan = await this.kyNhanRepo.findFirstDeleted({ id, deletedAt: { not: null } });
-
-        if (!kyNhan) {
-            throw new NotFoundException(KYNHAN_MESSAGE.NOT_FOUND_DELETED);
+  async create({
+    data,
+    createdById,
+    imgFile
+  }: {
+    data: CreateKyNhanBodyType
+    createdById: number
+    imgFile?: Express.Multer.File
+  }) {
+    try {
+      if (imgFile) {
+        try {
+          const uploadRes = await this.uploadService.uploadFileByType(
+            imgFile,
+            'kynhan',
+            'images'
+          )
+          data = { ...data, imgUrl: uploadRes.url }
+        } catch (uploadError) {
+          throw uploadError
         }
+      }
 
-        const data = await this.kyNhanRepo.restore(id);
-        return {
-            data,
-            message: KYNHAN_MESSAGE.RESTORE_SUCCESS
-        };
+      const attendenceConfig = await this.kynhanRepo.create({
+        createdById,
+        data
+      })
+      return {
+        statusCode: HttpStatus.CREATED,
+        data: attendenceConfig,
+        message: ENTITY_MESSAGE.CREATE_SUCCESS
+      }
+    } catch (error) {
+      if (isUniqueConstraintPrismaError(error)) {
+        throw KynhanAlreadyExistsException
+      }
+      throw error
     }
-    //#endregion
+  }
 
-    //#region findAll
-    async findAll(query: QueryKyNhanType) {
-        const { page, limit } = query;
-        const { data, total } = await this.kyNhanRepo.findMany(query);
-
-        return {
-            data: {
-                results: data,
-                pagination: {
-                    current: page,
-                    pageSize: limit,
-                    totalPage: Math.ceil(total / limit),
-                    totalItem: total,
-                },
-            },
-            message: KYNHAN_MESSAGE.GET_LIST_SUCCESS
-        };
+  async update({
+    id,
+    data,
+    updatedById
+  }: {
+    id: number
+    data: UpdateKyNhanBodyType
+    updatedById: number
+  }) {
+    try {
+      const updatedKynhan = await this.kynhanRepo.update({
+        id,
+        updatedById,
+        data
+      })
+      return {
+        statusCode: HttpStatus.OK,
+        data: updatedKynhan,
+        message: ENTITY_MESSAGE.UPDATE_SUCCESS
+      }
+    } catch (error) {
+      if (isNotFoundPrismaError(error)) {
+        throw NotFoundRecordException
+      }
+      if (isUniqueConstraintPrismaError(error)) {
+        throw KynhanAlreadyExistsException
+      }
+      throw error
     }
-    //#endregion
+  }
 
-    //#region findOne
-    async findOne(id: number) {
-        const kyNhan = await this.kyNhanRepo.findFirst({ id, deletedAt: null });
-
-        if (!kyNhan) {
-            throw new NotFoundException(KYNHAN_MESSAGE.NOT_FOUND);
-        }
-
-        return kyNhan;
+  async delete({ id, deletedById }: { id: number; deletedById: number }) {
+    try {
+      await this.kynhanRepo.delete({
+        id,
+        deletedById
+      })
+      return {
+        statusCode: HttpStatus.OK,
+        data: null,
+        message: ENTITY_MESSAGE.DELETE_SUCCESS
+      }
+    } catch (error) {
+      if (isNotFoundPrismaError(error)) {
+        throw NotFoundRecordException
+      }
+      throw error
     }
-
-    async findOneWithResponse(id: number) {
-        const data = await this.findOne(id);
-        return {
-            data,
-            message: KYNHAN_MESSAGE.GET_SUCCESS
-        };
-    }
-    //#endregion
-
-    //#region findFirstDeleted
-    async findFirstDeleted(id: number) {
-        return this.kyNhanRepo.findFirstDeleted({ id, deletedAt: { not: null } });
-    }
-    //#endregion
-
+  }
 }

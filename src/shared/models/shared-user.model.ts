@@ -2,6 +2,7 @@ import { UserStatus } from '@/common/constants/auth.constant'
 import { AUTH_MESSAGE } from '@/common/constants/message'
 import { Gender } from '@/common/constants/user.constant'
 import { FigureSchema } from '@/modules/figure/entities/figure.entity'
+import { GodProfileSchema } from '@/modules/god-profile/entities/god-profile.entity'
 import { RoleSchema } from 'src/shared/models/shared-role.model'
 import { z } from 'zod'
 
@@ -17,6 +18,7 @@ export const UserSchema = z.object({
   coin: z.number().min(0).default(0),
   point: z.number().min(0).default(0),
   figureId: z.number().nullable().optional(),
+  godProfileId: z.number().nullable().optional(),
   pointTestHome: z.boolean().default(false),
   status: z.enum([UserStatus.ACTIVE, UserStatus.INACTIVE]),
   roleId: z.number().positive(),
@@ -42,7 +44,8 @@ export const GetAccountProfileResSchema = z.object({
       id: true,
       name: true
     }),
-    figure: FigureSchema.nullable().optional()
+    figure: FigureSchema.nullable().optional(),
+    godProfile: GodProfileSchema.nullable().optional()
   })
 })
 

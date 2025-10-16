@@ -33,7 +33,8 @@ export class SharedUserRepository {
       },
       include: {
         role: true,
-        figure: true
+        figure: true,
+        godProfile: true
       }
     })
   }

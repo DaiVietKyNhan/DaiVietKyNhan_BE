@@ -1,5 +1,6 @@
 import { TypeOfVerificationCode } from '@/common/constants/auth.constant'
 import { FigureSchema } from '@/modules/figure/entities/figure.entity'
+import { GodProfileSchema } from '@/modules/god-profile/entities/god-profile.entity'
 import { extendZodWithOpenApi } from '@anatine/zod-openapi'
 import { patchNestJsSwagger } from 'nestjs-zod'
 import { RoleSchema } from 'src/shared/models/shared-role.model'
@@ -38,6 +39,7 @@ export const LoginResSchema = z
       phoneNumber: true,
       gender: true,
       figureId: true,
+      godProfileId: true,
       coin: true,
       pointTestHome: true,
       point: true,
@@ -49,7 +51,8 @@ export const LoginResSchema = z
       accessToken: z.string(),
       refreshToken: z.string(),
       role: RoleSchema,
-      figure: FigureSchema.nullable().optional()
+      figure: FigureSchema.nullable().optional(),
+      godProfile: GodProfileSchema.nullable().optional()
     }),
     message: z.string()
   })
