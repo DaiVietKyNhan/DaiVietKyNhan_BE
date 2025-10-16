@@ -82,6 +82,12 @@ model User {
   createdFigures           Figure[]               @relation("FigureCreatedBy")
   updatedFigures           Figure[]               @relation("FigureUpdatedBy")
   deletedFigures           Figure[]               @relation("FigureDeletedBy")
+  createdLands             Land[]                 @relation("LandCreatedBy")
+  updatedLands             Land[]                 @relation("LandUpdatedBy")
+  deletedLands             Land[]                 @relation("LandDeletedBy")
+  createdMotaKyNhans       MotaKyNhan[]           @relation("MoTaKyNhanCreatedBy")
+  updatedMotaKyNhans       MotaKyNhan[]           @relation("MoTaKyNhanUpdatedBy")
+  deletedMotaKyNhans       MotaKyNhan[]           @relation("MoTaKyNhanDeletedBy")
 
   // 1 user có thể tạo ra nhiều user khác
   // 1 user chỉ có thể được tạo ra bởi 1 user khác
@@ -183,8 +189,12 @@ model KyNhan {
   imgUrl    String? @db.VarChar(1000)
   active    Boolean @default(false)
 
+  landId Int?
+  land   Land? @relation(fields: [landId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
   chiTietKyNhans  ChiTietKyNhan[]
   kyNhanSummaries KyNhanSummary[]
+  motaKyNhan      MotaKyNhan?
 
   createdById Int?
   createdBy   User? @relation("KyNhanCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
@@ -200,12 +210,45 @@ model KyNhan {
   @@index([deletedAt])
 }
 
+model MotaKyNhan {
+  id            Int     @id @default(autoincrement())
+  ten           String  @db.VarChar(500)
+  danhHieu      String? @db.VarChar(500)
+  namSinhNamMat String? @db.VarChar(100)
+  queQuan       String? @db.VarChar(500)
+  xuatThan      String? @db.VarChar(500)
+  khoiNghia     String? @db.VarChar(500)
+  nguoiDongHanh String? @db.VarChar(500)
+  phuQuan       String? @db.VarChar(500)
+  chienCong     String? @db.VarChar(500)
+  dinhCao       String? @db.VarChar(500)
+  ketCuc        String? @db.VarChar(500)
+  imgUrl        String? @db.VarChar(1000)
+
+  kyNhanId Int    @unique
+  kyNhan   KyNhan @relation(fields: [kyNhanId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  createdById Int?
+  createdBy   User? @relation("MoTaKyNhanCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  updatedById Int?
+  updatedBy   User? @relation("MoTaKyNhanUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  deletedById Int?
+  deletedBy   User? @relation("MoTaKyNhanDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([deletedAt])
+}
+
 model ChiTietKyNhan {
   id Int @id @default(autoincrement())
 
   kyNhanId Int
   kyNhan   KyNhan @relation(fields: [kyNhanId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
+  ten       String  @db.VarChar(500)
   tinhCach  String  @db.Text()
   quanHe    String? @db.Text()
   trichDoan String  @db.Text()
@@ -249,6 +292,25 @@ model KyNhanSummary {
   updatedAt DateTime  @updatedAt
 
   @@index([deletedAt])
+}
+
+model Land {
+  id       Int     @id @default(autoincrement())
+  name     String  @db.VarChar(500)
+  order    Int     @default(0)
+  imageUrl String? @db.VarChar()
+
+  createdById Int?
+  createdBy   User? @relation("LandCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  updatedById Int?
+  updatedBy   User? @relation("LandUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  deletedById Int?
+  deletedBy   User? @relation("LandDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  KyNhan    KyNhan[]
 }
 
 model SystemConfig {

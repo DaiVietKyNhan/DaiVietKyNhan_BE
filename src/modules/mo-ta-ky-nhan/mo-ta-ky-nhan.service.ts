@@ -9,19 +9,23 @@ import {
   isNotFoundPrismaError,
   isUniqueConstraintPrismaError
 } from 'src/shared/helpers'
-import { KynhanAlreadyExistsException } from './dto/kynhan.error'
-import { CreateKyNhanBodyType, UpdateKyNhanBodyType } from './entities/kynhan.entities'
-import { KynhanRepo } from './kynhan.repo'
+import { MotaKyNhanAlreadyExistsException } from './dto/mo-ta-ky-nhan.error'
+
+import {
+  CreateMotaKyNhanBodyType,
+  UpdateMotaKyNhanBodyType
+} from './entities/mo-ta-ky-nhan.entity'
+import { MotaKyNhanRepo } from './mo-ta-ky-nhan.repo'
 
 @Injectable()
-export class KynhanService {
+export class MotaKyNhanService {
   constructor(
-    private kynhanRepo: KynhanRepo,
+    private motaKyNhanRepo: MotaKyNhanRepo,
     private readonly uploadService: UploadService
   ) {}
 
   async list(pagination: PaginationQueryType) {
-    const data = await this.kynhanRepo.list(pagination)
+    const data = await this.motaKyNhanRepo.list(pagination)
     return {
       statusCode: HttpStatus.OK,
       data,
@@ -30,7 +34,19 @@ export class KynhanService {
   }
 
   async findById(id: number) {
-    const attendenceConfig = await this.kynhanRepo.findById(id)
+    const attendenceConfig = await this.motaKyNhanRepo.findById(id)
+    if (!attendenceConfig) {
+      throw NotFoundRecordException
+    }
+    return {
+      statusCode: HttpStatus.OK,
+      data: attendenceConfig,
+      message: ENTITY_MESSAGE.GET_SUCCESS
+    }
+  }
+
+  async findByKyNhanId(id: number) {
+    const attendenceConfig = await this.motaKyNhanRepo.findByKyNhanId(id)
     if (!attendenceConfig) {
       throw NotFoundRecordException
     }
@@ -46,22 +62,16 @@ export class KynhanService {
     createdById,
     imgFile
   }: {
-    data: CreateKyNhanBodyType
+    data: CreateMotaKyNhanBodyType
     createdById: number
     imgFile: Express.Multer.File
   }) {
     try {
-      const isDupplicateName = data.name
-        ? await this.kynhanRepo.findExistByName(data.name)
-        : null
-      if (isDupplicateName) {
-        throw KynhanAlreadyExistsException
-      }
       if (imgFile) {
         try {
           const uploadRes = await this.uploadService.uploadFileByType(
             imgFile,
-            'kynhan',
+            'motakynhan',
             'images'
           )
           data = { ...data, imgUrl: uploadRes.url }
@@ -77,7 +87,7 @@ export class KynhanService {
       if (data.imgUrl === '') {
       }
 
-      const attendenceConfig = await this.kynhanRepo.create({
+      const attendenceConfig = await this.motaKyNhanRepo.create({
         createdById,
         data
       })
@@ -88,7 +98,13 @@ export class KynhanService {
       }
     } catch (error) {
       if (isUniqueConstraintPrismaError(error)) {
-        throw KynhanAlreadyExistsException
+        throw MotaKyNhanAlreadyExistsException
+      }
+      if (isForeignKeyConstraintPrismaError(error)) {
+        throw NotFoundRecordException
+      }
+      if (isNotFoundPrismaError(error)) {
+        throw MotaKyNhanAlreadyExistsException
       }
       throw error
     }
@@ -101,28 +117,22 @@ export class KynhanService {
     imgFile
   }: {
     id: number
-    data: UpdateKyNhanBodyType
+    data: UpdateMotaKyNhanBodyType
     updatedById: number
     imgFile?: Express.Multer.File
   }) {
     try {
-      const existing = await this.kynhanRepo.findById(id)
+      const existing = await this.motaKyNhanRepo.findById(id)
       if (!existing) {
         throw NotFoundRecordException
       }
 
-      const isDupplicateName = data.name
-        ? await this.kynhanRepo.findExistByName(data.name)
-        : null
-      if (isDupplicateName && isDupplicateName.id !== id) {
-        throw KynhanAlreadyExistsException
-      }
       if (imgFile) {
         try {
           // Upload new image into god-profiles/images
           const uploadRes = await this.uploadService.uploadFileByType(
             imgFile,
-            'kynhan',
+            'motakynhan',
             'images'
           )
           data = { ...data, imgUrl: uploadRes.url }
@@ -130,7 +140,7 @@ export class KynhanService {
           // Try to delete old image if existed
           if (existing.imgUrl) {
             try {
-              await this.uploadService.deleteFile(existing.imgUrl, 'kynhan/images')
+              await this.uploadService.deleteFile(existing.imgUrl, 'motakynhan/images')
             } catch (delErr) {}
           }
         } catch (uploadError) {
@@ -138,14 +148,14 @@ export class KynhanService {
         }
       }
 
-      const updatedKynhan = await this.kynhanRepo.update({
+      const updatedMotaKyNhan = await this.motaKyNhanRepo.update({
         id,
         updatedById,
         data
       })
       return {
         statusCode: HttpStatus.OK,
-        data: updatedKynhan,
+        data: updatedMotaKyNhan,
         message: ENTITY_MESSAGE.UPDATE_SUCCESS
       }
     } catch (error) {
@@ -153,7 +163,7 @@ export class KynhanService {
         throw NotFoundRecordException
       }
       if (isUniqueConstraintPrismaError(error)) {
-        throw KynhanAlreadyExistsException
+        throw MotaKyNhanAlreadyExistsException
       }
       if (isForeignKeyConstraintPrismaError(error)) {
         throw NotFoundRecordException
@@ -164,7 +174,7 @@ export class KynhanService {
 
   async delete({ id, deletedById }: { id: number; deletedById: number }) {
     try {
-      await this.kynhanRepo.delete({
+      await this.motaKyNhanRepo.delete({
         id,
         deletedById
       })

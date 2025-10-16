@@ -10,19 +10,20 @@ import { TransformInterceptor } from './common/interceptor/transform.interceptor
 import { AttendanceModule } from './modules/attendance/attendance.module'
 import { AttendenceConfigModule } from './modules/attendence-config/attendence-config.module'
 import { AuthModule } from './modules/auth/auth.module'
-import { ChiTietKyNhanModule } from './modules/chitietkynhan/chitietkynhan.module'
+
+import { FigureModule } from './modules/figure/figure.module'
+import { GodProfileModule } from './modules/god-profile/god-profile.module'
 import { KyNhanModule } from './modules/kynhan/kynhan.module'
 import { MediaModule } from './modules/media/media.module'
+import { MoTaKyNhanModule } from './modules/mo-ta-ky-nhan/mo-ta-ky-nhan.module'
 import { PermissionModule } from './modules/permission/permission.module'
 import { RoleModule } from './modules/role/role.module'
 import { SystemConfigModule } from './modules/system-config/system-config.module'
 import { TestQuestionHomeModule } from './modules/test-question-home/test-question-home.module'
+import { UserTestQuestionHomeModule } from './modules/user-test-question-home/user-test-question-home.module'
 import { UserModule } from './modules/user/user.module'
 import { SharedModule } from './shared/shared.module'
 import { WebsocketsModule } from './websockets/websockets.module'
-import { UserTestQuestionHomeModule } from './modules/user-test-question-home/user-test-question-home.module';
-import { GodProfileModule } from './modules/god-profile/god-profile.module';
-import { FigureModule } from './modules/figure/figure.module';
 
 @Module({
   imports: [
@@ -37,7 +38,7 @@ import { FigureModule } from './modules/figure/figure.module';
     RoleModule,
     PermissionModule,
     KyNhanModule,
-    ChiTietKyNhanModule,
+
     MediaModule,
     AttendenceConfigModule,
     AttendanceModule,
@@ -47,7 +48,8 @@ import { FigureModule } from './modules/figure/figure.module';
     TestQuestionHomeModule,
     UserTestQuestionHomeModule,
     GodProfileModule,
-    FigureModule
+    FigureModule,
+    MoTaKyNhanModule
   ],
 
   controllers: [],
