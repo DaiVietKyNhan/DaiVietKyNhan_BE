@@ -76,6 +76,7 @@ export class KynhanController {
   update(
     @Body() body: any,
     @Param() params: GetParamsKyNhanDTO,
+    @UploadedFile() imgFile: Express.Multer.File,
     @ActiveUser('userId') userId: number
   ) {
     const payload: UpdateKyNhanBodyDTO = {}
@@ -88,7 +89,8 @@ export class KynhanController {
     return this.kynhanService.update({
       data: payload,
       id: params.kyNhanId,
-      updatedById: userId
+      updatedById: userId,
+      imgFile
     })
   }
 

@@ -1,6 +1,6 @@
 import { ENTITY_MESSAGE } from '@/common/constants/message'
 import { PaginationQueryType } from '@/shared/models/request.model'
-import { HttpStatus, Injectable } from '@nestjs/common'
+import { HttpStatus, Injectable, UnprocessableEntityException } from '@nestjs/common'
 
 import { UploadService } from '@/3rdService/upload/upload.service'
 import { NotFoundRecordException } from 'src/shared/error'
@@ -44,9 +44,15 @@ export class KynhanService {
   }: {
     data: CreateKyNhanBodyType
     createdById: number
-    imgFile?: Express.Multer.File
+    imgFile: Express.Multer.File
   }) {
     try {
+      const isDupplicateName = data.name
+        ? await this.kynhanRepo.findExistByName(data.name)
+        : null
+      if (isDupplicateName) {
+        throw KynhanAlreadyExistsException
+      }
       if (imgFile) {
         try {
           const uploadRes = await this.uploadService.uploadFileByType(
@@ -58,6 +64,13 @@ export class KynhanService {
         } catch (uploadError) {
           throw uploadError
         }
+      } else {
+        throw new UnprocessableEntityException([
+          { path: 'imgUrl', message: 'Thiếu ảnh hoặc ảnh không hợp lệ' }
+        ])
+      }
+
+      if (data.imgUrl === '') {
       }
 
       const attendenceConfig = await this.kynhanRepo.create({
@@ -80,13 +93,47 @@ export class KynhanService {
   async update({
     id,
     data,
-    updatedById
+    updatedById,
+    imgFile
   }: {
     id: number
     data: UpdateKyNhanBodyType
     updatedById: number
+    imgFile?: Express.Multer.File
   }) {
     try {
+      const existing = await this.kynhanRepo.findById(id)
+      if (!existing) {
+        throw NotFoundRecordException
+      }
+
+      const isDupplicateName = data.name
+        ? await this.kynhanRepo.findExistByName(data.name)
+        : null
+      if (isDupplicateName && isDupplicateName.id !== id) {
+        throw KynhanAlreadyExistsException
+      }
+      if (imgFile) {
+        try {
+          // Upload new image into god-profiles/images
+          const uploadRes = await this.uploadService.uploadFileByType(
+            imgFile,
+            'kynhan',
+            'images'
+          )
+          data = { ...data, imgUrl: uploadRes.url }
+
+          // Try to delete old image if existed
+          if (existing.imgUrl) {
+            try {
+              await this.uploadService.deleteFile(existing.imgUrl, 'kynhan/images')
+            } catch (delErr) {}
+          }
+        } catch (uploadError) {
+          throw uploadError
+        }
+      }
+
       const updatedKynhan = await this.kynhanRepo.update({
         id,
         updatedById,

@@ -116,4 +116,13 @@ export class KynhanRepo {
       }
     })
   }
+
+  findExistByName(name: string): Promise<KyNhanType | null> {
+    return this.prismaService.kyNhan.findFirst({
+      where: {
+        name,
+        deletedAt: null
+      }
+    })
+  }
 }
