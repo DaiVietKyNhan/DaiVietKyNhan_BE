@@ -87,8 +87,14 @@ export class KynhanService {
         message: ENTITY_MESSAGE.CREATE_SUCCESS
       }
     } catch (error) {
+      if (isNotFoundPrismaError(error)) {
+        throw NotFoundRecordException
+      }
       if (isUniqueConstraintPrismaError(error)) {
         throw KynhanAlreadyExistsException
+      }
+      if (isForeignKeyConstraintPrismaError(error)) {
+        throw NotFoundRecordException
       }
       throw error
     }
@@ -175,6 +181,12 @@ export class KynhanService {
       }
     } catch (error) {
       if (isNotFoundPrismaError(error)) {
+        throw NotFoundRecordException
+      }
+      if (isUniqueConstraintPrismaError(error)) {
+        throw KynhanAlreadyExistsException
+      }
+      if (isForeignKeyConstraintPrismaError(error)) {
         throw NotFoundRecordException
       }
       throw error

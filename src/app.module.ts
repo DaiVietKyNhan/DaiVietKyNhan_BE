@@ -24,6 +24,7 @@ import { UserTestQuestionHomeModule } from './modules/user-test-question-home/us
 import { UserModule } from './modules/user/user.module'
 import { SharedModule } from './shared/shared.module'
 import { WebsocketsModule } from './websockets/websockets.module'
+import { LandModule } from './modules/land/land.module';
 
 @Module({
   imports: [
@@ -49,7 +50,8 @@ import { WebsocketsModule } from './websockets/websockets.module'
     UserTestQuestionHomeModule,
     GodProfileModule,
     FigureModule,
-    MoTaKyNhanModule
+    MoTaKyNhanModule,
+    LandModule
   ],
 
   controllers: [],
