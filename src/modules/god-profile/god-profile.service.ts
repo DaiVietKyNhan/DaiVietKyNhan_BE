@@ -260,4 +260,24 @@ export class GodProfileService {
       message: ENTITY_MESSAGE.GET_LIST_SUCCESS
     }
   }
+
+  async choiceGod(userId: number, godProfileId: number) {
+    const [user, godProfile] = await Promise.all([
+      this.sharedUserRepo.findUnique({ id: userId }),
+      this.godProfileRepo.findById(godProfileId)
+    ])
+    if (!user || !godProfile) {
+      throw NotFoundRecordException
+    }
+
+    if (user.pointTestHome === false) {
+      throw new BadRequestException('Người dùng chưa làm bài trắc nghiệm')
+    }
+    const updatedUser = await this.sharedUserRepo.updateUserById(userId, { godProfileId })
+    return {
+      statusCode: HttpStatus.OK,
+      data: godProfile,
+      message: 'Chọn Thần Bảo Hộ thành công'
+    }
+  }
 }

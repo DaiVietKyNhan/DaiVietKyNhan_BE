@@ -45,6 +45,15 @@ export class GodProfileController {
     return this.godProfileService.findGodByPoint(userId)
   }
 
+  @Post('user-choice/:godProfileId')
+  @ZodSerializerDto(CreateGodProfileResDTO)
+  choiceGod(
+    @ActiveUser('userId') userId: number,
+    @Param() params: GetGodProfileParamsDTO
+  ) {
+    return this.godProfileService.choiceGod(userId, params.godProfileId)
+  }
+
   @Get(':godProfileId')
   @ZodSerializerDto(GetGodProfileResDTO)
   findById(@Param() params: GetGodProfileParamsDTO) {

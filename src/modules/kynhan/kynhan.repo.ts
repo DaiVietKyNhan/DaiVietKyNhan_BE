@@ -1,146 +1,119 @@
+import { PaginationQueryType } from '@/shared/models/request.model'
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from '../../shared/services/prisma.service'
+
+import { parseQs } from '@/common/utils/qs-parser'
+import { PrismaService } from 'src/shared/services/prisma.service'
 import {
   CreateKyNhanBodyType,
+  KYNHAN_FIELDS,
   KyNhanType,
-  QueryKyNhanType,
   UpdateKyNhanBodyType
 } from './entities/kynhan.entities'
 
 @Injectable()
-export class KyNhanRepository {
-  constructor(private readonly prismaService: PrismaService) {}
+export class KynhanRepo {
+  constructor(private prismaService: PrismaService) {}
 
-  //#region create
-  async create(data: CreateKyNhanBodyType): Promise<KyNhanType> {
+  create({
+    createdById,
+    data
+  }: {
+    createdById: number | null
+    data: CreateKyNhanBodyType
+  }): Promise<KyNhanType> {
     return this.prismaService.kyNhan.create({
-      data,
-      include: {
-        chiTietKyNhans: {
-          where: { deletedAt: null },
-          include: {
-            media: true
-          }
-        }
+      data: {
+        ...data,
+        createdById
       }
     })
   }
-  //#endregion
 
-  //#region update
-  async update(id: number, data: UpdateKyNhanBodyType): Promise<KyNhanType> {
-    return this.prismaService.kyNhan.update({
-      where: { id },
-      data,
-      include: {
-        chiTietKyNhans: {
-          where: { deletedAt: null },
-          include: {
-            media: true
-          }
-        }
-      }
-    })
-  }
-  //#endregion
-
-  //#region remove
-  async softDelete(id: number): Promise<KyNhanType> {
-    return this.prismaService.kyNhan.update({
-      where: { id },
-      data: { deletedAt: new Date() }
-    })
-  }
-  //#endregion
-
-  //#region restore
-  async restore(id: number): Promise<KyNhanType> {
-    return this.prismaService.kyNhan.update({
-      where: { id },
-      data: { deletedAt: null },
-      include: {
-        chiTietKyNhans: {
-          where: { deletedAt: null },
-          include: {
-            media: true
-          }
-        }
-      }
-    })
-  }
-  //#endregion
-
-  //#region findFirstDeleted
-  async findFirstDeleted(where: {
+  update({
+    id,
+    updatedById,
+    data
+  }: {
     id: number
-    deletedAt: { not: null }
-  }): Promise<KyNhanType | null> {
-    return this.prismaService.kyNhan.findFirst({
-      where
+    updatedById: number
+    data: UpdateKyNhanBodyType
+  }): Promise<KyNhanType> {
+    return this.prismaService.kyNhan.update({
+      where: {
+        id,
+        deletedAt: null
+      },
+      data: {
+        ...data,
+        updatedById
+      }
     })
   }
-  //#endregion
 
-  //#region findMany
-  async findMany(query: QueryKyNhanType): Promise<{ data: KyNhanType[]; total: number }> {
-    const { page, limit, search, thoiKy, active, sortBy, sortOrder } = query
-    const skip = (page - 1) * limit
-
-    const where: any = {
-      deletedAt: null
-    }
-
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { thoiKy: { contains: search, mode: 'insensitive' } },
-        { chienCong: { contains: search, mode: 'insensitive' } }
-      ]
-    }
-
-    if (thoiKy) {
-      where.thoiKy = { contains: thoiKy, mode: 'insensitive' }
-    }
-
-    if (active !== undefined) {
-      where.active = active
-    }
-
-    const [data, total] = await Promise.all([
-      this.prismaService.kyNhan.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { [sortBy]: sortOrder },
-        include: {
-          chiTietKyNhans: {
-            where: { deletedAt: null },
-            include: {
-              media: true
-            }
+  delete(
+    {
+      id,
+      deletedById
+    }: {
+      id: number
+      deletedById: number
+    },
+    isHard?: boolean
+  ): Promise<KyNhanType> {
+    return isHard
+      ? this.prismaService.kyNhan.delete({
+          where: {
+            id
           }
-        }
+        })
+      : this.prismaService.kyNhan.update({
+          where: {
+            id,
+            deletedAt: null
+          },
+          data: {
+            deletedAt: new Date(),
+            deletedById
+          }
+        })
+  }
+
+  async list(pagination: PaginationQueryType) {
+    const { where, orderBy } = parseQs(pagination.qs, KYNHAN_FIELDS)
+
+    const skip = (pagination.currentPage - 1) * pagination.pageSize
+    const take = pagination.pageSize
+
+    const [totalItems, data] = await Promise.all([
+      this.prismaService.kyNhan.count({
+        where: { deletedAt: null, ...where }
       }),
-      this.prismaService.kyNhan.count({ where })
+      this.prismaService.kyNhan.findMany({
+        where: { deletedAt: null, ...where },
+
+        orderBy,
+        skip,
+        take
+      })
     ])
 
-    return { data, total }
+    return {
+      results: data,
+      pagination: {
+        current: pagination.currentPage,
+        pageSize: pagination.pageSize,
+        totalPage: Math.ceil(totalItems / pagination.pageSize),
+        totalItem: totalItems
+      }
+    }
   }
-  //#endregion
 
-  //#region findFirst
-  async findFirst(where: { id: number; deletedAt?: any }): Promise<KyNhanType | null> {
-    return this.prismaService.kyNhan.findFirst({
-      where,
-      include: {
-        chiTietKyNhans: {
-          where: { deletedAt: null },
-          include: {
-            media: true
-          }
-        }
+  findById(id: number): Promise<KyNhanType | null> {
+    return this.prismaService.kyNhan.findUnique({
+      where: {
+        id,
+        deletedAt: null
       }
     })
   }
-  //#endregion
 }

@@ -1,18 +1,16 @@
-import {
-    CreateKyNhanBodySchema,
-    UpdateKyNhanBodySchema,
-    QueryKyNhanSchema,
-    KyNhanResSchema,
-    KyNhanListResSchema
-} from '../entities/kynhan.entities'
 import { createZodDto } from 'nestjs-zod'
+import {
+  CreateKyNhanBodySchema,
+  CreateKyNhanResSchema,
+  GetKyNhanParamsSchema,
+  GetKyNhanResSchema,
+  UpdateKyNhanBodySchema,
+  UpdateKyNhanResSchema
+} from '../entities/kynhan.entities'
 
-export class CreateKyNhanBodyDTO extends createZodDto(CreateKyNhanBodySchema) { }
-
-export class UpdateKyNhanBodyDTO extends createZodDto(UpdateKyNhanBodySchema) { }
-
-export class QueryKyNhanDTO extends createZodDto(QueryKyNhanSchema) { }
-
-export class KyNhanResDTO extends createZodDto(KyNhanResSchema) { }
-
-export class KyNhanListResDTO extends createZodDto(KyNhanListResSchema) { }
+export class CreateKyNhanBodyDTO extends createZodDto(CreateKyNhanBodySchema) {}
+export class CreateKyNhanResDTO extends createZodDto(CreateKyNhanResSchema) {}
+export class UpdateKyNhanBodyDTO extends createZodDto(UpdateKyNhanBodySchema) {}
+export class UpdateKyNhanResDTO extends createZodDto(UpdateKyNhanResSchema) {}
+export class GetParamsKyNhanDTO extends createZodDto(GetKyNhanParamsSchema) {}
+export class GetKyNhanResDTO extends createZodDto(GetKyNhanResSchema) {}

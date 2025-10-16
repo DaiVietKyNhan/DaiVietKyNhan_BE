@@ -3,7 +3,11 @@ import { PaginationQueryType } from '@/shared/models/request.model'
 import { HttpStatus, Injectable } from '@nestjs/common'
 
 import { NotFoundRecordException } from 'src/shared/error'
-import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
+import {
+  isForeignKeyConstraintPrismaError,
+  isNotFoundPrismaError,
+  isUniqueConstraintPrismaError
+} from 'src/shared/helpers'
 
 import { SharedUserRepository } from '@/shared/repositories/shared-user.repo'
 import { UserTestQuestionHomeAlreadyExistsException } from './dto/user-test-question-home.error'
@@ -101,6 +105,12 @@ export class UserTestQuestionHomeService {
       if (isUniqueConstraintPrismaError(error)) {
         throw UserTestQuestionHomeAlreadyExistsException
       }
+      if (isForeignKeyConstraintPrismaError(error)) {
+        throw NotFoundRecordException
+      }
+      if (isNotFoundPrismaError(error)) {
+        throw NotFoundRecordException
+      }
       throw error
     }
   }
@@ -129,8 +139,11 @@ export class UserTestQuestionHomeService {
       if (isNotFoundPrismaError(error)) {
         throw NotFoundRecordException
       }
-      if (isUniqueConstraintPrismaError(error)) {
-        throw UserTestQuestionHomeAlreadyExistsException
+      if (isForeignKeyConstraintPrismaError(error)) {
+        throw NotFoundRecordException
+      }
+      if (isNotFoundPrismaError(error)) {
+        throw NotFoundRecordException
       }
       throw error
     }
@@ -148,6 +161,9 @@ export class UserTestQuestionHomeService {
         message: ENTITY_MESSAGE.DELETE_SUCCESS
       }
     } catch (error) {
+      if (isForeignKeyConstraintPrismaError(error)) {
+        throw NotFoundRecordException
+      }
       if (isNotFoundPrismaError(error)) {
         throw NotFoundRecordException
       }
