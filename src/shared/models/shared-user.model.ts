@@ -1,6 +1,7 @@
 import { UserStatus } from '@/common/constants/auth.constant'
 import { AUTH_MESSAGE } from '@/common/constants/message'
 import { Gender } from '@/common/constants/user.constant'
+import { FigureSchema } from '@/modules/figure/entities/figure.entity'
 import { RoleSchema } from 'src/shared/models/shared-role.model'
 import { z } from 'zod'
 
@@ -15,6 +16,8 @@ export const UserSchema = z.object({
   avatar: z.string().nullable(),
   coin: z.number().min(0).default(0),
   point: z.number().min(0).default(0),
+  figureId: z.number().nullable().optional(),
+  pointTestHome: z.boolean().default(false),
   status: z.enum([UserStatus.ACTIVE, UserStatus.INACTIVE]),
   roleId: z.number().positive(),
   createdById: z.number().nullable(),
@@ -38,7 +41,8 @@ export const GetAccountProfileResSchema = z.object({
     role: RoleSchema.pick({
       id: true,
       name: true
-    })
+    }),
+    figure: FigureSchema.nullable().optional()
   })
 })
 

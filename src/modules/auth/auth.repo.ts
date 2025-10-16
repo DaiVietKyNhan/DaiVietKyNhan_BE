@@ -107,7 +107,8 @@ export class AuthRepository {
         deletedAt: null
       },
       include: {
-        role: true
+        role: true,
+        figure: true
       }
     })
   }

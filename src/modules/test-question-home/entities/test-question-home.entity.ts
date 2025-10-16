@@ -1,5 +1,6 @@
 import {
   AnswerScaleType,
+  TestQuestionHomeTraitType,
   TestQuestionHomeType
 } from '@/common/constants/text-question-home.constant'
 import { checkIdSchema } from '@/common/utils/id.validation'
@@ -15,7 +16,14 @@ export const TestQuestionHomeSchema = z.object({
   testQuestionHomeType: z
     .enum([TestQuestionHomeType.NORMAL, TestQuestionHomeType.CONVERT])
     .default(TestQuestionHomeType.NORMAL),
-
+  testType: z
+    .enum([
+      TestQuestionHomeTraitType.CHOLERIC,
+      TestQuestionHomeTraitType.SANGUINE,
+      TestQuestionHomeTraitType.MELANCHOLIC,
+      TestQuestionHomeTraitType.PHLEGMATIC
+    ])
+    .nullable(),
   answer: z.enum([
     AnswerScaleType.STRONGLY_DISAGREE,
     AnswerScaleType.DISAGREE,
@@ -34,7 +42,8 @@ export const TestQuestionHomeSchema = z.object({
 export const CreateTestQuestionHomeBodySchema = TestQuestionHomeSchema.pick({
   text: true,
   testQuestionHomeType: true,
-  answer: true
+  answer: true,
+  testType: true
 }).strict()
 
 export const CreateTestQuestionHomeResSchema = z.object({

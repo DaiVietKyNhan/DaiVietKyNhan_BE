@@ -1,4 +1,5 @@
 import { TypeOfVerificationCode } from '@/common/constants/auth.constant'
+import { FigureSchema } from '@/modules/figure/entities/figure.entity'
 import { extendZodWithOpenApi } from '@anatine/zod-openapi'
 import { patchNestJsSwagger } from 'nestjs-zod'
 import { RoleSchema } from 'src/shared/models/shared-role.model'
@@ -36,7 +37,9 @@ export const LoginResSchema = z
       status: true,
       phoneNumber: true,
       gender: true,
+      figureId: true,
       coin: true,
+      pointTestHome: true,
       point: true,
       birthDate: true,
       roleId: true,
@@ -45,7 +48,8 @@ export const LoginResSchema = z
       phoneNumber: z.string().nullable(),
       accessToken: z.string(),
       refreshToken: z.string(),
-      role: RoleSchema
+      role: RoleSchema,
+      figure: FigureSchema.nullable().optional()
     }),
     message: z.string()
   })
@@ -179,7 +183,9 @@ export const UpdateMeBodySchema = UserSchema.pick({
 
 export const AccountResSchema = z.object({
   statusCode: z.number(),
-  data: UserSchema.omit({ password: true }),
+  data: UserSchema.omit({ password: true }).extend({
+    figure: FigureSchema.nullable().optional()
+  }),
   message: z.string()
 })
 

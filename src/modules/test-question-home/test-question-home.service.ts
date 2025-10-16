@@ -25,6 +25,15 @@ export class TestQuestionHomeService {
     }
   }
 
+  async getListWithUser(userId: number) {
+    const data = await this.testQuestionHomeRepo.getListWithUser(userId)
+    return {
+      statusCode: HttpStatus.OK,
+      data,
+      message: ENTITY_MESSAGE.GET_LIST_SUCCESS
+    }
+  }
+
   async findById(id: number) {
     const attendenceConfig = await this.testQuestionHomeRepo.findById(id)
     if (!attendenceConfig) {
