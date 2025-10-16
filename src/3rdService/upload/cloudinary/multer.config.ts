@@ -75,7 +75,7 @@ export const CloudinaryImageUploadConfig = {
     }
   },
   limits: {
-    fileSize: 3 * 1024 * 1024, // 3MB
+    fileSize: 5 * 1024 * 1024, // 3MB
     files: 1 // Chỉ cho phép 1 file
   }
 }
