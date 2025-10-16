@@ -177,4 +177,12 @@ export class UserLandService {
       throw error
     }
   }
+
+  async getLandByUserId(userId: number) {
+    return {
+      statusCode: HttpStatus.OK,
+      data: await this.userLandRepo.getLandsByUserId(userId),
+      message: ENTITY_MESSAGE.GET_LIST_SUCCESS
+    }
+  }
 }

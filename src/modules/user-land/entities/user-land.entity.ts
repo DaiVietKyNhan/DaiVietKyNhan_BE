@@ -1,5 +1,6 @@
 import { UserLandStatus } from '@/common/constants/user-land.constant'
 import { checkIdSchema } from '@/common/utils/id.validation'
+import { LandSchema } from '@/modules/land/entities/land.entity'
 import { extendZodWithOpenApi } from '@anatine/zod-openapi'
 import { patchNestJsSwagger } from 'nestjs-zod'
 import { z } from 'zod'
@@ -56,7 +57,21 @@ export const GetUserLandParamsSchema = z
 export const GetUserLandResSchema = z
   .object({
     statusCode: z.number(),
-    data: UserLandSchema,
+    data: UserLandSchema.extend({
+      land: LandSchema.optional()
+    }),
+    message: z.string()
+  })
+  .strict()
+
+export const GetUserLandsResSchema = z
+  .object({
+    statusCode: z.number(),
+    data: z.array(
+      UserLandSchema.extend({
+        land: LandSchema.optional()
+      })
+    ),
     message: z.string()
   })
   .strict()
