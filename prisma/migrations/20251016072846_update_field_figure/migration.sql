@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Figure" ALTER COLUMN "imageUrl" DROP NOT NULL,
+ALTER COLUMN "imageUrl" SET DATA TYPE VARCHAR;

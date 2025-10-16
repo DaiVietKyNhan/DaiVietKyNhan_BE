@@ -5,6 +5,16 @@ export const TestQuestionHomeType = {
 export type TestQuestionHomeTypeType =
   (typeof TestQuestionHomeType)[keyof typeof TestQuestionHomeType]
 
+export const TestQuestionHomeTraitType = {
+  CHOLERIC: 'CHOLERIC',
+  SANGUINE: 'SANGUINE',
+  MELANCHOLIC: 'MELANCHOLIC',
+  PHLEGMATIC: 'PHLEGMATIC'
+} as const
+
+export type TestQuestionHomeTraitTypeType =
+  (typeof TestQuestionHomeTraitType)[keyof typeof TestQuestionHomeTraitType]
+
 export const AnswerScaleType = {
   STRONGLY_DISAGREE: 'STRONGLY_DISAGREE',
   DISAGREE: 'DISAGREE',

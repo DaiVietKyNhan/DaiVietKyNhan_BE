@@ -109,6 +109,44 @@ export class TestQuestionHomeRepo {
     }
   }
 
+  async getListWithUser(userId: number) {
+    // Return all questions with the user's answer (if any) attached as `userAnswer`
+    const dataWithAnswers = await this.prismaService.testQuestionHome.findMany({
+      where: { deletedAt: null },
+      orderBy: { id: 'asc' },
+      include: {
+        // include at most one UserTestQuestionHome per question for this user
+        userTestQuestionHomes: {
+          where: { userId },
+          take: 1
+        }
+      }
+    })
+
+    const mapped = dataWithAnswers.map((q: any) => {
+      const userAnswer =
+        Array.isArray(q.userTestQuestionHomes) && q.userTestQuestionHomes.length > 0
+          ? q.userTestQuestionHomes[0]
+          : null
+      // remove the relation array and attach a single userAnswer field
+      const { userTestQuestionHomes, ...rest } = q
+      return {
+        ...rest,
+        userAnswer
+      }
+    })
+
+    return {
+      results: mapped,
+      pagination: {
+        current: 1,
+        pageSize: mapped.length,
+        totalPage: 1,
+        totalItem: mapped.length
+      }
+    }
+  }
+
   findById(id: number): Promise<TestQuestionHomeTypeType | null> {
     return this.prismaService.testQuestionHome.findUnique({
       where: {

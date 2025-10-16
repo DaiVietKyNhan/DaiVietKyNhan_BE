@@ -20,6 +20,9 @@ import { TestQuestionHomeModule } from './modules/test-question-home/test-questi
 import { UserModule } from './modules/user/user.module'
 import { SharedModule } from './shared/shared.module'
 import { WebsocketsModule } from './websockets/websockets.module'
+import { UserTestQuestionHomeModule } from './modules/user-test-question-home/user-test-question-home.module';
+import { GodProfileModule } from './modules/god-profile/god-profile.module';
+import { FigureModule } from './modules/figure/figure.module';
 
 @Module({
   imports: [
@@ -41,7 +44,10 @@ import { WebsocketsModule } from './websockets/websockets.module'
     SystemConfigModule,
     UserModule,
     WebsocketsModule,
-    TestQuestionHomeModule
+    TestQuestionHomeModule,
+    UserTestQuestionHomeModule,
+    GodProfileModule,
+    FigureModule
   ],
 
   controllers: [],

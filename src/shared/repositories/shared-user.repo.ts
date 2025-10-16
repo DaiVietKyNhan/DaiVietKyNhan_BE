@@ -32,7 +32,8 @@ export class SharedUserRepository {
         deletedAt: null
       },
       include: {
-        role: true
+        role: true,
+        figure: true
       }
     })
   }
@@ -131,6 +132,27 @@ export class SharedUserRepository {
           decrement: amount
         }
       }
+    })
+  }
+
+  updateUserPointHome(userId: number, pointTestHome: boolean): Promise<UserType | null> {
+    return this.prismaService.user.update({
+      where: {
+        id: userId,
+        deletedAt: null
+      },
+      data: {
+        pointTestHome
+      }
+    })
+  }
+  updateUserById(userId: number, data: Partial<UserType>): Promise<UserType | null> {
+    return this.prismaService.user.update({
+      where: {
+        id: userId,
+        deletedAt: null
+      },
+      data
     })
   }
 }

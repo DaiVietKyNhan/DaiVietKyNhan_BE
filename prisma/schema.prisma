@@ -19,7 +19,9 @@ model User {
   status        UserStatus @default(INACTIVE)
   coin          Int        @default(0)
   point         Int        @default(0)
-  pointTestHome Int?
+  pointTestHome Boolean    @default(false)
+  figureId      Int?
+  figure        Figure?    @relation(fields: [figureId], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
   roleId Int
   role   Role @relation(fields: [roleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -72,6 +74,12 @@ model User {
   createdUserTestQHs       UserTestQuestionHome[] @relation("UserTestQuestionHomeCreatedBy")
   updatedUserTestQHs       UserTestQuestionHome[] @relation("UserTestQuestionHomeUpdatedBy")
   deletedUserTestQHs       UserTestQuestionHome[] @relation("UserTestQuestionHomeDeletedBy")
+  createdGodProfiles       GodProfile[]           @relation("GodProfileCreatedBy")
+  updatedGodProfiles       GodProfile[]           @relation("GodProfileUpdatedBy")
+  deletedGodProfiles       GodProfile[]           @relation("GodProfileDeletedBy")
+  createdFigures           Figure[]               @relation("FigureCreatedBy")
+  updatedFigures           Figure[]               @relation("FigureUpdatedBy")
+  deletedFigures           Figure[]               @relation("FigureDeletedBy")
 
   // 1 user có thể tạo ra nhiều user khác
   // 1 user chỉ có thể được tạo ra bởi 1 user khác
@@ -335,11 +343,14 @@ model Question {
 }
 
 model TestQuestionHome {
-  id                   Int                  @id @default(autoincrement())
-  text                 String               @db.VarChar()
-  testQuestionHomeType TestQuestionHomeType @default(NORMAL)
+  id                   Int                        @id @default(autoincrement())
+  text                 String                     @db.VarChar()
+  testQuestionHomeType TestQuestionHomeType       @default(NORMAL)
+  testType             TestQuestionHomeTraitType?
 
   answer AnswerScale
+
+  userTestQuestionHomes UserTestQuestionHome[]
 
   createdById Int?
   createdBy   User? @relation("TestQuestionHomeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
@@ -354,9 +365,13 @@ model TestQuestionHome {
 }
 
 model UserTestQuestionHome {
-  id     Int  @id @default(autoincrement())
+  id Int @id @default(autoincrement())
+
   userId Int
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  questionId Int
+  question   TestQuestionHome @relation(fields: [questionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   answer AnswerScale
 
@@ -366,6 +381,29 @@ model UserTestQuestionHome {
   updatedBy   User? @relation("UserTestQuestionHomeUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
   deletedById Int?
   deletedBy   User? @relation("UserTestQuestionHomeDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model GodProfile {
+  id Int @id @default(autoincrement())
+
+  title       String                     @db.VarChar(500)
+  textEmotion String                     @db.VarChar()
+  order       Int                        @default(0)
+  traitType   TestQuestionHomeTraitType?
+  description String                     @db.Text()
+  imgUrl      String?                    @db.VarChar()
+  text_color  String?                    @db.VarChar()
+
+  createdById Int?
+  createdBy   User? @relation("GodProfileCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  updatedById Int?
+  updatedBy   User? @relation("GodProfileUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  deletedById Int?
+  deletedBy   User? @relation("GodProfileDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())
@@ -435,6 +473,24 @@ model UserAnswerLog {
   updatedBy   User? @relation("UserAnswerLogUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
   deletedById Int?
   deletedBy   User? @relation("UserAnswerLogDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Figure {
+  id       Int     @id @default(autoincrement())
+  imageUrl String? @db.VarChar()
+
+  users User[]
+
+  createdById Int?
+  createdBy   User? @relation("FigureCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  updatedById Int?
+  updatedBy   User? @relation("FigureUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  deletedById Int?
+  deletedBy   User? @relation("FigureDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())
@@ -517,4 +573,11 @@ enum AnswerScale {
   NEUTRAL // Tương ứng với 2: Trung lập
   AGREE // Tương ứng với 3: Đồng ý
   STRONGLY_AGREE // Tương ứng với 4: Hoàn toàn đồng ý
+}
+
+enum TestQuestionHomeTraitType {
+  CHOLERIC
+  SANGUINE
+  MELANCHOLIC
+  PHLEGMATIC
 }

@@ -50,3 +50,7 @@ export const USER_MESSAGE = {
   EMAIL_INVALID: 'Email không hợp lệ',
   EMAIL_ALREADY_EXISTS: 'Email đã tồn tại'
 }
+
+export const ANSWER_SCALE_MESSAGE = {
+  ANSWER_SUCCESS: 'Trả lời thành công'
+}
