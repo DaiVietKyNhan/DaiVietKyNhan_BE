@@ -125,4 +125,13 @@ export class LandRepo {
       }
     })
   }
+
+  findAll(): Promise<LandType[]> {
+    return this.prismaService.land.findMany({
+      where: {
+        deletedAt: null
+      },
+      orderBy: { id: 'asc' }
+    })
+  }
 }

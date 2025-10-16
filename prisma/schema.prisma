@@ -679,7 +679,7 @@ enum TestQuestionHomeTraitType {
 }
 
 enum UserLandStatus {
-  UNLOCKED
+  LOCKED_FORCED
   LOCKED
   PENDING
   COMPLETED

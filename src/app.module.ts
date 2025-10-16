@@ -25,6 +25,7 @@ import { UserModule } from './modules/user/user.module'
 import { SharedModule } from './shared/shared.module'
 import { WebsocketsModule } from './websockets/websockets.module'
 import { LandModule } from './modules/land/land.module';
+import { UserLandModule } from './modules/user-land/user-land.module';
 
 @Module({
   imports: [
@@ -51,7 +52,8 @@ import { LandModule } from './modules/land/land.module';
     GodProfileModule,
     FigureModule,
     MoTaKyNhanModule,
-    LandModule
+    LandModule,
+    UserLandModule
   ],
 
   controllers: [],
