@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 import { PrismaService } from 'src/shared/services/prisma.service'
+import { SharedUserRepository } from '@/shared/repositories/shared-user.repo'
 
 import { AchievementController } from './achievement.controller'
 import { AchievementRepo } from './achievement.repo'
@@ -17,7 +18,8 @@ import { AchievementCheckerService } from './achievement-checker.service'
         UserAchievementService,
         UserAchievementRepo,
         AchievementCheckerService,
-        PrismaService
+        PrismaService,
+        SharedUserRepository
     ],
     exports: [AchievementService, UserAchievementService, AchievementCheckerService]
 })

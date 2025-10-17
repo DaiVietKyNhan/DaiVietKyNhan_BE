@@ -33,21 +33,32 @@ export class AchievementRepo {
                 }
             },
             orderBy: parsedOrderBy || { createdAt: 'desc' },
-            skip,
-            take: pagination.pageSize
+            skip: skip || 0,
+            take: Number(pagination.pageSize) || 10
+        })
+    }
+
+    findMaxOrder() {
+        return this.prismaService.achievement.findFirst({
+            where: { deletedAt: null },
+            orderBy: { order: 'desc' },
+            select: { order: true }
         })
     }
 
     create({
         createdById,
-        data
+        data,
+        order
     }: {
         createdById: number | null
         data: CreateAchievementBodyType
+        order: number
     }): Promise<AchievementType> {
         return this.prismaService.achievement.create({
             data: {
                 ...data,
+                order,
                 createdById
             }
         })
@@ -97,7 +108,7 @@ export class AchievementRepo {
 
     findUnique({ id }: { id: number }) {
         return this.prismaService.achievement.findUnique({
-            where: { id },
+            where: { id: Number(id) },
             include: {
                 land: {
                     select: {
@@ -120,7 +131,7 @@ export class AchievementRepo {
         updatedById: number
     }) {
         return this.prismaService.achievement.update({
-            where: { id },
+            where: { id: Number(id) },
             data: {
                 ...data,
                 updatedById
@@ -130,7 +141,7 @@ export class AchievementRepo {
 
     delete({ id, deletedById }: { id: number; deletedById: number }) {
         return this.prismaService.achievement.update({
-            where: { id },
+            where: { id: Number(id) },
             data: {
                 deletedAt: new Date(),
                 deletedById

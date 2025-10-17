@@ -37,8 +37,8 @@ export class UserAchievementRepo {
                 }
             },
             orderBy: parsedOrderBy || { createdAt: 'desc' },
-            skip,
-            take: pagination.pageSize
+            skip: skip || 0,
+            take: Number(pagination.pageSize) || 10
         })
     }
 
@@ -67,6 +67,64 @@ export class UserAchievementRepo {
                     }
                 }
             }
+        })
+    }
+
+    /**
+     * Create PENDING user-achievements for all active achievements
+     * Idempotent due to skipDuplicates on (userId, achievementId)
+     */
+    async createManyForUserFromActiveAchievements(userId: number, createdById: number) {
+        const achievements = await this.prismaService.achievement.findMany({
+            where: { isActive: true, deletedAt: null },
+            select: { id: true }
+        })
+
+        if (!achievements.length) return { count: 0 }
+
+        const rows = achievements.map((a) => ({
+            userId,
+            achievementId: a.id,
+            status: 'PENDING' as const,
+            completedAt: null,
+            rewardClaimed: false,
+            createdById
+        }))
+
+        return this.prismaService.userAchievement.createMany({
+            data: rows,
+            skipDuplicates: true
+        })
+    }
+
+    /**
+     * Create a specific achievement for all active users
+     * Called when a new achievement is added to the system
+     */
+    async createAchievementForAllUsers(achievementId: number, createdById: number) {
+        // Get all active users
+        const users = await this.prismaService.user.findMany({
+            where: {
+                status: 'ACTIVE',
+                deletedAt: null
+            },
+            select: { id: true }
+        })
+
+        if (!users.length) return { count: 0 }
+
+        const rows = users.map((user) => ({
+            userId: user.id,
+            achievementId,
+            status: 'PENDING' as const,
+            completedAt: null,
+            rewardClaimed: false,
+            createdById
+        }))
+
+        return this.prismaService.userAchievement.createMany({
+            data: rows,
+            skipDuplicates: true
         })
     }
 
@@ -118,7 +176,7 @@ export class UserAchievementRepo {
 
     findUnique({ id }: { id: number }) {
         return this.prismaService.userAchievement.findUnique({
-            where: { id },
+            where: { id: Number(id) },
             include: {
                 achievement: {
                     include: {
@@ -169,7 +227,7 @@ export class UserAchievementRepo {
         updatedById: number
     }) {
         return this.prismaService.userAchievement.update({
-            where: { id },
+            where: { id: Number(id) },
             data: {
                 ...data,
                 updatedById
@@ -238,7 +296,7 @@ export class UserAchievementRepo {
 
     delete({ id, deletedById }: { id: number; deletedById: number }) {
         return this.prismaService.userAchievement.update({
-            where: { id },
+            where: { id: Number(id) },
             data: {
                 deletedAt: new Date(),
                 deletedById

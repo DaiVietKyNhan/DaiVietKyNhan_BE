@@ -96,7 +96,7 @@ export class UserAnswerLogService {
             amount: question.point
           })
         }
-
+        //KUMO
         // 3) Check achievements after adding KyNhanSummary
         await this.achievementCheckerService.checkKyNhanSummaryAchievements(createdById)
       } else {

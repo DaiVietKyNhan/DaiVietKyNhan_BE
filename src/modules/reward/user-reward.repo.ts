@@ -27,8 +27,8 @@ export class UserRewardRepo {
                 reward: true
             },
             orderBy: parsedOrderBy || { createdAt: 'desc' },
-            skip,
-            take: pagination.pageSize
+            skip: skip || 0,
+            take: Number(pagination.pageSize) || 10
         })
     }
 
@@ -88,7 +88,7 @@ export class UserRewardRepo {
 
     findUnique({ id }: { id: number }) {
         return this.prismaService.userReward.findUnique({
-            where: { id },
+            where: { id: Number(id) },
             include: {
                 reward: true
             }
@@ -119,7 +119,7 @@ export class UserRewardRepo {
         updatedById: number
     }) {
         return this.prismaService.userReward.update({
-            where: { id },
+            where: { id: Number(id) },
             data: {
                 ...data,
                 updatedById
@@ -168,7 +168,7 @@ export class UserRewardRepo {
 
     delete({ id, deletedById }: { id: number; deletedById: number }) {
         return this.prismaService.userReward.update({
-            where: { id },
+            where: { id: Number(id) },
             data: {
                 deletedAt: new Date(),
                 deletedById
