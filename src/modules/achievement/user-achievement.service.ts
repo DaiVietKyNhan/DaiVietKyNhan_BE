@@ -18,11 +18,13 @@ import {
     UpdateUserAchievementBodyType
 } from './entities/user-achievement.entity'
 import { UserAchievementRepo } from './user-achievement.repo'
+import { SharedUserRepository } from '@/shared/repositories/shared-user.repo'
 
 @Injectable()
 export class UserAchievementService {
     constructor(
-        private userAchievementRepo: UserAchievementRepo
+        private userAchievementRepo: UserAchievementRepo,
+        private sharedUserRepo: SharedUserRepository
     ) { }
 
     async list(pagination: PaginationQueryType) {
@@ -31,6 +33,31 @@ export class UserAchievementService {
             statusCode: HttpStatus.OK,
             data,
             message: ENTITY_MESSAGE.GET_LIST_SUCCESS
+        }
+    }
+
+    /**
+     * Initialize all active achievements as PENDING for a verified user
+     */
+    async initializeForUser(userId: number) {
+        const result = await this.userAchievementRepo.createManyForUserFromActiveAchievements(userId, userId)
+        return {
+            statusCode: HttpStatus.CREATED,
+            data: { initialized: result.count },
+            message: ENTITY_MESSAGE.CREATE_SUCCESS
+        }
+    }
+
+    /**
+     * Initialize a specific achievement for all active users
+     * Called when a new achievement is added to the system
+     */
+    async initializeAchievementForAllUsers(achievementId: number, createdById: number) {
+        const result = await this.userAchievementRepo.createAchievementForAllUsers(achievementId, createdById)
+        return {
+            statusCode: HttpStatus.CREATED,
+            data: { initialized: result.count },
+            message: `Achievement initialized for ${result.count} users`
         }
     }
 
@@ -180,6 +207,10 @@ export class UserAchievementService {
                 throw new BadRequestException('Reward already claimed')
             }
 
+            // Get achievement reward amount
+            const achievement = await this.userAchievementRepo.findByUserAndAchievement({ userId, achievementId })
+            const rewardAmount = achievement?.achievement?.reward || 0
+
             // Update user achievement to claimed status
             const updatedUserAchievement = await this.userAchievementRepo.update({
                 id: userAchievement.id,
@@ -190,10 +221,18 @@ export class UserAchievementService {
                 updatedById
             })
 
+            // 🌟 Cộng reward vào coin của user
+            if (rewardAmount > 0) {
+                await this.sharedUserRepo.addCoinByUserId({
+                    userId,
+                    amount: rewardAmount
+                })
+            }
+
             return {
                 statusCode: HttpStatus.OK,
                 data: updatedUserAchievement,
-                message: 'Reward claimed successfully'
+                message: `nhận thưởng thành tựu thành công! +${rewardAmount} coin đã được cộng vào tài khoản của bạn`
             }
         } catch (error) {
             if (isNotFoundPrismaError(error)) {

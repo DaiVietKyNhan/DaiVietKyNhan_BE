@@ -24,8 +24,8 @@ export class RewardRepo {
                 deletedAt: null
             },
             orderBy: parsedOrderBy || { createdAt: 'desc' },
-            skip,
-            take: pagination.pageSize
+            skip: skip || 0,
+            take: Number(pagination.pageSize) || 10
         })
     }
 
@@ -79,7 +79,7 @@ export class RewardRepo {
 
     findUnique({ id }: { id: number }) {
         return this.prismaService.reward.findUnique({
-            where: { id }
+            where: { id: Number(id) }
         })
     }
 
@@ -93,7 +93,7 @@ export class RewardRepo {
         updatedById: number
     }) {
         return this.prismaService.reward.update({
-            where: { id },
+            where: { id: Number(id) },
             data: {
                 ...data,
                 updatedById
@@ -103,7 +103,7 @@ export class RewardRepo {
 
     delete({ id, deletedById }: { id: number; deletedById: number }) {
         return this.prismaService.reward.update({
-            where: { id },
+            where: { id: Number(id) },
             data: {
                 deletedAt: new Date(),
                 deletedById

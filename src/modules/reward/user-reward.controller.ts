@@ -1,6 +1,6 @@
 import { ActiveUser } from '@/common/decorators/active-user.decorator'
 import { PaginationQueryType } from '@/shared/models/request.model'
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 
 import { CreateUserRewardBodyDTO, UpdateUserRewardBodyDTO, ExchangeRewardBodyDTO } from './dto/user-reward.zod-dto'
@@ -50,7 +50,7 @@ export class UserRewardController {
         return this.userRewardService.create({ data, createdById })
     }
 
-    @Patch(':id')
+    @Put(':id')
     @ApiOperation({ summary: 'Update user reward' })
     @ApiResponse({ status: 200, description: 'Update user reward successfully' })
     async update(

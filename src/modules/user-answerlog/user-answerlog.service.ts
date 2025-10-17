@@ -115,9 +115,9 @@ export class UserAnswerLogService {
             amount: question.point
           })
         }
-
+        
         landId = question?.landId
-
+        
         // 3) Check achievements after adding KyNhanSummary
         await this.achievementCheckerService.checkKyNhanSummaryAchievements(createdById)
       } else {

@@ -30,7 +30,6 @@ export const CreateAchievementBodySchema = AchievementSchema.pick({
     requirement: true,
     reward: true,
     isActive: true,
-    order: true,
     landId: true
 })
 

@@ -18,11 +18,13 @@ import {
     UpdateAchievementBodyType
 } from './entities/achievement.entity'
 import { AchievementRepo } from './achievement.repo'
+import { UserAchievementService } from './user-achievement.service'
 
 @Injectable()
 export class AchievementService {
     constructor(
-        private achievementRepo: AchievementRepo
+        private achievementRepo: AchievementRepo,
+        private userAchievementService: UserAchievementService
     ) { }
 
     async list(pagination: PaginationQueryType) {
@@ -69,10 +71,25 @@ export class AchievementService {
                 })
             }
 
+            // Tự động set order = max(order) + 1
+            const maxOrderRow = await this.achievementRepo.findMaxOrder()
+            const nextOrder = (maxOrderRow?.order ?? 0) + 1
+
             const achievement = await this.achievementRepo.create({
                 createdById,
-                data: parsed.data as CreateAchievementBodyType
+                data: parsed.data as CreateAchievementBodyType,
+                order: nextOrder
             })
+
+            // 🌟 Tự động tạo UserAchievement cho tất cả user hiện tại khi có achievement mới
+            if (achievement.isActive) {
+                try {
+                    await this.userAchievementService.initializeAchievementForAllUsers(achievement.id, createdById)
+                } catch (error) {
+                    // Log error but don't fail the achievement creation
+                    console.error('Failed to initialize achievement for all users:', error)
+                }
+            }
 
             return {
                 statusCode: HttpStatus.CREATED,
@@ -178,6 +195,41 @@ export class AchievementService {
             statusCode: HttpStatus.OK,
             data: achievements,
             message: ENTITY_MESSAGE.GET_LIST_SUCCESS
+        }
+    }
+
+    /**
+     * Initialize all active achievements for all users
+     * Admin endpoint to manually trigger initialization
+     */
+    async initializeForAllUsers(createdById: number) {
+        try {
+            // Get all active achievements
+            const achievements = await this.achievementRepo.findActiveAchievements()
+
+            if (!achievements.length) {
+                return {
+                    statusCode: HttpStatus.OK,
+                    data: { initialized: 0 },
+                    message: 'No active achievements found'
+                }
+            }
+
+            let totalInitialized = 0
+
+            // Initialize each achievement for all users
+            for (const achievement of achievements) {
+                const result = await this.userAchievementService.initializeAchievementForAllUsers(achievement.id, createdById)
+                totalInitialized += result.data.initialized
+            }
+
+            return {
+                statusCode: HttpStatus.OK,
+                data: { initialized: totalInitialized },
+                message: `Initialized ${totalInitialized} user achievements for all users`
+            }
+        } catch (error) {
+            throw error
         }
     }
 }
