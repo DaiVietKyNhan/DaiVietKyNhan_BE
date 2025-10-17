@@ -22,6 +22,7 @@ import { MessageResDTO } from 'src/shared/dtos/response.dto'
 import {
   CreateKyNhanSummaryBodyDTO,
   CreateKyNhanSummaryResDTO,
+  GetKyNhanSummariesResDTO,
   GetKyNhanSummaryByQuesIdParamsDTO,
   GetKyNhanSummaryParamsDTO,
   GetKyNhanSummaryResDTO,
@@ -47,8 +48,8 @@ export class KyNhanSummaryController {
     return this.kyNhanSummaryService.findById(params.kyNhanSummaryId)
   }
 
-  @Get('question/questionId')
-  @ZodSerializerDto(GetKyNhanSummaryResDTO)
+  @Get('question/:questionId')
+  @ZodSerializerDto(GetKyNhanSummariesResDTO)
   findByQuestionId(@Param() params: GetKyNhanSummaryByQuesIdParamsDTO) {
     return this.kyNhanSummaryService.findByQuestionId(params.questionId)
   }

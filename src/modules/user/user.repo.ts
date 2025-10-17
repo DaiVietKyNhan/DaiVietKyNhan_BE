@@ -7,6 +7,7 @@ import { WhereUniqueUserType } from '@/shared/repositories/shared-user.repo'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import {
   CreateUserBodyType,
+  GetKyNhansByUserSchemaType,
   UpdateUserBodyType,
   USER_FIELDS
 } from './entities/user.entity'
@@ -204,6 +205,25 @@ export class UserRepo {
       include: {
         role: {
           select: { id: true, name: true, description: true }
+        }
+      }
+    })
+  }
+
+  getKyNhanList(
+    userId: number
+  ): Promise<Omit<GetKyNhansByUserSchemaType, 'password'> | null> {
+    return this.prismaService.user.findUnique({
+      where: {
+        id: userId,
+        deletedAt: null
+      },
+      include: {
+        userKynhans: {
+          where: { deletedAt: null },
+          include: {
+            motaKyNhan: true
+          }
         }
       }
     })

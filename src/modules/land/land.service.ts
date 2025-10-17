@@ -37,6 +37,23 @@ export class LandService {
     }
   }
 
+  async getQuestionsByLandId(landId: number, userId: number) {
+    const existLand = await this.landRepo.findById(landId)
+    if (!existLand) {
+      throw NotFoundRecordException
+    }
+
+    const landWithQuestionsAndAnswers = await this.landRepo.getQuestionsByLandId(
+      landId,
+      userId
+    )
+    return {
+      statusCode: HttpStatus.OK,
+      data: landWithQuestionsAndAnswers,
+      message: ENTITY_MESSAGE.GET_SUCCESS
+    }
+  }
+
   async create({ data, createdById }: { data: CreateLandBodyType; createdById: number }) {
     try {
       const attendenceConfig = await this.landRepo.create({

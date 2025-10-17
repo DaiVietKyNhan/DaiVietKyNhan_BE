@@ -7,8 +7,10 @@ import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared
 
 import envConfig from '@/config/env.config'
 import { SharedRoleRepository } from '@/shared/repositories/shared-role.repo'
+import { SharedUserRepository } from '@/shared/repositories/shared-user.repo'
 import { HashingService } from '@/shared/services/hashing.service'
 import { EmailAlreadyExistsException } from '../auth/dto/auth.error'
+import { UserMaxHeartException, UserNotEnoughCoinException } from './dto/user.error'
 import { CreateUserBodyType, UpdateUserBodyType } from './entities/user.entity'
 import { UserRepo } from './user.repo'
 
@@ -17,7 +19,8 @@ export class UserService {
   constructor(
     private userRepo: UserRepo,
     private readonly hashingService: HashingService,
-    private readonly sharedRoleRepo: SharedRoleRepository
+    private readonly sharedRoleRepo: SharedRoleRepository,
+    private readonly sharedUserRepo: SharedUserRepository
   ) {}
 
   async list(pagination: PaginationQueryType) {
@@ -169,6 +172,47 @@ export class UserService {
         throw NotFoundRecordException
       }
       throw error
+    }
+  }
+
+  async addHeartToUser(userId: number) {
+    try {
+      const user = await this.sharedUserRepo.findUnique({ id: userId })
+      if (!user) {
+        throw NotFoundRecordException
+      }
+      if (user.coin < 100) {
+        throw UserNotEnoughCoinException
+      }
+      if (user.heart >= 3) {
+        throw UserMaxHeartException
+      }
+      const [updatedUser] = await Promise.all([
+        this.sharedUserRepo.addHeart({ userId, amount: 1 }),
+        await this.sharedUserRepo.minusCoinByUserId({
+          userId,
+          amount: 100
+        })
+      ])
+
+      return {
+        statusCode: HttpStatus.OK,
+        data: updatedUser,
+        message: ENTITY_MESSAGE.UPDATE_SUCCESS
+      }
+    } catch (error) {
+      if (isNotFoundPrismaError(error)) {
+        throw NotFoundRecordException
+      }
+      throw error
+    }
+  }
+
+  async getKyNhanList(userId: number) {
+    return {
+      statusCode: HttpStatus.OK,
+      data: await this.userRepo.getKyNhanList(userId),
+      message: ENTITY_MESSAGE.GET_LIST_SUCCESS
     }
   }
 }
