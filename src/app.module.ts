@@ -26,6 +26,7 @@ import { SharedModule } from './shared/shared.module'
 import { WebsocketsModule } from './websockets/websockets.module'
 import { LandModule } from './modules/land/land.module';
 import { UserLandModule } from './modules/user-land/user-land.module';
+import { KynhanSummaryModule } from './modules/kynhan-summary/kynhan-summary.module';
 
 @Module({
   imports: [
@@ -53,7 +54,8 @@ import { UserLandModule } from './modules/user-land/user-land.module';
     FigureModule,
     MoTaKyNhanModule,
     LandModule,
-    UserLandModule
+    UserLandModule,
+    KynhanSummaryModule
   ],
 
   controllers: [],
