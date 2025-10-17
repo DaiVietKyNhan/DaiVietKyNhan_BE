@@ -29,6 +29,7 @@ import { UserModule } from './modules/user/user.module'
 import { SharedModule } from './shared/shared.module'
 import { WebsocketsModule } from './websockets/websockets.module'
 import { AnswerModule } from './modules/answer/answer.module';
+import { UserAnswerlogModule } from './modules/user-answerlog/user-answerlog.module';
 
 @Module({
   imports: [
@@ -59,7 +60,8 @@ import { AnswerModule } from './modules/answer/answer.module';
     UserLandModule,
     KynhanSummaryModule,
     QuestionModule,
-    AnswerModule
+    AnswerModule,
+    UserAnswerlogModule
   ],
 
   controllers: [],

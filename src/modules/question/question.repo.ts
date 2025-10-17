@@ -195,4 +195,27 @@ export class QuestionRepo {
       include: { kynhanSummaries: true, answers: true }
     })
   }
+
+  getQuestionByIdAndAnswer(
+    questionId: number,
+    text: string
+  ): Promise<QuestionType | null> {
+    return this.prismaService.question.findFirst({
+      where: {
+        id: questionId,
+        deletedAt: null,
+        answers: {
+          some: {
+            text: {
+              equals: text,
+              mode: 'insensitive' // không phân biệt hoa thường
+            }
+          }
+        }
+      },
+      include: {
+        answers: true
+      }
+    })
+  }
 }

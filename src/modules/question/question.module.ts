@@ -8,6 +8,7 @@ import { QuestionService } from './question.service'
 @Module({
   imports: [AnswerModule, LandModule],
   controllers: [QuestionController],
-  providers: [QuestionService, QuestionRepo]
+  providers: [QuestionService, QuestionRepo],
+  exports: [QuestionService, QuestionRepo]
 })
 export class QuestionModule {}

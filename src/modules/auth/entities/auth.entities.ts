@@ -43,6 +43,7 @@ export const LoginResSchema = z
       coin: true,
       pointTestHome: true,
       point: true,
+      heart: true,
       birthDate: true,
       roleId: true,
       avatar: true
