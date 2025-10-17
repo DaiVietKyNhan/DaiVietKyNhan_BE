@@ -10,6 +10,7 @@ import {
   isRecordNotFoundOnConnectPrismaError,
   isUniqueConstraintPrismaError
 } from 'src/shared/helpers'
+import { AchievementCheckerService } from '../achievement/achievement-checker.service'
 import { KyNhanSummaryRepo } from '../kynhan-summary/kynhan-summary.repo'
 import { QuestionRepo } from '../question/question.repo'
 import { UserLandRepo } from '../user-land/user-land.repo'
@@ -30,7 +31,9 @@ export class UserAnswerLogService {
     private readonly quesRepo: QuestionRepo,
     private readonly kyNhanSummaryRepo: KyNhanSummaryRepo,
     private readonly sharedUserRepo: SharedUserRepository,
-    private readonly userLandRepo: UserLandRepo
+    private readonly userLandRepo: UserLandRepo,
+
+    private readonly achievementCheckerService: AchievementCheckerService
   ) {}
 
   async list(pagination: PaginationQueryType) {
@@ -124,6 +127,9 @@ export class UserAnswerLogService {
             userId: createdById
           })
         }
+
+        // 3) Check achievements after adding KyNhanSummary
+        await this.achievementCheckerService.checkKyNhanSummaryAchievements(createdById)
       } else {
         // Incorrect: minus 20 points but not below zero
         // Get current point
