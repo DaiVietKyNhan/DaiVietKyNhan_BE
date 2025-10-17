@@ -13,19 +13,23 @@ import { AuthModule } from './modules/auth/auth.module'
 
 import { FigureModule } from './modules/figure/figure.module'
 import { GodProfileModule } from './modules/god-profile/god-profile.module'
+import { KynhanSummaryModule } from './modules/kynhan-summary/kynhan-summary.module'
 import { KyNhanModule } from './modules/kynhan/kynhan.module'
+import { LandModule } from './modules/land/land.module'
 import { MediaModule } from './modules/media/media.module'
 import { MoTaKyNhanModule } from './modules/mo-ta-ky-nhan/mo-ta-ky-nhan.module'
 import { PermissionModule } from './modules/permission/permission.module'
+import { QuestionModule } from './modules/question/question.module'
 import { RoleModule } from './modules/role/role.module'
 import { SystemConfigModule } from './modules/system-config/system-config.module'
 import { TestQuestionHomeModule } from './modules/test-question-home/test-question-home.module'
+import { UserLandModule } from './modules/user-land/user-land.module'
 import { UserTestQuestionHomeModule } from './modules/user-test-question-home/user-test-question-home.module'
 import { UserModule } from './modules/user/user.module'
 import { SharedModule } from './shared/shared.module'
 import { WebsocketsModule } from './websockets/websockets.module'
-import { LandModule } from './modules/land/land.module';
-import { UserLandModule } from './modules/user-land/user-land.module';
+import { AnswerModule } from './modules/answer/answer.module';
+import { UserAnswerlogModule } from './modules/user-answerlog/user-answerlog.module';
 
 @Module({
   imports: [
@@ -53,7 +57,11 @@ import { UserLandModule } from './modules/user-land/user-land.module';
     FigureModule,
     MoTaKyNhanModule,
     LandModule,
-    UserLandModule
+    UserLandModule,
+    KynhanSummaryModule,
+    QuestionModule,
+    AnswerModule,
+    UserAnswerlogModule
   ],
 
   controllers: [],

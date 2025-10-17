@@ -17,6 +17,7 @@ export const UserSchema = z.object({
   avatar: z.string().nullable(),
   coin: z.number().min(0).default(0),
   point: z.number().min(0).default(0),
+  heart: z.number().min(0).default(3),
   figureId: z.number().nullable().optional(),
   godProfileId: z.number().nullable().optional(),
   pointTestHome: z.boolean().default(false),

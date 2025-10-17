@@ -5,6 +5,7 @@ import {
   CreateUserLandResSchema,
   GetUserLandParamsSchema,
   GetUserLandResSchema,
+  GetUserLandsResSchema,
   UpdateUserLandBodySchema,
   UpdateUserLandResSchema
 } from '../entities/user-land.entity'
@@ -16,3 +17,5 @@ export class UpdateUserLandBodyDTO extends createZodDto(UpdateUserLandBodySchema
 export class UpdateUserLandResDTO extends createZodDto(UpdateUserLandResSchema) {}
 export class GetParamsUserLandDTO extends createZodDto(GetUserLandParamsSchema) {}
 export class GetUserLandResDTO extends createZodDto(GetUserLandResSchema) {}
+
+export class GetUserLandsResDTO extends createZodDto(GetUserLandsResSchema) {}

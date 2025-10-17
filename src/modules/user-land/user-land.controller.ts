@@ -10,6 +10,7 @@ import {
   CreateUserLandResDTO,
   GetParamsUserLandDTO,
   GetUserLandResDTO,
+  GetUserLandsResDTO,
   UpdateUserLandBodyDTO,
   UpdateUserLandResDTO
 } from 'src/modules/user-land/dto/user-land.zod-dto'
@@ -26,6 +27,12 @@ export class UserLandController {
   @ZodSerializerDto(PaginationResponseSchema)
   list(@Query() query: PaginationQueryDTO) {
     return this.userLandService.list(query)
+  }
+
+  @Get('user')
+  @ZodSerializerDto(GetUserLandsResDTO)
+  getLandByUser(@ActiveUser('userId') userId: number) {
+    return this.userLandService.getLandByUserId(userId)
   }
 
   @Get(':userLandId')

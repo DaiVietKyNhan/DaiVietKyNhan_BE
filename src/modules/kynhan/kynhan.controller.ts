@@ -59,7 +59,7 @@ export class KynhanController {
       name: body.name,
       thoiKy: body.thoiKy,
       chienCong: body.chienCong,
-      landId: body.landId,
+      landId: Number(body.landId),
       imgUrl: '',
       active: body.active === 'true' || body.active === true ? true : false
     }
@@ -87,7 +87,7 @@ export class KynhanController {
     if (body.active !== undefined)
       payload.active = body.active === 'true' || body.active === true ? true : false
     if (body.imgUrl !== undefined) payload.imgUrl = body.imgUrl
-    if (body.landId !== undefined) payload.landId = body.landId
+    if (body.landId !== undefined) payload.landId = Number(body.landId)
     return this.kynhanService.update({
       data: payload,
       id: params.kyNhanId,

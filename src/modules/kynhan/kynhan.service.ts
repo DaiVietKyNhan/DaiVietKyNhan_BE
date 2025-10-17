@@ -81,6 +81,7 @@ export class KynhanService {
         createdById,
         data
       })
+
       return {
         statusCode: HttpStatus.CREATED,
         data: attendenceConfig,

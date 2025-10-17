@@ -113,7 +113,8 @@ export class UserLandRepo {
       where: {
         id,
         deletedAt: null
-      }
+      },
+      include: { land: true }
     })
   }
 
@@ -169,5 +170,15 @@ export class UserLandRepo {
     }
 
     return results
+  }
+
+  getLandsByUserId(userId: number): Promise<UserLandType[]> {
+    return this.prismaService.userLand.findMany({
+      where: {
+        userId,
+        deletedAt: null
+      },
+      include: { land: true }
+    })
   }
 }

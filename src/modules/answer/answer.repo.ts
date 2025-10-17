@@ -4,14 +4,14 @@ import { Injectable } from '@nestjs/common'
 import { parseQs } from '@/common/utils/qs-parser'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import {
-  CreateLandBodyType,
-  LAND_FIELDS,
-  LandType,
-  UpdateLandBodyType
-} from './entities/land.entity'
+  ANSWER_FIELDS,
+  AnswerType,
+  CreateAnswerBodyType,
+  UpdateAnswerBodyType
+} from './entities/answer.entity'
 
 @Injectable()
-export class LandRepo {
+export class AnswerRepo {
   constructor(private prismaService: PrismaService) {}
 
   create({
@@ -19,9 +19,9 @@ export class LandRepo {
     data
   }: {
     createdById: number | null
-    data: CreateLandBodyType
-  }): Promise<LandType> {
-    return this.prismaService.land.create({
+    data: CreateAnswerBodyType
+  }): Promise<AnswerType> {
+    return this.prismaService.answer.create({
       data: {
         ...data,
         createdById
@@ -36,9 +36,9 @@ export class LandRepo {
   }: {
     id: number
     updatedById: number
-    data: UpdateLandBodyType
-  }): Promise<LandType> {
-    return this.prismaService.land.update({
+    data: UpdateAnswerBodyType
+  }): Promise<AnswerType> {
+    return this.prismaService.answer.update({
       where: {
         id,
         deletedAt: null
@@ -59,14 +59,14 @@ export class LandRepo {
       deletedById: number
     },
     isHard?: boolean
-  ): Promise<LandType> {
+  ): Promise<AnswerType> {
     return isHard
-      ? this.prismaService.land.delete({
+      ? this.prismaService.answer.delete({
           where: {
             id
           }
         })
-      : this.prismaService.land.update({
+      : this.prismaService.answer.update({
           where: {
             id,
             deletedAt: null
@@ -79,16 +79,16 @@ export class LandRepo {
   }
 
   async list(pagination: PaginationQueryType) {
-    const { where, orderBy } = parseQs(pagination.qs, LAND_FIELDS)
+    const { where, orderBy } = parseQs(pagination.qs, ANSWER_FIELDS)
 
     const skip = (pagination.currentPage - 1) * pagination.pageSize
     const take = pagination.pageSize
 
     const [totalItems, data] = await Promise.all([
-      this.prismaService.land.count({
+      this.prismaService.answer.count({
         where: { deletedAt: null, ...where }
       }),
-      this.prismaService.land.findMany({
+      this.prismaService.answer.findMany({
         where: { deletedAt: null, ...where },
 
         orderBy,
@@ -108,8 +108,8 @@ export class LandRepo {
     }
   }
 
-  findById(id: number): Promise<LandType | null> {
-    return this.prismaService.land.findUnique({
+  findById(id: number): Promise<AnswerType | null> {
+    return this.prismaService.answer.findUnique({
       where: {
         id,
         deletedAt: null
@@ -117,38 +117,26 @@ export class LandRepo {
     })
   }
 
-  findExistByName(name: string): Promise<LandType | null> {
-    return this.prismaService.land.findFirst({
+  createMany({ data }: { data: CreateAnswerBodyType[] }): Promise<{ count: number }> {
+    return this.prismaService.answer.createMany({
+      data: data,
+      skipDuplicates: true
+    })
+  }
+
+  deleteManyByQuestionId(questionId: number): Promise<{ count: number }> {
+    return this.prismaService.answer.deleteMany({
       where: {
-        name,
-        deletedAt: null
+        questionId: questionId
       }
     })
   }
 
-  findAll(): Promise<LandType[]> {
-    return this.prismaService.land.findMany({
+  countByQuestionId(questionId: number): Promise<number> {
+    return this.prismaService.answer.count({
       where: {
+        questionId,
         deletedAt: null
-      },
-      orderBy: { id: 'asc' }
-    })
-  }
-
-  getListQuesByLandId(landId: number): Promise<LandType | null> {
-    return this.prismaService.land.findUnique({
-      where: {
-        id: landId,
-        deletedAt: null
-      },
-      include: {
-        questions: {
-          select: {
-            id: true,
-            text: true,
-            answers: true
-          }
-        }
       }
     })
   }
