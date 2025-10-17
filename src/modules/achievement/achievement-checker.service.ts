@@ -1,0 +1,143 @@
+import { Injectable, Logger } from '@nestjs/common'
+import { PrismaService } from 'src/shared/services/prisma.service'
+import { UserAchievementRepo } from './user-achievement.repo'
+import { AchievementRepo } from './achievement.repo'
+
+@Injectable()
+export class AchievementCheckerService {
+    constructor(
+        private prismaService: PrismaService,
+        private userAchievementRepo: UserAchievementRepo,
+        private achievementRepo: AchievementRepo,
+        private logger: Logger
+    ) { }
+
+    /**
+     * Kiểm tra và cập nhật thành tựu dựa trên số lượng KyNhanSummary của user
+     */
+    async checkKyNhanSummaryAchievements(userId: number) {
+        try {
+            // Lấy số lượng KyNhanSummary của user
+            const user = await this.prismaService.user.findUnique({
+                where: { id: userId },
+                include: {
+                    _count: {
+                        select: {
+                            userKyNhanSummaries: true
+                        }
+                    }
+                }
+            })
+
+            const count = user?._count.userKyNhanSummaries || 0
+
+            // Lấy tất cả thành tựu loại KY_NHAN_SUMMARY_COUNT
+            const achievements = await this.achievementRepo.findByType('KY_NHAN_SUMMARY_COUNT')
+
+            for (const achievement of achievements) {
+                // Kiểm tra xem user đã đạt được thành tựu này chưa
+                const userAchievement = await this.userAchievementRepo.findByUserAndAchievement({
+                    userId,
+                    achievementId: achievement.id
+                })
+
+                if (!userAchievement) {
+                    // Tạo user achievement mới
+                    await this.userAchievementRepo.create({
+                        createdById: userId,
+                        data: {
+                            userId,
+                            achievementId: achievement.id,
+                            status: count >= achievement.requirement ? 'COMPLETED' : 'PENDING',
+                            completedAt: count >= achievement.requirement ? new Date() : null,
+                            rewardClaimed: false
+                        }
+                    })
+                } else if (userAchievement.status === 'PENDING' && count >= achievement.requirement) {
+                    // Cập nhật thành tựu đã hoàn thành
+                    await this.userAchievementRepo.update({
+                        id: userAchievement.id,
+                        data: {
+                            status: 'COMPLETED',
+                            completedAt: new Date()
+                        },
+                        updatedById: userId
+                    })
+                }
+            }
+
+            this.logger.log(`Checked KyNhanSummary achievements for user ${userId}`)
+        } catch (error) {
+            this.logger.error(`Error checking KyNhanSummary achievements for user ${userId}:`, error)
+        }
+    }
+
+    /**
+     * Kiểm tra và cập nhật thành tựu dựa trên Land của user
+     */
+    async checkLandAchievements(userId: number) {
+        try {
+            // Lấy tất cả thành tựu loại LAND_COLLECTION
+            const achievements = await this.achievementRepo.findByType('LAND_COLLECTION')
+
+            for (const achievement of achievements) {
+                if (!achievement.landId) continue
+
+                // Kiểm tra xem user đã có Land này chưa
+                const userLand = await this.prismaService.userLand.findFirst({
+                    where: {
+                        userId,
+                        landId: achievement.landId,
+                        status: 'COMPLETED'
+                    }
+                })
+
+                const hasLand = !!userLand
+
+                // Kiểm tra xem user đã có thành tựu này chưa
+                const userAchievement = await this.userAchievementRepo.findByUserAndAchievement({
+                    userId,
+                    achievementId: achievement.id
+                })
+
+                if (!userAchievement) {
+                    // Tạo user achievement mới
+                    await this.userAchievementRepo.create({
+                        createdById: userId,
+                        data: {
+                            userId,
+                            achievementId: achievement.id,
+                            status: hasLand ? 'COMPLETED' : 'PENDING',
+                            completedAt: hasLand ? new Date() : null,
+                            rewardClaimed: false
+                        }
+                    })
+                } else if (userAchievement.status === 'PENDING' && hasLand) {
+                    // Cập nhật thành tựu đã hoàn thành
+                    await this.userAchievementRepo.update({
+                        id: userAchievement.id,
+                        data: {
+                            status: 'COMPLETED',
+                            completedAt: new Date()
+                        },
+                        updatedById: userId
+                    })
+                }
+            }
+
+            this.logger.log(`Checked Land achievements for user ${userId}`)
+        } catch (error) {
+            this.logger.error(`Error checking Land achievements for user ${userId}:`, error)
+        }
+    }
+
+    /**
+     * Kiểm tra tất cả thành tựu của user
+     */
+    async checkAllAchievements(userId: number) {
+        await Promise.all([
+            this.checkKyNhanSummaryAchievements(userId),
+            this.checkLandAchievements(userId)
+        ])
+    }
+}

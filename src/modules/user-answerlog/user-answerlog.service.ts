@@ -12,6 +12,7 @@ import {
 } from 'src/shared/helpers'
 import { KyNhanSummaryRepo } from '../kynhan-summary/kynhan-summary.repo'
 import { QuestionRepo } from '../question/question.repo'
+import { AchievementCheckerService } from '../achievement/achievement-checker.service'
 import {
   UserAnswerLogAlreadyExistsException,
   UserAnswerLogIsCorrectExistExistsException
@@ -25,8 +26,9 @@ export class UserAnswerLogService {
     private userAnswerLogRepo: UserAnswerLogRepo,
     private readonly quesRepo: QuestionRepo,
     private readonly kyNhanSummaryRepo: KyNhanSummaryRepo,
-    private readonly sharedUserRepo: SharedUserRepository
-  ) {}
+    private readonly sharedUserRepo: SharedUserRepository,
+    private readonly achievementCheckerService: AchievementCheckerService
+  ) { }
 
   async list(pagination: PaginationQueryType) {
     const data = await this.userAnswerLogRepo.list(pagination)
@@ -94,6 +96,9 @@ export class UserAnswerLogService {
             amount: question.point
           })
         }
+
+        // 3) Check achievements after adding KyNhanSummary
+        await this.achievementCheckerService.checkKyNhanSummaryAchievements(createdById)
       } else {
         // Incorrect: minus 20 points but not below zero
         // Get current point

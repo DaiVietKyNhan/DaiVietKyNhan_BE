@@ -10,6 +10,7 @@ import {
   isUniqueConstraintPrismaError
 } from 'src/shared/helpers'
 import { LandRepo } from '../land/land.repo'
+import { AchievementCheckerService } from '../achievement/achievement-checker.service'
 import { UserLandAlreadyExistsException } from './dto/user-land.error'
 import {
   CreateUserLandBodyType,
@@ -22,8 +23,9 @@ export class UserLandService {
   constructor(
     private userLandRepo: UserLandRepo,
     private readonly sharedUserRepo: SharedUserRepository,
-    private readonly landRepo: LandRepo
-  ) {}
+    private readonly landRepo: LandRepo,
+    private readonly achievementCheckerService: AchievementCheckerService
+  ) { }
 
   async list(pagination: PaginationQueryType) {
     const data = await this.userLandRepo.list(pagination)
@@ -183,6 +185,40 @@ export class UserLandService {
       statusCode: HttpStatus.OK,
       data: await this.userLandRepo.getLandsByUserId(userId),
       message: ENTITY_MESSAGE.GET_LIST_SUCCESS
+    }
+  }
+
+  async completeLand({ userId, landId, updatedById }: { userId: number; landId: number; updatedById: number }) {
+    try {
+      // Tìm UserLand record
+      const userLand = await this.userLandRepo.findByUserIdAndLandId(userId, landId)
+
+      if (!userLand) {
+        throw NotFoundRecordException
+      }
+
+      // Cập nhật status thành COMPLETED
+      const updatedUserLand = await this.userLandRepo.update({
+        id: userLand.id,
+        data: {
+          status: 'COMPLETED'
+        },
+        updatedById
+      })
+
+      // Kiểm tra thành tựu Land
+      await this.achievementCheckerService.checkLandAchievements(userId)
+
+      return {
+        statusCode: HttpStatus.OK,
+        data: updatedUserLand,
+        message: 'Land completed successfully'
+      }
+    } catch (error) {
+      if (isNotFoundPrismaError(error)) {
+        throw NotFoundRecordException
+      }
+      throw error
     }
   }
 }

@@ -30,6 +30,8 @@ import { SharedModule } from './shared/shared.module'
 import { WebsocketsModule } from './websockets/websockets.module'
 import { AnswerModule } from './modules/answer/answer.module';
 import { UserAnswerlogModule } from './modules/user-answerlog/user-answerlog.module';
+import { AchievementModule } from './modules/achievement/achievement.module';
+import { RewardModule } from './modules/reward/reward.module';
 
 @Module({
   imports: [
@@ -61,7 +63,9 @@ import { UserAnswerlogModule } from './modules/user-answerlog/user-answerlog.mod
     KynhanSummaryModule,
     QuestionModule,
     AnswerModule,
-    UserAnswerlogModule
+    UserAnswerlogModule,
+    AchievementModule,
+    RewardModule
   ],
 
   controllers: [],
@@ -78,4 +82,4 @@ import { UserAnswerlogModule } from './modules/user-answerlog/user-answerlog.mod
     }
   ]
 })
-export class AppModule {}
+export class AppModule { }
