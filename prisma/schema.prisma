@@ -62,9 +62,9 @@ model User {
   createdQuestions         Question[]             @relation("QuestionCreatedBy")
   updatedQuestions         Question[]             @relation("QuestionUpdatedBy")
   deletedQuestions         Question[]             @relation("QuestionDeletedBy")
-  createdValidTextInputs   ValidTextInputAnswer[] @relation("ValidTextInputAnswerCreatedBy")
-  updatedValidTextInputs   ValidTextInputAnswer[] @relation("ValidTextInputAnswerUpdatedBy")
-  deletedValidTextInputs   ValidTextInputAnswer[] @relation("ValidTextInputAnswerDeletedBy")
+  createdValidTextInputs   Answer[]               @relation("ValidTextInputAnswerCreatedBy")
+  updatedValidTextInputs   Answer[]               @relation("ValidTextInputAnswerUpdatedBy")
+  deletedValidTextInputs   Answer[]               @relation("ValidTextInputAnswerDeletedBy")
   createdUserAnswerLogs    UserAnswerLog[]        @relation("UserAnswerLogCreatedBy")
   updatedUserAnswerLogs    UserAnswerLog[]        @relation("UserAnswerLogUpdatedBy")
   deletedUserAnswerLogs    UserAnswerLog[]        @relation("UserAnswerLogDeletedBy")
@@ -279,7 +279,7 @@ model KyNhanSummary {
   imgUrl  String? @db.VarChar(1000)
 
   questionId Int?
-  question   Question? @relation(fields: [questionId], references: [id])
+  question   Question? @relation(fields: [questionId], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
   createdById Int?
   createdBy   User? @relation("KyNhanSummaryCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
@@ -487,8 +487,8 @@ model Question {
 
   kynhanSummaries KyNhanSummary[]
 
-  validTextInputAnswers ValidTextInputAnswer[]
-  userAnswerLogs        UserAnswerLog[]
+  answers        Answer[]
+  userAnswerLogs UserAnswerLog[]
 
   createdById Int?
   createdBy   User? @relation("QuestionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
@@ -502,7 +502,7 @@ model Question {
   updatedAt DateTime  @updatedAt
 }
 
-model ValidTextInputAnswer {
+model Answer {
   id   Int    @id @default(autoincrement())
   text String @db.VarChar()
 
@@ -614,7 +614,6 @@ enum WeekDay {
 }
 
 enum QuestionType {
-  MULTIPLE_CHOICE
   TEXT_INPUT
 }
 
