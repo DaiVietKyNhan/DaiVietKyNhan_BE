@@ -65,6 +65,7 @@ export class UserAnswerLogService {
     createdById: number
   }) {
     try {
+      let landId = 0
       //check xem user da tra loi cau hoi chua
       const isHave = await this.userAnswerLogRepo.checkHasAnswered(
         data.questionId,
@@ -115,18 +116,7 @@ export class UserAnswerLogService {
           })
         }
 
-        const landId = question?.landId
-        const isCompletedLand =
-          await this.userAnswerLogRepo.isCompleteAllQuestionsInLandByUserId({
-            landId: landId,
-            userId: createdById
-          })
-        if (isCompletedLand) {
-          await this.setLandCompletedByUserId({
-            landId,
-            userId: createdById
-          })
-        }
+        landId = question?.landId
 
         // 3) Check achievements after adding KyNhanSummary
         await this.achievementCheckerService.checkKyNhanSummaryAchievements(createdById)
@@ -151,9 +141,28 @@ export class UserAnswerLogService {
           isCorrect
         }
       })
+      let isCompletedLand = false
+      if (isCorrect) {
+        isCompletedLand =
+          await this.userAnswerLogRepo.isCompleteAllQuestionsInLandByUserId({
+            landId: landId,
+            userId: createdById
+          })
+
+        if (isCompletedLand) {
+          isCompletedLand = true
+          await this.setLandCompletedByUserId({
+            landId,
+            userId: createdById
+          })
+        }
+      }
       return {
         statusCode: HttpStatus.CREATED,
-        data: answer,
+        data: {
+          ...answer,
+          isCompletedLand
+        },
         message: ENTITY_MESSAGE.CREATE_SUCCESS
       }
     } catch (error) {
@@ -243,6 +252,7 @@ export class UserAnswerLogService {
       if (user.point < 500) {
         throw UserNotEnoughHeartException
       }
+      await this.sharedUserRepo.minuspointByUserId({ userId: createdById, amount: 500 })
 
       // lấy câu hỏi kèm câu trả lời
       const quesWithAns = await this.quesRepo.getQuestionsByIdWithAnswer(data.questionId)
@@ -301,7 +311,10 @@ export class UserAnswerLogService {
       }
       return {
         statusCode: HttpStatus.CREATED,
-        data: answer,
+        data: {
+          ...answer,
+          isCompletedLand
+        },
         message: ENTITY_MESSAGE.CREATE_SUCCESS
       }
     } catch (error) {

@@ -9,6 +9,7 @@ import { MessageResDTO } from 'src/shared/dtos/response.dto'
 import {
   CreateUserBodyDTO,
   CreateUserResDTO,
+  GetKyNhansByUserResDTO,
   GetParamsIdOrEmailDTO,
   GetParamsUserDTO,
   GetUserWithRoleResDTO,
@@ -32,6 +33,12 @@ export class UserController {
   @ZodSerializerDto(CreateUserResDTO)
   addHeartToUser(@ActiveUser('userId') userId: number) {
     return this.userService.addHeartToUser(userId)
+  }
+
+  @Get('ky-nhan-library')
+  @ZodSerializerDto(GetKyNhansByUserResDTO)
+  getKyNhanList(@ActiveUser('userId') userId: number) {
+    return this.userService.getKyNhanList(userId)
   }
 
   @Get('user-list')

@@ -18,7 +18,7 @@ import { ZodSerializerDto } from 'nestjs-zod'
 import {
   CreateKyNhanBodyDTO,
   CreateKyNhanResDTO,
-  GetKyNhanResDTO,
+  GetKyNhanUserResDTO,
   GetParamsKyNhanDTO,
   UpdateKyNhanBodyDTO,
   UpdateKyNhanResDTO
@@ -41,9 +41,15 @@ export class KynhanController {
   }
 
   @Get(':kyNhanId')
-  @ZodSerializerDto(GetKyNhanResDTO)
+  @ZodSerializerDto(GetKyNhanUserResDTO)
   findById(@Param() params: GetParamsKyNhanDTO) {
     return this.kynhanService.findById(params.kyNhanId)
+  }
+
+  @Get('list/user')
+  @ZodSerializerDto(GetKyNhanUserResDTO)
+  getListByUser(@ActiveUser('userId') userId: number) {
+    return this.kynhanService.getListByUser(userId)
   }
 
   @Post()

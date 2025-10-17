@@ -32,7 +32,9 @@ export const CreateUserAnswerLogBodySchema = UserAnswerLogSchema.pick({
 
 export const CreateUserAnswerLogResSchema = z.object({
   statusCode: z.number(),
-  data: UserAnswerLogSchema,
+  data: UserAnswerLogSchema.extend({
+    isCompletedLand: z.boolean().default(false)
+  }),
   message: z.string()
 })
 

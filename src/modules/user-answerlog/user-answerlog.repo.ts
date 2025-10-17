@@ -203,31 +203,30 @@ export class UserAnswerLogRepo {
     })
   }
 
-  isCompleteAllQuestionsInLandByUserId({
+  async isCompleteAllQuestionsInLandByUserId({
     landId,
     userId
   }: {
     landId: number
     userId: number
-  }) {
-    return this.prismaService.$queryRawUnsafe<boolean>(`
-  SELECT
-    CASE
-      WHEN COUNT(q.id) = 0 THEN TRUE
-      ELSE FALSE
-    END AS "isComplete"
-  FROM "Question" q
-  JOIN "LandQuestion" lq
-    ON q.id = lq."questionId"
-   AND lq."landId" = ${landId}
-   AND q."deletedAt" IS NULL
-   AND lq."deletedAt" IS NULL
-  LEFT JOIN "UserAnswerLog" ua
-    ON ua."questionId" = q.id
-   AND ua."userId" = ${userId}
-   AND ua."isCorrect" = TRUE
-   AND ua."deletedAt" IS NULL
-  WHERE ua.id IS NULL;
-`)
+  }): Promise<boolean> {
+    const result = await this.prismaService.$queryRawUnsafe<{ isComplete: boolean }[]>(`
+    SELECT
+      CASE
+        WHEN COUNT(q.id) = 0 THEN TRUE
+        ELSE FALSE
+      END AS "isComplete"
+    FROM "Question" q
+    LEFT JOIN "UserAnswerLog" ua
+      ON ua."questionId" = q.id
+     AND ua."userId" = ${userId}
+     AND ua."isCorrect" = TRUE
+     AND ua."deletedAt" IS NULL
+    WHERE q."landId" = ${landId}
+      AND q."deletedAt" IS NULL
+      AND ua.id IS NULL;
+  `)
+
+    return result[0]?.isComplete ?? false
   }
 }

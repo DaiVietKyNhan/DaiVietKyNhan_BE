@@ -207,4 +207,12 @@ export class UserService {
       throw error
     }
   }
+
+  async getKyNhanList(userId: number) {
+    return {
+      statusCode: HttpStatus.OK,
+      data: await this.userRepo.getKyNhanList(userId),
+      message: ENTITY_MESSAGE.GET_LIST_SUCCESS
+    }
+  }
 }
