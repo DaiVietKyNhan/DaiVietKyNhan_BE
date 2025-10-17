@@ -7,6 +7,7 @@ import {
   CreateLandBodyType,
   LAND_FIELDS,
   LandType,
+  LandWithQuestionAndUserAnswerLogType,
   UpdateLandBodyType
 } from './entities/land.entity'
 
@@ -148,6 +149,38 @@ export class LandRepo {
             text: true,
             answers: true
           }
+        }
+      }
+    })
+  }
+
+  getQuestionsByLandId(
+    landId: number,
+    userId: number
+  ): Promise<LandWithQuestionAndUserAnswerLogType | null> {
+    return this.prismaService.land.findUnique({
+      where: {
+        id: landId,
+        deletedAt: null
+      },
+      include: {
+        questions: {
+          select: {
+            id: true,
+            text: true,
+            userAnswerLogs: {
+              where: {
+                userId,
+                deletedAt: null
+              },
+              select: {
+                id: true,
+                text: true,
+                isCorrect: true
+              }
+            }
+          },
+          orderBy: { id: 'asc' }
         }
       }
     })

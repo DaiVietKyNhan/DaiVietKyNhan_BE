@@ -28,6 +28,12 @@ export class UserController {
     return this.userService.list(query)
   }
 
+  @Put('add-heart')
+  @ZodSerializerDto(CreateUserResDTO)
+  addHeartToUser(@ActiveUser('userId') userId: number) {
+    return this.userService.addHeartToUser(userId)
+  }
+
   @Get('user-list')
   @ZodSerializerDto(PaginationResponseSchema)
   getUserActiveList(@Query() query: PaginationQueryDTO) {

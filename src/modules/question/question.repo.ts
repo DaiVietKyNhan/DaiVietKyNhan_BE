@@ -7,6 +7,7 @@ import {
   CreateQuestionBodyType,
   QUESTION_FIELDS,
   QuestionType,
+  QuestionWithAnswersType,
   UpdateQuestionBodyType
 } from './entities/question.entity'
 
@@ -212,6 +213,18 @@ export class QuestionRepo {
             }
           }
         }
+      },
+      include: {
+        answers: true
+      }
+    })
+  }
+
+  getQuestionsByIdWithAnswer(id: number): Promise<QuestionWithAnswersType | null> {
+    return this.prismaService.question.findUnique({
+      where: {
+        id,
+        deletedAt: null
       },
       include: {
         answers: true

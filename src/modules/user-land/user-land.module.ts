@@ -7,6 +7,7 @@ import { UserLandService } from './user-land.service'
 @Module({
   imports: [LandModule],
   controllers: [UserLandController],
-  providers: [UserLandService, UserLandRepo]
+  providers: [UserLandService, UserLandRepo],
+  exports: [UserLandService, UserLandRepo]
 })
 export class UserLandModule {}

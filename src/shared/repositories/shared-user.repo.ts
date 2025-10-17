@@ -228,7 +228,6 @@ export class SharedUserRepository {
     const toConnect = summaryIds.filter((id) => !existingIds.has(id))
 
     if (!toConnect.length) return this.findUnique({ id: userId })
-    console.log(toConnect)
 
     return this.prismaService.user.update({
       where: { id: userId, deletedAt: null },
