@@ -11,7 +11,7 @@ async function createAchievements() {
             {
                 name: 'Thu thập được 5 Kỳ Ấn',
                 description: 'Thu thập được 5 Kỳ Ấn',
-                type: 'KY_NHAN_SUMMARY_COUNT',
+                type: 'KY_NHAN_SUMMARY_COUNT' as const,
                 requirement: 5,
                 reward: 100,
                 isActive: true,
@@ -20,7 +20,7 @@ async function createAchievements() {
             {
                 name: 'Thu thập được 15 Kỳ Ấn',
                 description: 'Thu thập được 15 Kỳ Ấn',
-                type: 'KY_NHAN_SUMMARY_COUNT',
+                type: 'KY_NHAN_SUMMARY_COUNT' as const,
                 requirement: 15,
                 reward: 200,
                 isActive: true,
@@ -29,7 +29,7 @@ async function createAchievements() {
             {
                 name: 'Thu thập được 30 Kỳ Ấn',
                 description: 'Thu thập được 30 Kỳ Ấn',
-                type: 'KY_NHAN_SUMMARY_COUNT',
+                type: 'KY_NHAN_SUMMARY_COUNT' as const,
                 requirement: 30,
                 reward: 700,
                 isActive: true,
@@ -42,7 +42,7 @@ async function createAchievements() {
             {
                 name: 'Thu thập được Núi Tản Viên',
                 description: 'Thu thập được Núi Tản Viên',
-                type: 'LAND_COLLECTION',
+                type: 'LAND_COLLECTION' as const,
                 requirement: 1,
                 reward: 200,
                 isActive: true,
@@ -52,7 +52,7 @@ async function createAchievements() {
             {
                 name: 'Thu thập được Đầm Dạ Trạch',
                 description: 'Thu thập được Đầm Dạ Trạch',
-                type: 'LAND_COLLECTION',
+                type: 'LAND_COLLECTION' as const,
                 requirement: 1,
                 reward: 200,
                 isActive: true,
@@ -62,7 +62,7 @@ async function createAchievements() {
             {
                 name: 'Thu thập được Làng Phù Đổng',
                 description: 'Thu thập được Làng Phù Đổng',
-                type: 'LAND_COLLECTION',
+                type: 'LAND_COLLECTION' as const,
                 requirement: 1,
                 reward: 200,
                 isActive: true,

@@ -1,6 +1,6 @@
 import { ENTITY_MESSAGE } from '@/common/constants/message'
 import { PaginationQueryType } from '@/shared/models/request.model'
-import { HttpStatus, Injectable, Logger } from '@nestjs/common'
+import { HttpStatus, Injectable } from '@nestjs/common'
 
 import { BadRequestException } from '@nestjs/common'
 import { NotFoundRecordException } from 'src/shared/error'
@@ -22,26 +22,14 @@ import { RewardRepo } from './reward.repo'
 @Injectable()
 export class RewardService {
     constructor(
-        private rewardRepo: RewardRepo,
-        private logger: Logger
+        private rewardRepo: RewardRepo
     ) { }
 
-    async findMany({ pagination, where, orderBy }: { pagination: PaginationQueryType; where?: any; orderBy?: any }) {
-        const [results, total] = await Promise.all([
-            this.rewardRepo.findMany({ pagination, where, orderBy }),
-            this.rewardRepo.findManyCount({ where })
-        ])
-
-        const { page, limit } = parseQs(pagination)
-
+    async list(pagination: PaginationQueryType) {
+        const data = await this.rewardRepo.list(pagination)
         return {
             statusCode: HttpStatus.OK,
-            data: {
-                results,
-                total,
-                page,
-                limit
-            },
+            data,
             message: ENTITY_MESSAGE.GET_LIST_SUCCESS
         }
     }

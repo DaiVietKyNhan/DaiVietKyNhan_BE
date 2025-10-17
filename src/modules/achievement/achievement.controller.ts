@@ -1,16 +1,13 @@
-import { ENTITY_MESSAGE } from '@/common/constants/message'
+import { ActiveUser } from '@/common/decorators/active-user.decorator'
 import { PaginationQueryType } from '@/shared/models/request.model'
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 
-import { AuthenticationGuard } from '@/common/guards/authentication.guard'
-import { User } from '@/common/decorators/user.decorator'
 import { CreateAchievementBodyDTO, UpdateAchievementBodyDTO } from './dto/achievement.zod-dto'
 import { AchievementService } from './achievement.service'
 
 @ApiTags('Achievement')
 @Controller('achievement')
-@UseGuards(AuthenticationGuard)
 @ApiBearerAuth()
 export class AchievementController {
     constructor(private achievementService: AchievementService) { }
@@ -18,8 +15,8 @@ export class AchievementController {
     @Get()
     @ApiOperation({ summary: 'Get achievement list' })
     @ApiResponse({ status: 200, description: 'Get achievement list successfully' })
-    async findMany(@Query() pagination: PaginationQueryType, @Query() where: any, @Query() orderBy: any) {
-        return this.achievementService.findMany({ pagination, where, orderBy })
+    async list(@Query() pagination: PaginationQueryType) {
+        return this.achievementService.list(pagination)
     }
 
     @Get('active')
@@ -46,7 +43,7 @@ export class AchievementController {
     @Post()
     @ApiOperation({ summary: 'Create achievement' })
     @ApiResponse({ status: 201, description: 'Create achievement successfully' })
-    async create(@Body() data: CreateAchievementBodyDTO, @User('id') createdById: number) {
+    async create(@Body() data: CreateAchievementBodyDTO, @ActiveUser('userId') createdById: number) {
         return this.achievementService.create({ data, createdById })
     }
 
@@ -56,7 +53,7 @@ export class AchievementController {
     async update(
         @Param('id') id: number,
         @Body() data: UpdateAchievementBodyDTO,
-        @User('id') updatedById: number
+        @ActiveUser('userId') updatedById: number
     ) {
         return this.achievementService.update({ id, data, updatedById })
     }
@@ -64,7 +61,7 @@ export class AchievementController {
     @Delete(':id')
     @ApiOperation({ summary: 'Delete achievement' })
     @ApiResponse({ status: 200, description: 'Delete achievement successfully' })
-    async delete(@Param('id') id: number, @User('id') deletedById: number) {
+    async delete(@Param('id') id: number, @ActiveUser('userId') deletedById: number) {
         return this.achievementService.delete({ id, deletedById })
     }
 }

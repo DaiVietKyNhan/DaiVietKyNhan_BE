@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { UserAchievementRepo } from './user-achievement.repo'
 import { AchievementRepo } from './achievement.repo'
@@ -8,8 +8,7 @@ export class AchievementCheckerService {
     constructor(
         private prismaService: PrismaService,
         private userAchievementRepo: UserAchievementRepo,
-        private achievementRepo: AchievementRepo,
-        private logger: Logger
+        private achievementRepo: AchievementRepo
     ) { }
 
     /**
@@ -66,9 +65,9 @@ export class AchievementCheckerService {
                 }
             }
 
-            this.logger.log(`Checked KyNhanSummary achievements for user ${userId}`)
+            // Achievement check completed
         } catch (error) {
-            this.logger.error(`Error checking KyNhanSummary achievements for user ${userId}:`, error)
+            // Error checking achievements
         }
     }
 
@@ -125,9 +124,9 @@ export class AchievementCheckerService {
                 }
             }
 
-            this.logger.log(`Checked Land achievements for user ${userId}`)
+            // Land achievement check completed
         } catch (error) {
-            this.logger.error(`Error checking Land achievements for user ${userId}:`, error)
+            // Error checking Land achievements
         }
     }
 

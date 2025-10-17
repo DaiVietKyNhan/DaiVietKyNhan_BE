@@ -14,6 +14,24 @@ import {
 export class UserRewardRepo {
     constructor(private prismaService: PrismaService) { }
 
+    list(pagination: PaginationQueryType) {
+        const { where: parsedWhere, orderBy: parsedOrderBy } = parseQs(pagination.qs, USER_REWARD_FIELDS)
+        const skip = (pagination.currentPage - 1) * pagination.pageSize
+
+        return this.prismaService.userReward.findMany({
+            where: {
+                ...parsedWhere,
+                deletedAt: null
+            },
+            include: {
+                reward: true
+            },
+            orderBy: parsedOrderBy || { createdAt: 'desc' },
+            skip,
+            take: pagination.pageSize
+        })
+    }
+
     create({
         createdById,
         data

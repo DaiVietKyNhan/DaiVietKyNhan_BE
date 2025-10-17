@@ -13,7 +13,7 @@ async function createRewards() {
                 description: 'Voucher giảm giá 50.000 VNĐ',
                 requireValue: 1000,
                 gift: 'Voucher 50k',
-                type: 'POINT',
+                type: 'POINT' as const,
                 limit: 100,
                 startDate: new Date(),
                 endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 ngày
@@ -24,7 +24,7 @@ async function createRewards() {
                 description: 'Voucher giảm giá 100.000 VNĐ',
                 requireValue: 2000,
                 gift: 'Voucher 100k',
-                type: 'POINT',
+                type: 'POINT' as const,
                 limit: 50,
                 startDate: new Date(),
                 endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 ngày
@@ -39,7 +39,7 @@ async function createRewards() {
                 description: 'Áo thun chính thức của game',
                 requireValue: 5000,
                 gift: 'Áo thun Đại Việt Kỳ Nhân',
-                type: 'COIN',
+                type: 'COIN' as const,
                 limit: 20,
                 startDate: new Date(),
                 endDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 ngày
@@ -50,7 +50,7 @@ async function createRewards() {
                 description: 'Móc khóa hình Kỳ Nhân',
                 requireValue: 2000,
                 gift: 'Móc khóa Kỳ Nhân',
-                type: 'COIN',
+                type: 'COIN' as const,
                 limit: 100,
                 startDate: new Date(),
                 endDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 ngày
@@ -65,7 +65,7 @@ async function createRewards() {
                 description: 'Code đổi quà đặc biệt',
                 requireValue: 1,
                 gift: 'Code đặc biệt',
-                type: 'CODE',
+                type: 'CODE' as const,
                 limit: null, // Không giới hạn
                 startDate: new Date(),
                 endDate: null, // Không có ngày kết thúc

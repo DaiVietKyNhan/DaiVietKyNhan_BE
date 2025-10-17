@@ -14,6 +14,34 @@ import {
 export class UserAchievementRepo {
     constructor(private prismaService: PrismaService) { }
 
+    list(pagination: PaginationQueryType) {
+        const { where: parsedWhere, orderBy: parsedOrderBy } = parseQs(pagination.qs, USER_ACHIEVEMENT_FIELDS)
+        const skip = (pagination.currentPage - 1) * pagination.pageSize
+
+        return this.prismaService.userAchievement.findMany({
+            where: {
+                ...parsedWhere,
+                deletedAt: null
+            },
+            include: {
+                achievement: {
+                    include: {
+                        land: {
+                            select: {
+                                id: true,
+                                name: true,
+                                order: true
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: parsedOrderBy || { createdAt: 'desc' },
+            skip,
+            take: pagination.pageSize
+        })
+    }
+
     create({
         createdById,
         data

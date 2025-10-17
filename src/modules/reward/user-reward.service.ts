@@ -1,6 +1,6 @@
 import { ENTITY_MESSAGE } from '@/common/constants/message'
 import { PaginationQueryType } from '@/shared/models/request.model'
-import { HttpStatus, Injectable, Logger } from '@nestjs/common'
+import { HttpStatus, Injectable } from '@nestjs/common'
 
 import { BadRequestException } from '@nestjs/common'
 import { NotFoundRecordException } from 'src/shared/error'
@@ -33,26 +33,14 @@ export class UserRewardService {
     constructor(
         private userRewardRepo: UserRewardRepo,
         private rewardRepo: RewardRepo,
-        private sharedUserRepo: SharedUserRepository,
-        private logger: Logger
+        private sharedUserRepo: SharedUserRepository
     ) { }
 
-    async findMany({ pagination, where, orderBy }: { pagination: PaginationQueryType; where?: any; orderBy?: any }) {
-        const [results, total] = await Promise.all([
-            this.userRewardRepo.findMany({ pagination, where, orderBy }),
-            this.userRewardRepo.findManyCount({ where })
-        ])
-
-        const { page, limit } = parseQs(pagination)
-
+    async list(pagination: PaginationQueryType) {
+        const data = await this.userRewardRepo.list(pagination)
         return {
             statusCode: HttpStatus.OK,
-            data: {
-                results,
-                total,
-                page,
-                limit
-            },
+            data,
             message: ENTITY_MESSAGE.GET_LIST_SUCCESS
         }
     }
@@ -248,7 +236,8 @@ export class UserRewardService {
                     rewardId,
                     status: 'PENDING',
                     valuePaid: reward.requireValue,
-                    code: code || null
+                    code: code || null,
+                    exchangedAt: null
                 }
             })
 

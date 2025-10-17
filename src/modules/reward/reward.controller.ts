@@ -1,16 +1,13 @@
-import { ENTITY_MESSAGE } from '@/common/constants/message'
+import { ActiveUser } from '@/common/decorators/active-user.decorator'
 import { PaginationQueryType } from '@/shared/models/request.model'
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 
-import { AuthenticationGuard } from '@/common/guards/authentication.guard'
-import { User } from '@/common/decorators/user.decorator'
 import { CreateRewardBodyDTO, UpdateRewardBodyDTO } from './dto/reward.zod-dto'
 import { RewardService } from './reward.service'
 
 @ApiTags('Reward')
 @Controller('reward')
-@UseGuards(AuthenticationGuard)
 @ApiBearerAuth()
 export class RewardController {
     constructor(private rewardService: RewardService) { }
@@ -18,8 +15,8 @@ export class RewardController {
     @Get()
     @ApiOperation({ summary: 'Get reward list' })
     @ApiResponse({ status: 200, description: 'Get reward list successfully' })
-    async findMany(@Query() pagination: PaginationQueryType, @Query() where: any, @Query() orderBy: any) {
-        return this.rewardService.findMany({ pagination, where, orderBy })
+    async list(@Query() pagination: PaginationQueryType) {
+        return this.rewardService.list(pagination)
     }
 
     @Get('active')
@@ -46,7 +43,7 @@ export class RewardController {
     @Post()
     @ApiOperation({ summary: 'Create reward' })
     @ApiResponse({ status: 201, description: 'Create reward successfully' })
-    async create(@Body() data: CreateRewardBodyDTO, @User('id') createdById: number) {
+    async create(@Body() data: CreateRewardBodyDTO, @ActiveUser('userId') createdById: number) {
         return this.rewardService.create({ data, createdById })
     }
 
@@ -56,7 +53,7 @@ export class RewardController {
     async update(
         @Param('id') id: number,
         @Body() data: UpdateRewardBodyDTO,
-        @User('id') updatedById: number
+        @ActiveUser('userId') updatedById: number
     ) {
         return this.rewardService.update({ id, data, updatedById })
     }
@@ -64,7 +61,7 @@ export class RewardController {
     @Delete(':id')
     @ApiOperation({ summary: 'Delete reward' })
     @ApiResponse({ status: 200, description: 'Delete reward successfully' })
-    async delete(@Param('id') id: number, @User('id') deletedById: number) {
+    async delete(@Param('id') id: number, @ActiveUser('userId') deletedById: number) {
         return this.rewardService.delete({ id, deletedById })
     }
 }

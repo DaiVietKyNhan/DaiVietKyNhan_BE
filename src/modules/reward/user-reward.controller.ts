@@ -1,16 +1,13 @@
-import { ENTITY_MESSAGE } from '@/common/constants/message'
+import { ActiveUser } from '@/common/decorators/active-user.decorator'
 import { PaginationQueryType } from '@/shared/models/request.model'
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 
-import { AuthenticationGuard } from '@/common/guards/authentication.guard'
-import { User } from '@/common/decorators/user.decorator'
 import { CreateUserRewardBodyDTO, UpdateUserRewardBodyDTO, ExchangeRewardBodyDTO } from './dto/user-reward.zod-dto'
 import { UserRewardService } from './user-reward.service'
 
 @ApiTags('User Reward')
 @Controller('user-reward')
-@UseGuards(AuthenticationGuard)
 @ApiBearerAuth()
 export class UserRewardController {
     constructor(private userRewardService: UserRewardService) { }
@@ -18,14 +15,14 @@ export class UserRewardController {
     @Get()
     @ApiOperation({ summary: 'Get user reward list' })
     @ApiResponse({ status: 200, description: 'Get user reward list successfully' })
-    async findMany(@Query() pagination: PaginationQueryType, @Query() where: any, @Query() orderBy: any) {
-        return this.userRewardService.findMany({ pagination, where, orderBy })
+    async list(@Query() pagination: PaginationQueryType) {
+        return this.userRewardService.list(pagination)
     }
 
     @Get('my-rewards')
     @ApiOperation({ summary: 'Get my rewards' })
     @ApiResponse({ status: 200, description: 'Get my rewards successfully' })
-    async getMyRewards(@User('id') userId: number) {
+    async getMyRewards(@ActiveUser('userId') userId: number) {
         return this.userRewardService.findByUserId(userId)
     }
 
@@ -33,7 +30,7 @@ export class UserRewardController {
     @ApiOperation({ summary: 'Get my rewards by status' })
     @ApiResponse({ status: 200, description: 'Get my rewards by status successfully' })
     async getMyRewardsByStatus(
-        @User('id') userId: number,
+        @ActiveUser('userId') userId: number,
         @Param('status') status: 'PENDING' | 'COMPLETED' | 'CANCELLED'
     ) {
         return this.userRewardService.findByUserIdAndStatus(userId, status)
@@ -49,7 +46,7 @@ export class UserRewardController {
     @Post()
     @ApiOperation({ summary: 'Create user reward' })
     @ApiResponse({ status: 201, description: 'Create user reward successfully' })
-    async create(@Body() data: CreateUserRewardBodyDTO, @User('id') createdById: number) {
+    async create(@Body() data: CreateUserRewardBodyDTO, @ActiveUser('userId') createdById: number) {
         return this.userRewardService.create({ data, createdById })
     }
 
@@ -59,7 +56,7 @@ export class UserRewardController {
     async update(
         @Param('id') id: number,
         @Body() data: UpdateUserRewardBodyDTO,
-        @User('id') updatedById: number
+        @ActiveUser('userId') updatedById: number
     ) {
         return this.userRewardService.update({ id, data, updatedById })
     }
@@ -67,7 +64,7 @@ export class UserRewardController {
     @Post('exchange')
     @ApiOperation({ summary: 'Exchange reward' })
     @ApiResponse({ status: 200, description: 'Exchange reward successfully' })
-    async exchangeReward(@Body() data: ExchangeRewardBodyDTO, @User('id') userId: number) {
+    async exchangeReward(@Body() data: ExchangeRewardBodyDTO, @ActiveUser('userId') userId: number) {
         return this.userRewardService.exchangeReward({
             userId,
             rewardId: data.rewardId,
@@ -79,7 +76,7 @@ export class UserRewardController {
     @Delete(':id')
     @ApiOperation({ summary: 'Delete user reward' })
     @ApiResponse({ status: 200, description: 'Delete user reward successfully' })
-    async delete(@Param('id') id: number, @User('id') deletedById: number) {
+    async delete(@Param('id') id: number, @ActiveUser('userId') deletedById: number) {
         return this.userRewardService.delete({ id, deletedById })
     }
 }
