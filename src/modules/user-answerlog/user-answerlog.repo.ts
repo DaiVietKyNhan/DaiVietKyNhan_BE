@@ -189,4 +189,44 @@ export class UserAnswerLogRepo {
       })
       .then((count) => count > 0)
   }
+
+  checkHasAnswered(
+    questionId: number,
+    userId: number
+  ): Promise<UserAnswerLogType | null> {
+    return this.prismaService.userAnswerLog.findFirst({
+      where: {
+        userId,
+        questionId,
+        deletedAt: null
+      }
+    })
+  }
+
+  async isCompleteAllQuestionsInLandByUserId({
+    landId,
+    userId
+  }: {
+    landId: number
+    userId: number
+  }): Promise<boolean> {
+    const result = await this.prismaService.$queryRawUnsafe<{ isComplete: boolean }[]>(`
+    SELECT
+      CASE
+        WHEN COUNT(q.id) = 0 THEN TRUE
+        ELSE FALSE
+      END AS "isComplete"
+    FROM "Question" q
+    LEFT JOIN "UserAnswerLog" ua
+      ON ua."questionId" = q.id
+     AND ua."userId" = ${userId}
+     AND ua."isCorrect" = TRUE
+     AND ua."deletedAt" IS NULL
+    WHERE q."landId" = ${landId}
+      AND q."deletedAt" IS NULL
+      AND ua.id IS NULL;
+  `)
+
+    return result[0]?.isComplete ?? false
+  }
 }

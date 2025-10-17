@@ -21,7 +21,7 @@ import { UserLandService } from './user-land.service'
 @Controller('user-land')
 @ApiBearerAuth()
 export class UserLandController {
-  constructor(private readonly userLandService: UserLandService) {}
+  constructor(private readonly userLandService: UserLandService) { }
 
   @Get()
   @ZodSerializerDto(PaginationResponseSchema)
@@ -68,6 +68,16 @@ export class UserLandController {
     return this.userLandService.update({
       data: body,
       id: params.userLandId,
+      updatedById: userId
+    })
+  }
+
+  @Post('complete/:landId')
+  @ZodSerializerDto(MessageResDTO)
+  completeLand(@Param('landId') landId: number, @ActiveUser('userId') userId: number) {
+    return this.userLandService.completeLand({
+      userId,
+      landId,
       updatedById: userId
     })
   }

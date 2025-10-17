@@ -1,4 +1,5 @@
 import { checkIdSchema } from '@/common/utils/id.validation'
+import { AnswerSchema } from '@/modules/answer/entities/answer.entity'
 import { extendZodWithOpenApi } from '@anatine/zod-openapi'
 import { patchNestJsSwagger } from 'nestjs-zod'
 import { z } from 'zod'
@@ -25,6 +26,10 @@ export const QuestionSchema = z
     updatedAt: z.date()
   })
   .strict()
+
+const QuestionWithAnswersSchema = QuestionSchema.extend({
+  answers: z.array(AnswerSchema)
+})
 
 export const CreateQuestionBodySchema = QuestionSchema.pick({
   text: true,
@@ -69,6 +74,7 @@ export const GetQuestionResSchema = z
 
 // Types
 export type QuestionType = z.infer<typeof QuestionSchema>
+export type QuestionWithAnswersType = z.infer<typeof QuestionWithAnswersSchema>
 export type CreateQuestionBodyType = z.infer<typeof CreateQuestionBodySchema>
 export type UpdateQuestionBodyType = z.infer<typeof UpdateQuestionBodySchema>
 export type GetQuestionParamsType = z.infer<typeof GetQuestionParamsSchema>

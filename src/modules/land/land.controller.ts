@@ -8,6 +8,7 @@ import {
   CreateLandBodyDTO,
   CreateLandResDTO,
   GetLandResDTO,
+  GetLandWithQuestionAndUserAnswerLogResDTO,
   GetParamsLandDTO,
   UpdateLandBodyDTO,
   UpdateLandResDTO
@@ -25,6 +26,15 @@ export class LandController {
   @ZodSerializerDto(PaginationResponseSchema)
   list(@Query() query: PaginationQueryDTO) {
     return this.landService.list(query)
+  }
+
+  @Get('user/question/:landId')
+  @ZodSerializerDto(GetLandWithQuestionAndUserAnswerLogResDTO)
+  getQuestionsByLandId(
+    @Param() params: GetParamsLandDTO,
+    @ActiveUser('userId') userId: number
+  ) {
+    return this.landService.getQuestionsByLandId(params.landId, userId)
   }
 
   @Get(':landId')

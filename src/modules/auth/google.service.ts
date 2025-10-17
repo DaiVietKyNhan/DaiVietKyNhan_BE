@@ -4,6 +4,7 @@ import { AuthRepository } from '@/modules/auth/auth.repo'
 import { SharedRoleRepository } from '@/shared/repositories/shared-role.repo'
 import { NotificationService } from '@/websockets/notification.service'
 import { Injectable } from '@nestjs/common'
+import { UserAchievementService } from '@/modules/achievement/user-achievement.service'
 import { google } from 'googleapis'
 import { AuthService } from 'src/modules/auth/auth.service'
 import { HashingService } from 'src/shared/services/hashing.service'
@@ -18,7 +19,8 @@ export class GoogleService {
     private readonly authService: AuthService,
     private readonly authRepository: AuthRepository,
     private readonly sharedRoleRepo: SharedRoleRepository,
-    private readonly notificationService: NotificationService
+    private readonly notificationService: NotificationService,
+    private readonly userAchievementService: UserAchievementService
   ) {
     this.oauth2Client = new google.auth.OAuth2(
       envConfig.GOOGLE_CLIENT_ID,
@@ -96,6 +98,13 @@ export class GoogleService {
 
         // 🔔 Gọi WebSocket để thông báo có user mới đăng nhập với Google
         await this.notificationService.notifyNewUserRegistered()
+
+        // 🌟 Khởi tạo toàn bộ UserAchievement ở trạng thái PENDING cho user Google mới
+        await this.userAchievementService.initializeForUser(user.id)
+      }
+      else {
+        // Đảm bảo user cũ đăng nhập bằng Google cũng được khởi tạo achievements nếu thiếu
+        await this.userAchievementService.initializeForUser(user.id)
       }
       // 4. Tạo mới device
       const device = await this.authRepository.createDevice({

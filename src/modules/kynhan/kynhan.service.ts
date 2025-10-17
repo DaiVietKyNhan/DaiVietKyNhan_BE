@@ -29,6 +29,15 @@ export class KynhanService {
     }
   }
 
+  async getListByUser(userId: number) {
+    const data = await this.kynhanRepo.getListByUser(userId)
+    return {
+      statusCode: HttpStatus.OK,
+      data,
+      message: ENTITY_MESSAGE.GET_LIST_SUCCESS
+    }
+  }
+
   async findById(id: number) {
     const attendenceConfig = await this.kynhanRepo.findById(id)
     if (!attendenceConfig) {

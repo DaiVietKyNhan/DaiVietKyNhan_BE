@@ -15,7 +15,7 @@ export type WhereUniqueUserType = { id: number } | { email: string }
 
 @Injectable()
 export class SharedUserRepository {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) { }
 
   findUnique(where: WhereUniqueUserType): Promise<UserType | null> {
     return this.prismaService.user.findFirst({
@@ -228,7 +228,6 @@ export class SharedUserRepository {
     const toConnect = summaryIds.filter((id) => !existingIds.has(id))
 
     if (!toConnect.length) return this.findUnique({ id: userId })
-    console.log(toConnect)
 
     return this.prismaService.user.update({
       where: { id: userId, deletedAt: null },

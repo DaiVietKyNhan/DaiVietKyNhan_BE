@@ -38,6 +38,7 @@ import { NotificationService } from '@/websockets/notification.service'
 import { InjectQueue } from '@nestjs/bull'
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common'
 import { Queue } from 'bull'
+import { UserAchievementService } from '@/modules/achievement/user-achievement.service'
 
 @Injectable()
 export class AuthService {
@@ -51,8 +52,9 @@ export class AuthService {
     private readonly bullQueueService: BullQueueService,
     private readonly notificationService: NotificationService,
     @InjectQueue('user-deletion') private readonly deletionQueue: Queue,
-    private readonly tokenService: TokenService
-  ) {}
+    private readonly tokenService: TokenService,
+    private readonly userAchievementService: UserAchievementService
+  ) { }
 
   async login(body: LoginBodyType & { userAgent: string; ip: string }) {
     // 1. Lấy thông tin user, kiểm tra user có tồn tại hay không, mật khẩu có đúng không
@@ -472,6 +474,11 @@ export class AuthService {
 
       // 🔔 Gọi WebSocket để thông báo có user mới verify thành công
       await this.notificationService.notifyNewUserRegistered()
+
+      // 🌟 Khởi tạo toàn bộ UserAchievement ở trạng thái PENDING cho user vừa verify
+      if (data?.id) {
+        await this.userAchievementService.initializeForUser(data.id)
+      }
 
       return {
         data,

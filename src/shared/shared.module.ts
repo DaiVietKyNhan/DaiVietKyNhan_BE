@@ -3,6 +3,7 @@ import { BullQueue } from '@/common/constants/bull-action.constant'
 import { AccessTokenGuard } from '@/common/guards/access-token.guard'
 import { APIKeyGuard } from '@/common/guards/api-key.guard'
 import { AuthenticationGuard } from '@/common/guards/authentication.guard'
+import { ResetHeartAllUserCronjob } from '@/cronjobs/remove-refresh-token.cronjob'
 import { SharedRoleRepository } from '@/shared/repositories/shared-role.repo'
 import { SharedUserRepository } from '@/shared/repositories/shared-user.repo'
 import { HashingService } from '@/shared/services/hashing.service'
@@ -40,7 +41,8 @@ const sharedServices = [
     {
       provide: APP_GUARD,
       useClass: AuthenticationGuard
-    }
+    },
+    ResetHeartAllUserCronjob
   ],
   exports: [...sharedServices, AccessTokenGuard, APIKeyGuard]
 })
