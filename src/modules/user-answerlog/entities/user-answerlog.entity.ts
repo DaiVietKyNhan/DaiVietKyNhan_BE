@@ -30,13 +30,19 @@ export const CreateUserAnswerLogBodySchema = UserAnswerLogSchema.pick({
   questionId: true
 })
 
-  .strict()
-
 export const CreateUserAnswerLogResSchema = z.object({
   statusCode: z.number(),
-  data: UserAnswerLogSchema,
+  data: UserAnswerLogSchema.extend({
+    isCompletedLand: z.boolean().default(false)
+  }),
   message: z.string()
 })
+
+export const PassUserAnswerLogBodySchema = UserAnswerLogSchema.pick({
+  questionId: true
+}).strict()
+
+export const PassUserAnswerLogResSchema = CreateUserAnswerLogResSchema
 
 export const UpdateUserAnswerLogBodySchema =
   CreateUserAnswerLogBodySchema.partial().strict()
@@ -52,11 +58,16 @@ export const GetUserAnswerLogParamsSchema = z
     userAnswerLogId: checkIdSchema('Id không hợp lệ')
   })
   .strict()
+export const GetUserAnswerLogByQuestionIdParamsSchema = z
+  .object({
+    questionId: checkIdSchema('Id không hợp lệ')
+  })
+  .strict()
 
 export const GetUserAnswerLogResSchema = z
   .object({
     statusCode: z.number(),
-    data: UserAnswerLogSchema,
+    data: UserAnswerLogSchema.nullable(),
     message: z.string()
   })
   .strict()
@@ -66,6 +77,9 @@ export type UserAnswerLogType = z.infer<typeof UserAnswerLogSchema>
 export type CreateUserAnswerLogBodyType = z.infer<typeof CreateUserAnswerLogBodySchema>
 export type UpdateUserAnswerLogBodyType = z.infer<typeof UpdateUserAnswerLogBodySchema>
 export type GetUserAnswerLogParamsType = z.infer<typeof GetUserAnswerLogParamsSchema>
+export type GetUserAnswerLogByQuestionIdParamsType = z.infer<
+  typeof GetUserAnswerLogByQuestionIdParamsSchema
+>
 export type GetUserAnswerLogResType = z.infer<typeof GetUserAnswerLogResSchema>
 
 //field

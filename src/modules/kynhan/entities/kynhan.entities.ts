@@ -39,6 +39,18 @@ export const CreateKyNhanResSchema = z.object({
   message: z.string()
 })
 
+export const GetKyNhansUserSchema = z.array(
+  KyNhanSchema.extend({
+    unlocked: z.boolean().default(false)
+  })
+)
+
+export const GetKyNhansUserResSchema = z.object({
+  statusCode: z.number(),
+  data: GetKyNhansUserSchema,
+  message: z.string()
+})
+
 export const UpdateKyNhanBodySchema = CreateKyNhanBodySchema.partial().strict()
 
 export const UpdateKyNhanResSchema = z.object({

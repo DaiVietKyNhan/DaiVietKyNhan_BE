@@ -56,6 +56,11 @@ export const GetKyNhanByQuesIdSummaryParamsSchema = z
   .strict()
 
 export const GetKyNhanSummaryResSchema = CreateKyNhanSummaryResSchema
+export const GetKyNhanSummariesResSchema = z.object({
+  statusCode: z.number(),
+  data: z.array(KyNhanSummarySchema),
+  message: z.string()
+})
 export const GetKyNhanSummarysByUserResSchema = z.object({
   statusCode: z.number(),
   data: z.array(

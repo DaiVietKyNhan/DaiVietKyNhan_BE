@@ -1,4 +1,6 @@
 import { checkIdSchema } from '@/common/utils/id.validation'
+import { QuestionSchema } from '@/modules/question/entities/question.entity'
+import { UserAnswerLogSchema } from '@/modules/user-answerlog/entities/user-answerlog.entity'
 import { extendZodWithOpenApi } from '@anatine/zod-openapi'
 import { patchNestJsSwagger } from 'nestjs-zod'
 import { z } from 'zod'
@@ -55,8 +57,38 @@ export const GetLandResSchema = z
   })
   .strict()
 
+export const LandWithQuestionAndUserAnswerLogSchema = LandSchema.extend({
+  questions: z.array(
+    QuestionSchema.pick({
+      id: true,
+      text: true
+    })
+      .extend({
+        userAnswerLogs: z.array(
+          UserAnswerLogSchema.pick({
+            id: true,
+            text: true,
+            isCorrect: true
+          })
+        )
+      })
+      .nullable()
+  )
+})
+
+export const GetLandWithQuestionAndUserAnswerLogResSchema = z
+  .object({
+    statusCode: z.number(),
+    data: LandWithQuestionAndUserAnswerLogSchema,
+    message: z.string()
+  })
+  .strict()
+
 // Types
 export type LandType = z.infer<typeof LandSchema>
+export type LandWithQuestionAndUserAnswerLogType = z.infer<
+  typeof LandWithQuestionAndUserAnswerLogSchema
+>
 export type CreateLandBodyType = z.infer<typeof CreateLandBodySchema>
 export type UpdateLandBodyType = z.infer<typeof UpdateLandBodySchema>
 export type GetLandParamsType = z.infer<typeof GetLandParamsSchema>

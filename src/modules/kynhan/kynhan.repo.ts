@@ -125,4 +125,39 @@ export class KynhanRepo {
       }
     })
   }
+
+  async getListByUser(userId: number): Promise<(KyNhanType & { unlocked: boolean })[]> {
+    // Fetch all KyNhan records
+    const allKyNhans = await this.prismaService.kyNhan.findMany({
+      where: {
+        deletedAt: null
+      },
+      orderBy: {
+        id: 'asc'
+      }
+    })
+
+    // Fetch user's KyNhan IDs
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        id: userId,
+        deletedAt: null
+      },
+      select: {
+        userKynhans: {
+          select: {
+            id: true
+          }
+        }
+      }
+    })
+
+    const userKyNhanIds = new Set(user?.userKynhans.map((k) => k.id) ?? [])
+
+    // Map each KyNhan with unlocked field
+    return allKyNhans.map((kyNhan) => ({
+      ...kyNhan,
+      unlocked: userKyNhanIds.has(kyNhan.id)
+    }))
+  }
 }

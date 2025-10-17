@@ -1,5 +1,7 @@
 import { ENTITY_MESSAGE } from '@/common/constants/message'
 import { checkIdSchema } from '@/common/utils/id.validation'
+import { KyNhanSchema } from '@/modules/kynhan/entities/kynhan.entities'
+import { MotaKyNhanSchema } from '@/modules/mo-ta-ky-nhan/entities/mo-ta-ky-nhan.entity'
 import { RoleSchema } from '@/shared/models/shared-role.model'
 import { UserSchema } from '@/shared/models/shared-user.model'
 import { extendZodWithOpenApi } from '@anatine/zod-openapi'
@@ -55,6 +57,24 @@ export const UpdateUserBodySchema = UserSchema.pick({
     return true
   })
 
+export const GetKyNhansByUserSchema = z.object({
+  ...UserSchema.shape,
+  userKynhans: z.array(
+    z
+      .object({
+        ...KyNhanSchema.shape,
+        motaKyNhan: MotaKyNhanSchema.nullable()
+      })
+      .nullable()
+  )
+})
+
+export const GetKyNhansByUserResSchema = z.object({
+  statusCode: z.number(),
+  data: GetKyNhansByUserSchema,
+  message: z.string()
+})
+
 export const UpdateUserResSchema = CreateUserResSchema
 
 export const GetParamsUserSchema = z.object({
@@ -78,7 +98,7 @@ export const GetUserWithRoleResSchema = z.object({
   }),
   message: z.string()
 })
-
+export type GetKyNhansByUserSchemaType = z.infer<typeof GetKyNhansByUserSchema>
 export type CreateUserBodyType = z.infer<typeof CreateUserBodySchema>
 export type UpdateUserBodyType = z.infer<typeof UpdateUserBodySchema>
 export type GetParamsUserType = z.infer<typeof GetParamsUserSchema>

@@ -178,7 +178,8 @@ export class UserLandRepo {
         userId,
         deletedAt: null
       },
-      include: { land: true }
+      include: { land: true },
+      orderBy: { id: 'asc' }
     })
   }
 }
