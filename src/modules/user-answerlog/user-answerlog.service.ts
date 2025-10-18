@@ -18,6 +18,7 @@ import {
   LandNotYetUnlockedException,
   UserAnswerLogAlreadyExistsException,
   UserAnswerLogIsCorrectExistExistsException,
+  UserNotEnoughCoinException,
   UserNotEnoughHeartException
 } from './dto/user-answerlog.error'
 import { PassUserAnswerLogBodyDTO } from './dto/user-answerlog.zod-dto'
@@ -115,9 +116,9 @@ export class UserAnswerLogService {
             amount: question.point
           })
         }
-        
+
         landId = question?.landId
-        
+
         // 3) Check achievements after adding KyNhanSummary
         await this.achievementCheckerService.checkKyNhanSummaryAchievements(createdById)
       } else {
@@ -249,10 +250,10 @@ export class UserAnswerLogService {
         throw NotFoundRecordException
       }
 
-      if (user.point < 500) {
-        throw UserNotEnoughHeartException
+      if (user.coin < 500) {
+        throw UserNotEnoughCoinException
       }
-      await this.sharedUserRepo.minuspointByUserId({ userId: createdById, amount: 500 })
+      await this.sharedUserRepo.minusCoinByUserId({ userId: createdById, amount: 500 })
 
       // lấy câu hỏi kèm câu trả lời
       const quesWithAns = await this.quesRepo.getQuestionsByIdWithAnswer(data.questionId)
