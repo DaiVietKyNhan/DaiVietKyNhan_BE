@@ -165,6 +165,7 @@ export class LandRepo {
       },
       include: {
         questions: {
+          where: { deletedAt: null },
           select: {
             id: true,
             text: true,
