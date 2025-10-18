@@ -3,6 +3,7 @@ import { PaginationQueryType } from '@/shared/models/request.model'
 import { HttpStatus, Injectable } from '@nestjs/common'
 
 import { SharedUserRepository } from '@/shared/repositories/shared-user.repo'
+import { answerOptionType } from '@prisma/client'
 import { NotFoundRecordException } from 'src/shared/error'
 import {
   isForeignKeyConstraintPrismaError,
@@ -15,6 +16,7 @@ import { KyNhanSummaryRepo } from '../kynhan-summary/kynhan-summary.repo'
 import { QuestionRepo } from '../question/question.repo'
 import { UserLandRepo } from '../user-land/user-land.repo'
 import {
+  AnswerMustBeUniqueAndAtLeastTwoException,
   LandNotYetUnlockedException,
   UserAnswerLogAlreadyExistsException,
   UserAnswerLogIsCorrectExistExistsException,
@@ -214,16 +216,41 @@ export class UserAnswerLogService {
     textAnswer
   }: {
     questionId: number
-    textAnswer: string
+    textAnswer: string[]
   }) {
-    const question = await this.quesRepo.findById(questionId)
+    const question = await this.quesRepo.getQuestionsByIdWithAnswer(questionId)
     if (!question) {
       throw NotFoundRecordException
     }
 
-    return (await this.quesRepo.getQuestionByIdAndAnswer(questionId, textAnswer))
-      ? true
-      : false
+    // Check if question allows TWO answers
+    const requiresTwoAnswers = question.answerOptionType === answerOptionType.TWO
+
+    if (requiresTwoAnswers) {
+      // Must provide exactly 2 answers
+      if (textAnswer.length !== 2 || !this.isUnique(textAnswer)) {
+        throw AnswerMustBeUniqueAndAtLeastTwoException
+      }
+
+      // Both answers must match (case insensitive)
+      // Get all valid answer texts
+      const validAnswers = question.answers.map((a) => a.text.toLowerCase())
+
+      // Check if both user answers are in the valid answers list
+      const answer1Valid = validAnswers.includes(textAnswer[0].toLowerCase())
+      const answer2Valid = validAnswers.includes(textAnswer[1].toLowerCase())
+
+      return answer1Valid && answer2Valid
+    } else {
+      // ONE answer required - check first answer only
+      if (textAnswer.length === 0) {
+        return false
+      }
+
+      return (await this.quesRepo.getQuestionByIdAndAnswer(questionId, textAnswer[0]))
+        ? true
+        : false
+    }
   }
 
   async pass({
@@ -260,7 +287,27 @@ export class UserAnswerLogService {
       if (!quesWithAns) {
         throw NotFoundRecordException
       }
-      const text = quesWithAns.answers[0]?.text || 'true'
+
+      // Check if question requires TWO answers
+      const requiresTwoAnswers = quesWithAns.answerOptionType === answerOptionType.TWO
+      let text: string[]
+
+      if (requiresTwoAnswers) {
+        // If question has only 1 answer, duplicate it for both slots
+        if (quesWithAns.answers.length === 1) {
+          const singleAnswer = quesWithAns.answers[0]?.text || 'true'
+          text = [singleAnswer, singleAnswer]
+        } else {
+          // Use first two answers
+          text = [
+            quesWithAns.answers[0]?.text || 'true',
+            quesWithAns.answers[1]?.text || 'true'
+          ]
+        }
+      } else {
+        // ONE answer - use first answer
+        text = [quesWithAns.answers[0]?.text || 'true']
+      }
 
       // Business: reward/punish user based on correctness
       if (true) {
@@ -394,5 +441,9 @@ export class UserAnswerLogService {
     }
 
     return
+  }
+
+  isUnique(textAnswer: string[]): boolean {
+    return new Set(textAnswer).size === textAnswer.length
   }
 }
