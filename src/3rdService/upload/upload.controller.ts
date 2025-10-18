@@ -31,7 +31,8 @@ import {
 import {
   UploadFileBodyDTO,
   UploadFileResponseDTO,
-  UploadFileSwaggerDTO
+  UploadFileSwaggerDTO,
+  UploadImageFlexibleResponseDTO
 } from './dto/upload-zod.dto'
 import { UploadImageDTO, UploadImageResponseDTO } from './dto/upload.dto'
 import { UploadResult, UploadService } from './upload.service'
@@ -41,7 +42,7 @@ import { UploadResult, UploadService } from './upload.service'
 @ApiBearerAuth()
 @UseFilters(MulterExceptionFilter)
 export class UploadController {
-  constructor(private readonly uploadService: UploadService) {}
+  constructor(private readonly uploadService: UploadService) { }
 
   @Post('generate-upload-url')
   @IsPublic()
@@ -124,17 +125,30 @@ export class UploadController {
 
   @Post('image')
   @UseInterceptors(FileInterceptor('image', CloudinaryImageUploadConfig))
-  @ApiOperation({ summary: 'Upload hình ảnh với folder tùy chọn' })
+  @ApiOperation({ summary: 'Upload hình ảnh với folder tùy chọn - API tái sử dụng cho toàn hệ thống' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({ type: UploadImageDTO })
   @ApiResponse({
-    status: 200,
+    status: 201,
     description: 'Upload hình ảnh thành công',
-    type: UploadImageResponseDTO
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 201 },
+        message: { type: 'string', example: 'Upload hình ảnh thành công!' },
+        data: {
+          type: 'object',
+          properties: {
+            url: { type: 'string', example: 'https://res.cloudinary.com/...' },
+            publicId: { type: 'string', example: 'folderName/images/filename' }
+          }
+        }
+      }
+    }
   })
   @ApiResponse({
     status: 400,
-    description: 'File không hợp lệ hoặc vượt quá giới hạn kích thước (3MB)',
+    description: 'File không hợp lệ hoặc vượt quá giới hạn kích thước (15MB)',
     schema: {
       type: 'object',
       properties: {
@@ -162,11 +176,13 @@ export class UploadController {
         throw new BadRequestException('Vui lòng cung cấp tên folder')
       }
 
-      const result = await this.uploadService.uploadFileByType(
-        image,
-        folderName,
-        'images'
-      )
+      // Validate folder name format
+      const folderNameRegex = /^[a-zA-Z0-9_-]+$/
+      if (!folderNameRegex.test(folderName)) {
+        throw new BadRequestException('Tên folder chỉ được chứa chữ cái, số, dấu gạch ngang và gạch dưới')
+      }
+
+      const result = await this.uploadService.uploadImageFile(image, folderName)
 
       return {
         statusCode: HttpStatus.CREATED,
@@ -183,6 +199,119 @@ export class UploadController {
       }
 
       // Handle other service errors
+      console.error('Upload service error:', error)
+      throw new BadRequestException('Đã xảy ra lỗi khi upload file. Vui lòng thử lại.')
+    }
+  }
+
+  @Post('image/flexible')
+  @UseInterceptors(FileInterceptor('image', CloudinaryImageUploadConfig))
+  @ZodSerializerDto(UploadImageFlexibleResponseDTO)
+  @ApiOperation({ summary: 'Upload hình ảnh linh hoạt với tùy chọn đa dạng' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        image: {
+          type: 'string',
+          format: 'binary',
+          description: 'File hình ảnh (JPEG, PNG, WEBP, GIF). Tối đa 15MB'
+        },
+        folderName: {
+          type: 'string',
+          example: 'avatars',
+          description: 'Tên folder (user, avatar, product, etc.)'
+        },
+        subFolder: {
+          type: 'string',
+          example: 'thumbnails',
+          description: 'Tên subfolder tùy chọn (optional)'
+        },
+        customPath: {
+          type: 'string',
+          example: 'custom/path',
+          description: 'Đường dẫn tùy chỉnh thay thế folderName/subFolder (optional)'
+        }
+      },
+      required: ['image', 'folderName']
+    }
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Upload hình ảnh thành công',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 201 },
+        message: { type: 'string', example: 'Upload hình ảnh thành công!' },
+        data: {
+          type: 'object',
+          properties: {
+            url: { type: 'string', example: 'https://res.cloudinary.com/...' },
+            publicId: { type: 'string', example: 'folderName/images/filename' },
+            folder: { type: 'string', example: 'folderName/images' }
+          }
+        }
+      }
+    }
+  })
+  async uploadImageFlexible(
+    @UploadedFile() image: Express.Multer.File,
+    @Body('folderName') folderName: string,
+    @Body('subFolder') subFolder?: string,
+    @Body('customPath') customPath?: string
+  ) {
+    try {
+      // Validate required fields
+      if (!image) {
+        throw new BadRequestException('Vui lòng chọn file hình ảnh để upload')
+      }
+
+      if (!folderName) {
+        throw new BadRequestException('Vui lòng cung cấp tên folder')
+      }
+
+      // Validate folder name format
+      const nameRegex = /^[a-zA-Z0-9_-]+$/
+      const customPathRegex = /^[a-zA-Z0-9_/-]+$/
+
+      if (!nameRegex.test(folderName)) {
+        throw new BadRequestException('Tên folder chỉ được chứa chữ cái, số, dấu gạch ngang và gạch dưới')
+      }
+
+      if (subFolder && !nameRegex.test(subFolder)) {
+        throw new BadRequestException('Tên subfolder chỉ được chứa chữ cái, số, dấu gạch ngang và gạch dưới')
+      }
+
+      // Determine upload path
+      let uploadPath: string
+      if (customPath) {
+        if (!customPathRegex.test(customPath)) {
+          throw new BadRequestException('Custom path chỉ được chứa chữ cái, số, dấu gạch ngang, gạch dưới và dấu /')
+        }
+        uploadPath = customPath
+      } else {
+        uploadPath = subFolder ? `${folderName}/${subFolder}` : folderName
+      }
+
+      // Upload with custom path structure
+      const result = await this.uploadService.uploadFileByType(image, uploadPath, 'images')
+
+      return {
+        statusCode: HttpStatus.CREATED,
+        message: 'Upload hình ảnh thành công!',
+        data: {
+          url: result.url,
+          publicId: result.publicId,
+          folder: `${uploadPath}/images`
+        }
+      }
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error
+      }
+
       console.error('Upload service error:', error)
       throw new BadRequestException('Đã xảy ra lỗi khi upload file. Vui lòng thử lại.')
     }
@@ -321,6 +450,67 @@ export class UploadController {
       // Handle other service errors
       console.error('Upload service error:', error)
       throw new BadRequestException('Đã xảy ra lỗi khi upload file. Vui lòng thử lại.')
+    }
+  }
+
+  @Post('avatar')
+  @UseInterceptors(FileInterceptor('image', CloudinaryImageUploadConfig))
+  @ApiOperation({ summary: 'Upload avatar - API đơn giản cho avatar người dùng' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        image: {
+          type: 'string',
+          format: 'binary',
+          description: 'File hình ảnh avatar (JPEG, PNG, WEBP, GIF). Tối đa 15MB'
+        }
+      },
+      required: ['image']
+    }
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Upload avatar thành công',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 201 },
+        message: { type: 'string', example: 'Upload avatar thành công!' },
+        data: {
+          type: 'object',
+          properties: {
+            url: { type: 'string', example: 'https://res.cloudinary.com/...' },
+            publicId: { type: 'string', example: 'avatars/images/filename' }
+          }
+        }
+      }
+    }
+  })
+  async uploadAvatar(@UploadedFile() image: Express.Multer.File) {
+    try {
+      if (!image) {
+        throw new BadRequestException('Vui lòng chọn file hình ảnh để upload')
+      }
+
+      const result = await this.uploadService.uploadImageFile(image, 'avatars')
+
+      return {
+        statusCode: HttpStatus.CREATED,
+        message: 'Upload avatar thành công!',
+        data: {
+          url: result.url,
+          publicId: result.publicId
+        }
+      }
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error
+      }
+
+      console.error('Upload avatar error:', error)
+      throw new BadRequestException('Đã xảy ra lỗi khi upload avatar. Vui lòng thử lại.')
     }
   }
 }

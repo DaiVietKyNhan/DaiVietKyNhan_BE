@@ -8,6 +8,6 @@ import { CloudinaryProvider } from './cloudinary/cloudinary.provider';
     imports: [CloudinaryModule],
     controllers: [UploadController],
     providers: [UploadService, CloudinaryProvider],
-    exports: [UploadService], // Export để vocabulary module có thể sử dụng
+    exports: [UploadService], 
 })
 export class UploadModule { }

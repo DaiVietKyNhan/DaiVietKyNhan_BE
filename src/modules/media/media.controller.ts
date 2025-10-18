@@ -1,4 +1,5 @@
 import { AuthenticationGuard } from '@/common/guards/authentication.guard'
+import { ActiveUser } from '@/common/decorators/active-user.decorator'
 import {
   Body,
   Controller,
@@ -12,7 +13,8 @@ import {
   UseGuards
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
-import { CreateMediaBodyDTO, QueryMediaDTO, UpdateMediaBodyDTO } from './dto'
+import { ZodSerializerDto } from 'nestjs-zod'
+import { CreateMediaBodyDTO, QueryMediaDTO, UpdateMediaBodyDTO, BulkCreateMediaBodyDTO, BulkCreateMediaResDTO } from './dto'
 import { MediaType } from './entities/media.entities'
 import { MediaService } from './media.service'
 
@@ -21,14 +23,23 @@ import { MediaService } from './media.service'
 @UseGuards(AuthenticationGuard)
 @Controller('media')
 export class MediaController {
-  constructor(private readonly mediaService: MediaService) {}
+  constructor(private readonly mediaService: MediaService) { }
 
   @Post()
   @ApiOperation({ summary: 'Tạo media mới' })
   @ApiResponse({ status: 201, description: 'Tạo media thành công' })
   @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ' })
-  create(@Body() createMediaDto: CreateMediaBodyDTO) {
-    return this.mediaService.create(createMediaDto)
+  create(@Body() createMediaDto: CreateMediaBodyDTO, @ActiveUser('userId') userId: number) {
+    return this.mediaService.create(createMediaDto, userId)
+  }
+
+  @Post('bulk')
+  @ApiOperation({ summary: 'Upload nhiều media cho thư viện ảnh' })
+  @ApiResponse({ status: 201, description: 'Upload nhiều media thành công', type: BulkCreateMediaResDTO })
+  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ' })
+  @ZodSerializerDto(BulkCreateMediaResDTO)
+  bulkCreate(@Body() bulkCreateDto: BulkCreateMediaBodyDTO, @ActiveUser('userId') userId: number) {
+    return this.mediaService.bulkCreate(bulkCreateDto, userId)
   }
 
   @Get()
@@ -76,7 +87,15 @@ export class MediaController {
   @ApiOperation({ summary: 'Xóa media' })
   @ApiResponse({ status: 200, description: 'Xóa thành công' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy media' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.mediaService.remove(id)
+  remove(@Param('id', ParseIntPipe) id: number, @ActiveUser('userId') userId: number) {
+    return this.mediaService.remove(id, userId)
+  }
+
+  @Delete('chitiet/:chiTietId')
+  @ApiOperation({ summary: 'Xóa tất cả media của chi tiết kỳ nhân' })
+  @ApiResponse({ status: 200, description: 'Xóa tất cả media thành công' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy chi tiết kỳ nhân' })
+  deleteByChiTietId(@Param('chiTietId', ParseIntPipe) chiTietId: number, @ActiveUser('userId') userId: number) {
+    return this.mediaService.deleteByChiTietId(chiTietId, userId)
   }
 }
