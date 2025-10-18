@@ -212,4 +212,17 @@ export class UserRewardRepo {
             }
         })
     }
+
+    findRewardByUserRewardId(userRewardId: number) {
+        return this.prismaService.userReward.findUnique({
+            where: { id: userRewardId },
+            include: {
+                reward: {
+                    select: {
+                        type: true
+                    }
+                }
+            }
+        })
+    }
 }

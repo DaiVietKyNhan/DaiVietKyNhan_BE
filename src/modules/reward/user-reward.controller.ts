@@ -63,13 +63,12 @@ export class UserRewardController {
 
     @Post('exchange')
     @ApiOperation({ summary: 'Exchange reward' })
-    @ApiResponse({ status: 200, description: 'Exchange reward successfully' })
+    @ApiResponse({ status: 200, description: 'đổi quà thành công' })
     async exchangeReward(@Body() data: ExchangeRewardBodyDTO, @ActiveUser('userId') userId: number) {
         return this.userRewardService.exchangeReward({
             userId,
             rewardId: data.rewardId,
-            code: data.code,
-            createdById: userId
+            code: data.code
         })
     }
 

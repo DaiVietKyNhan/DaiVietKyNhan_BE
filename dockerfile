@@ -35,11 +35,14 @@ COPY --from=builder /app/prisma ./prisma
 # Install dependencies and generate Prisma client in one layer
 RUN pnpm install --frozen-lockfile --prod && \
     pnpm add -D prisma@6.8.2 && \
-    pnpm exec prisma generate && \
-    pnpm remove prisma
+    pnpm exec prisma generate
 # Copy built application
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/tsconfig.json ./
+# Copy entrypoint script
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
 EXPOSE ${PORT}
+ENTRYPOINT ["./docker-entrypoint.sh"] # Dùng entrypoint này
 
 CMD ["node", "dist/main.js"]

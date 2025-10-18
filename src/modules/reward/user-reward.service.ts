@@ -100,9 +100,15 @@ export class UserRewardService {
                 })
             }
 
+            // Tự động set exchangedAt nếu status là COMPLETED
+            const dataToCreate = { ...parsed.data as CreateUserRewardBodyType }
+            if (dataToCreate.status === 'COMPLETED' && !dataToCreate.exchangedAt) {
+                dataToCreate.exchangedAt = new Date()
+            }
+
             const userReward = await this.userRewardRepo.create({
                 createdById,
-                data: parsed.data as CreateUserRewardBodyType
+                data: dataToCreate
             })
 
             return {
@@ -149,11 +155,45 @@ export class UserRewardService {
                 })
             }
 
+            // Tự động set exchangedAt nếu status chuyển thành COMPLETED
+            const dataToUpdate = { ...parsed.data as UpdateUserRewardBodyType }
+            if (dataToUpdate.status === 'COMPLETED' && !dataToUpdate.exchangedAt) {
+                dataToUpdate.exchangedAt = new Date()
+            }
+
+            // Lấy thông tin user reward hiện tại để kiểm tra status cũ
+            const currentUserReward = await this.userRewardRepo.findUnique({ id })
+            if (!currentUserReward) {
+                throw NotFoundRecordException
+            }
+
             const userReward = await this.userRewardRepo.update({
                 id,
-                data: parsed.data as UpdateUserRewardBodyType,
+                data: dataToUpdate,
                 updatedById
             })
+
+            // 🌟 Xử lý trả lại coin/point khi chuyển từ COMPLETED sang CANCELLED
+            if (currentUserReward.status === 'COMPLETED' && dataToUpdate.status === 'CANCELLED') {
+                // Lấy thông tin reward để biết type
+                const rewardData = await this.userRewardRepo.findRewardByUserRewardId(id)
+                if (rewardData && rewardData.reward) {
+                    if (rewardData.reward.type === 'POINT') {
+                        // Trả lại điểm
+                        await this.sharedUserRepo.addpointByUserId({
+                            userId: currentUserReward.userId,
+                            amount: currentUserReward.valuePaid
+                        })
+                    } else if (rewardData.reward.type === 'COIN') {
+                        // Trả lại xu
+                        await this.sharedUserRepo.addCoinByUserId({
+                            userId: currentUserReward.userId,
+                            amount: currentUserReward.valuePaid
+                        })
+                    }
+                    // CODE type không cần trả lại gì
+                }
+            }
 
             return {
                 statusCode: HttpStatus.OK,
@@ -175,7 +215,7 @@ export class UserRewardService {
         }
     }
 
-    async exchangeReward({ userId, rewardId, code, createdById }: { userId: number; rewardId: number; code?: string; createdById: number }) {
+    async exchangeReward({ userId, rewardId, code }: { userId: number; rewardId: number; code?: string }) {
         try {
             // Lấy thông tin reward
             const reward = await this.rewardRepo.findUnique({ id: rewardId })
@@ -224,24 +264,9 @@ export class UserRewardService {
                 if (!code) {
                     throw InvalidCodeException
                 }
-                // TODO: Implement code validation logic
-                // For now, just check if code is provided
             }
 
-            // Tạo user reward record
-            const userReward = await this.userRewardRepo.create({
-                createdById,
-                data: {
-                    userId,
-                    rewardId,
-                    status: 'PENDING',
-                    valuePaid: reward.requireValue,
-                    code: code || null,
-                    exchangedAt: null
-                }
-            })
-
-            // Trừ điểm/coin của user (chỉ với POINT và COIN)
+            // Trừ điểm/coin của user trước (chỉ với POINT và COIN)
             if (reward.type === 'POINT') {
                 await this.sharedUserRepo.minuspointByUserId({
                     userId,
@@ -254,19 +279,22 @@ export class UserRewardService {
                 })
             }
 
-            // Cập nhật user reward thành completed
-            const completedUserReward = await this.userRewardRepo.update({
-                id: userReward.id,
+            // Tạo user reward record với status PENDING
+            const userReward = await this.userRewardRepo.create({
+                createdById: userId,
                 data: {
-                    status: 'COMPLETED',
-                    exchangedAt: new Date()
-                },
-                updatedById: createdById
+                    userId,
+                    rewardId,
+                    status: 'PENDING',
+                    valuePaid: reward.type === 'CODE' ? 0 : reward.requireValue,
+                    code: code || null,
+                    exchangedAt: null
+                }
             })
 
             return {
                 statusCode: HttpStatus.OK,
-                data: completedUserReward,
+                data: userReward,
                 message: 'Reward exchanged successfully'
             }
         } catch (error) {
