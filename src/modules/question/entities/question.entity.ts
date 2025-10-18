@@ -1,3 +1,4 @@
+import { QuestionOptionType } from '@/common/constants/question.constant'
 import { checkIdSchema } from '@/common/utils/id.validation'
 import { AnswerSchema } from '@/modules/answer/entities/answer.entity'
 import { extendZodWithOpenApi } from '@anatine/zod-openapi'
@@ -11,9 +12,11 @@ export const QuestionSchema = z
   .object({
     id: z.number(),
 
-    text: z.string().min(1),
+    text: z.array(z.string()).min(1),
     questionType: z.enum(['TEXT_INPUT']).default('TEXT_INPUT'),
+    questionOptionType: z.nativeEnum(QuestionOptionType).nullable(),
     allowSimilarAnswers: z.boolean().default(false),
+
     point: z.number().default(100),
 
     landId: z.number(),

@@ -10,6 +10,7 @@ import {
   isNotFoundPrismaError,
   isUniqueConstraintPrismaError
 } from 'src/shared/helpers'
+import { LandRepo } from '../land/land.repo'
 import { KyNhanSummaryAlreadyExistsException } from './dto/kynhan-summary.error'
 import {
   CreateKyNhanSummaryBodySchema,
@@ -23,13 +24,35 @@ import { KyNhanSummaryRepo } from './kynhan-summary.repo'
 export class KyNhanSummaryService {
   constructor(
     private kyNhanSummaryRepo: KyNhanSummaryRepo,
-    private readonly uploadService: UploadService
+    private readonly uploadService: UploadService,
+    private readonly landRepo: LandRepo
   ) {}
 
   private readonly logger = new Logger(KyNhanSummaryService.name)
 
   async list(pagination: PaginationQueryType) {
     const data = await this.kyNhanSummaryRepo.list(pagination)
+    return {
+      statusCode: HttpStatus.OK,
+      data,
+      message: ENTITY_MESSAGE.GET_LIST_SUCCESS
+    }
+  }
+
+  async getListWithLandId(pagination: PaginationQueryType, landId: number) {
+    const land = await this.landRepo.findById(landId)
+    if (!land) {
+      throw NotFoundRecordException
+    }
+    const kynhanIdList = await this.landRepo.getListIdKyNhanByLandId(landId)
+    console.log('kynhans: ', kynhanIdList)
+
+    pagination.pageSize = land.totalQuestion
+    const data = await this.kyNhanSummaryRepo.getListWithLandId(
+      pagination,
+      land.id,
+      kynhanIdList
+    )
     return {
       statusCode: HttpStatus.OK,
       data,

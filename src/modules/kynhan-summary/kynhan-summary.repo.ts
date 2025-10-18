@@ -108,6 +108,40 @@ export class KyNhanSummaryRepo {
     }
   }
 
+  async getListWithLandId(
+    pagination: PaginationQueryType,
+    landId: number,
+    kynhanIdList: number[]
+  ) {
+    const { where, orderBy } = parseQs(pagination.qs, GOD_PROFILE_FIELDS)
+
+    const skip = (pagination.currentPage - 1) * pagination.pageSize
+    const take = pagination.pageSize
+
+    const [totalItems, data] = await Promise.all([
+      this.prismaService.kyNhanSummary.count({
+        where: { deletedAt: null, ...where, kyNhanId: { in: kynhanIdList } }
+      }),
+      this.prismaService.kyNhanSummary.findMany({
+        where: { deletedAt: null, ...where, kyNhanId: { in: kynhanIdList } },
+
+        orderBy,
+        skip,
+        take
+      })
+    ])
+
+    return {
+      results: data,
+      pagination: {
+        current: pagination.currentPage,
+        pageSize: pagination.pageSize,
+        totalPage: Math.ceil(totalItems / pagination.pageSize),
+        totalItem: totalItems
+      }
+    }
+  }
+
   findById(id: number): Promise<KyNhanSummaryTypeType | null> {
     return this.prismaService.kyNhanSummary.findUnique({
       where: {

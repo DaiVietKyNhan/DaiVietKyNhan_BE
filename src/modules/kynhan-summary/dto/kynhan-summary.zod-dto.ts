@@ -2,6 +2,7 @@ import { createZodDto } from 'nestjs-zod'
 import {
   CreateKyNhanSummaryBodySchema,
   CreateKyNhanSummaryResSchema,
+  GetKyNhanByLandIdSummaryParamsSchema,
   GetKyNhanByQuesIdSummaryParamsSchema,
   GetKyNhanSummariesResSchema,
   GetKyNhanSummaryParamsSchema,
@@ -33,6 +34,10 @@ export class GetKyNhanSummaryParamsDTO extends createZodDto(
 
 export class GetKyNhanSummaryByQuesIdParamsDTO extends createZodDto(
   GetKyNhanByQuesIdSummaryParamsSchema
+) {}
+
+export class GetKyNhanByLandIdSummaryParamsDTO extends createZodDto(
+  GetKyNhanByLandIdSummaryParamsSchema
 ) {}
 
 export class GetKyNhanSummaryResDTO extends createZodDto(GetKyNhanSummaryResSchema) {}

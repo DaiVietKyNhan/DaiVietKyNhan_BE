@@ -45,9 +45,11 @@ export const GetKyNhansUserSchema = z.array(
   })
 )
 
+export const GetKyNhanUserSchema = KyNhanSchema
+
 export const GetKyNhansUserResSchema = z.object({
   statusCode: z.number(),
-  data: GetKyNhansUserSchema,
+  data: GetKyNhanUserSchema,
   message: z.string()
 })
 

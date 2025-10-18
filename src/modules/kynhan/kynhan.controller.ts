@@ -27,6 +27,7 @@ import {
 import { CloudinaryImageUploadConfig } from '@/3rdService/upload/cloudinary/multer.config'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
+import { GetKyNhansByUserResDTO } from '../user/dto/user.zod-dto'
 import { KynhanService } from './kynhan.service'
 
 @Controller('kynhan')
@@ -47,7 +48,7 @@ export class KynhanController {
   }
 
   @Get('list/user')
-  @ZodSerializerDto(GetKyNhanUserResDTO)
+  @ZodSerializerDto(GetKyNhansByUserResDTO)
   getListByUser(@ActiveUser('userId') userId: number) {
     return this.kynhanService.getListByUser(userId)
   }

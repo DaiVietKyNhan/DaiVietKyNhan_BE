@@ -22,6 +22,7 @@ import { MessageResDTO } from 'src/shared/dtos/response.dto'
 import {
   CreateKyNhanSummaryBodyDTO,
   CreateKyNhanSummaryResDTO,
+  GetKyNhanByLandIdSummaryParamsDTO,
   GetKyNhanSummariesResDTO,
   GetKyNhanSummaryByQuesIdParamsDTO,
   GetKyNhanSummaryParamsDTO,
@@ -46,6 +47,17 @@ export class KyNhanSummaryController {
   @ZodSerializerDto(GetKyNhanSummaryResDTO)
   findById(@Param() params: GetKyNhanSummaryParamsDTO) {
     return this.kyNhanSummaryService.findById(params.kyNhanSummaryId)
+  }
+
+  @Get('land/:landId')
+  @ZodSerializerDto(PaginationResponseSchema)
+  getListWithLandId(
+    @Query() query: PaginationQueryDTO,
+    @Param() params: GetKyNhanByLandIdSummaryParamsDTO
+  ) {
+    console.log(query, params)
+
+    return this.kyNhanSummaryService.getListWithLandId(query, params.landId)
   }
 
   @Get('question/:questionId')

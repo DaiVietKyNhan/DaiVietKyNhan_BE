@@ -186,4 +186,18 @@ export class LandRepo {
       }
     })
   }
+
+  getListIdKyNhanByLandId(landId: number): Promise<number[]> {
+    return this.prismaService.kyNhanSummary
+      .findMany({
+        where: {
+          id: landId,
+          deletedAt: null
+        },
+        select: {
+          kyNhanId: true
+        }
+      })
+      .then((records) => records.map((record) => record.kyNhanId))
+  }
 }
