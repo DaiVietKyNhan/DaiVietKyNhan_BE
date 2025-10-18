@@ -2,6 +2,7 @@ import { ENTITY_MESSAGE } from '@/common/constants/message'
 import { PaginationQueryType } from '@/shared/models/request.model'
 import { HttpStatus, Injectable } from '@nestjs/common'
 
+import { answerOptionType } from '@prisma/client'
 import { NotFoundRecordException } from 'src/shared/error'
 import {
   isForeignKeyConstraintPrismaError,
@@ -15,7 +16,9 @@ import { CreateAnswerBodyType } from '../answer/entities/answer.entity'
 import { LandRepo } from '../land/land.repo'
 import {
   MaxQuestionPerLandExceededException,
-  QuestionAlreadyExistsException
+  QuestionAlreadyExistsException,
+  QuestionNeededAtLeastOneException,
+  QuestionWithTwoAnswersNeededMoreOneException
 } from './dto/question.error'
 import {
   CreateQuestionBodyType,
@@ -60,6 +63,13 @@ export class QuestionService {
     createdById: number
   }) {
     try {
+      if (data.answers.length === 0) {
+        throw QuestionNeededAtLeastOneException
+      }
+      if (data.answerOptionType === answerOptionType.TWO && data.answers.length < 2) {
+        throw QuestionWithTwoAnswersNeededMoreOneException
+      }
+
       const land = await this.landRepo.findById(data.landId)
       const isMaxQuestionPerLandExceeded =
         await this.questionRepo.isMaxQuestionPerLandExceeded(

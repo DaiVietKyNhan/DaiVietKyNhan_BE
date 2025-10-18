@@ -143,13 +143,15 @@ export class UserAnswerLogRepo {
     const existing = await this.findByUserIdAndQuestionId(userId, data.questionId)
 
     if (existing) {
+      const { amountAttempt } = existing
       // Update existing record
       return this.prismaService.userAnswerLog.update({
         where: { id: existing.id },
         data: {
           text: data.text,
           isCorrect: data.isCorrect,
-          updatedById: createdById
+          updatedById: createdById,
+          amountAttempt: amountAttempt + 1
         }
       })
     } else {
@@ -158,7 +160,8 @@ export class UserAnswerLogRepo {
         data: {
           ...data,
           userId,
-          createdById
+          createdById,
+          amountAttempt: 1
         }
       })
     }

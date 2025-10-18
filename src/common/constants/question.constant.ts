@@ -3,3 +3,8 @@ export const QuestionType = {
 } as const
 
 export type QuestionTypeType = (typeof QuestionType)[keyof typeof QuestionType]
+
+export enum answerOptionType {
+  ONE = 'ONE',
+  TWO = 'TWO'
+}

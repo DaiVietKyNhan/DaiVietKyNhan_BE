@@ -70,6 +70,11 @@ export class QuestionRepo {
   }): Promise<QuestionType> {
     const { kynhanSummaries, ...rest } = data
 
+    // Filter out null values from rest to avoid Prisma type errors
+    const filteredRest = Object.fromEntries(
+      Object.entries(rest).filter(([_, value]) => value !== null)
+    )
+
     // If kynhanSummaries provided, disconnect them from other questions first
     if (kynhanSummaries && kynhanSummaries.length > 0) {
       await this.disconnectKynhanSummariesFromOtherQuestions(kynhanSummaries, id)
@@ -81,7 +86,7 @@ export class QuestionRepo {
         deletedAt: null
       },
       data: {
-        ...rest,
+        ...filteredRest,
         updatedById,
         ...(kynhanSummaries
           ? {

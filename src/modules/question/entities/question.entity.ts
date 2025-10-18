@@ -1,6 +1,7 @@
 import { checkIdSchema } from '@/common/utils/id.validation'
 import { AnswerSchema } from '@/modules/answer/entities/answer.entity'
 import { extendZodWithOpenApi } from '@anatine/zod-openapi'
+import { answerOptionType } from '@prisma/client'
 import { patchNestJsSwagger } from 'nestjs-zod'
 import { z } from 'zod'
 
@@ -11,9 +12,11 @@ export const QuestionSchema = z
   .object({
     id: z.number(),
 
-    text: z.string().min(1),
+    text: z.string(),
     questionType: z.enum(['TEXT_INPUT']).default('TEXT_INPUT'),
+    answerOptionType: z.nativeEnum(answerOptionType).default(answerOptionType.ONE),
     allowSimilarAnswers: z.boolean().default(false),
+
     point: z.number().default(100),
 
     landId: z.number(),
@@ -35,6 +38,7 @@ export const CreateQuestionBodySchema = QuestionSchema.pick({
   text: true,
   questionType: true,
   allowSimilarAnswers: true,
+  answerOptionType: true,
   point: true,
   landId: true
 })

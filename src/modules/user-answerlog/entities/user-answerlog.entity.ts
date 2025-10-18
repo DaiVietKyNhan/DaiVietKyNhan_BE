@@ -12,8 +12,9 @@ export const UserAnswerLogSchema = z
 
     questionId: z.number(),
     userId: z.number(),
+    amountAttempt: z.number().default(0),
 
-    text: z.string(),
+    text: z.array(z.string()).min(1),
     isCorrect: z.boolean(),
 
     createdById: z.number().nullable(),

@@ -502,11 +502,12 @@ model GodProfile {
 }
 
 model Question {
-  id                  Int          @id @default(autoincrement())
-  text                String       @db.VarChar()
-  questionType        QuestionType @default(TEXT_INPUT)
-  allowSimilarAnswers Boolean      @default(false)
-  point               Int          @default(100)
+  id                  Int              @id @default(autoincrement())
+  text                String           @db.VarChar()
+  questionType        QuestionType     @default(TEXT_INPUT)
+  answerOptionType    answerOptionType @default(ONE)
+  allowSimilarAnswers Boolean          @default(false)
+  point               Int              @default(100)
 
   landId Int
   land   Land @relation(fields: [landId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -548,8 +549,10 @@ model Answer {
 }
 
 model UserAnswerLog {
-  id   Int    @id @default(autoincrement())
-  text String @db.VarChar()
+  id   Int      @id @default(autoincrement())
+  text String[]
+
+  amountAttempt Int @default(0)
 
   questionId Int
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -816,4 +819,9 @@ enum UserRewardStatus {
   PENDING // Chưa xử lý
   COMPLETED // Đã hoàn thành
   CANCELLED // Đã hủy
+}
+
+enum answerOptionType {
+  ONE
+  TWO
 }
