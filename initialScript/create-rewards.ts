@@ -63,7 +63,7 @@ async function createRewards() {
             {
                 name: 'Code đặc biệt',
                 description: 'Code đổi quà đặc biệt',
-                requireValue: 1,
+                requireValue: 0, // CODE type không cần requireValue
                 gift: 'Code đặc biệt',
                 type: 'CODE' as const,
                 limit: null, // Không giới hạn
