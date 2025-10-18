@@ -16,6 +16,7 @@ import { KyNhanSummaryRepo } from '../kynhan-summary/kynhan-summary.repo'
 import { QuestionRepo } from '../question/question.repo'
 import { UserLandRepo } from '../user-land/user-land.repo'
 import {
+  AnswerMustBeUniqueAndAtLeastTwoException,
   LandNotYetUnlockedException,
   UserAnswerLogAlreadyExistsException,
   UserAnswerLogIsCorrectExistExistsException,
@@ -227,8 +228,8 @@ export class UserAnswerLogService {
 
     if (requiresTwoAnswers) {
       // Must provide exactly 2 answers
-      if (textAnswer.length !== 2) {
-        return false
+      if (textAnswer.length !== 2 || !this.isUnique(textAnswer)) {
+        throw AnswerMustBeUniqueAndAtLeastTwoException
       }
 
       // Both answers must match (case insensitive)
@@ -440,5 +441,9 @@ export class UserAnswerLogService {
     }
 
     return
+  }
+
+  isUnique(textAnswer: string[]): boolean {
+    return new Set(textAnswer).size === textAnswer.length
   }
 }

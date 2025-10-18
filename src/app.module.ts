@@ -33,6 +33,8 @@ import { UserAnswerlogModule } from './modules/user-answerlog/user-answerlog.mod
 import { AchievementModule } from './modules/achievement/achievement.module';
 import { RewardModule } from './modules/reward/reward.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { LandBargeModule } from './modules/land-barge/land-barge.module';
+import { UserLandBargeModule } from './modules/user-land-barge/user-land-barge.module';
 
 @Module({
   imports: [
@@ -67,7 +69,9 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     UserAnswerlogModule,
     AchievementModule,
     RewardModule,
-    DashboardModule
+    DashboardModule,
+    LandBargeModule,
+    UserLandBargeModule
   ],
 
   controllers: [],
