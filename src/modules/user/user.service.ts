@@ -181,7 +181,7 @@ export class UserService {
       if (!user) {
         throw NotFoundRecordException
       }
-      if (user.coin < 100) {
+      if (user.coin < 200) {
         throw UserNotEnoughCoinException
       }
       if (user.heart >= 3) {
@@ -191,7 +191,7 @@ export class UserService {
         this.sharedUserRepo.addHeart({ userId, amount: 1 }),
         await this.sharedUserRepo.minusCoinByUserId({
           userId,
-          amount: 100
+          amount: 200
         })
       ])
 
