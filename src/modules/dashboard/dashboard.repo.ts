@@ -1,0 +1,116 @@
+import { Injectable } from '@nestjs/common'
+import { PrismaService } from '@/shared/services/prisma.service'
+
+@Injectable()
+export class DashboardRepo {
+    constructor(private prismaService: PrismaService) { }
+
+    async getTotalUsers(): Promise<number> {
+        return this.prismaService.user.count({
+            where: {
+                deletedAt: null,
+                status: 'ACTIVE'
+            }
+        })
+    }
+
+    async getTotalUsersLastMonth(): Promise<number> {
+        const lastMonth = new Date()
+        lastMonth.setMonth(lastMonth.getMonth() - 1)
+
+        return this.prismaService.user.count({
+            where: {
+                deletedAt: null,
+                status: 'ACTIVE',
+                createdAt: {
+                    lt: lastMonth
+                }
+            }
+        })
+    }
+
+    async getWebVisits(): Promise<number> {
+        // Count unique devices that have been active (web visits approximation)
+        const result = await this.prismaService.device.count({
+            where: {
+                isActive: true,
+                user: {
+                    deletedAt: null,
+                    status: 'ACTIVE'
+                }
+            }
+        })
+
+        return result
+    }
+
+    async getWebVisitsLastWeek(): Promise<number> {
+        const lastWeek = new Date()
+        lastWeek.setDate(lastWeek.getDate() - 7)
+
+        const result = await this.prismaService.device.count({
+            where: {
+                isActive: true,
+                lastActive: {
+                    gte: lastWeek,
+                    lt: new Date()
+                },
+                user: {
+                    deletedAt: null,
+                    status: 'ACTIVE'
+                }
+            }
+        })
+
+        return result
+    }
+
+    async getTotalQuestions(): Promise<number> {
+        return this.prismaService.question.count({
+            where: {
+                deletedAt: null
+            }
+        })
+    }
+
+    async getNewQuestionsThisWeek(): Promise<number> {
+        const thisWeek = new Date()
+        thisWeek.setDate(thisWeek.getDate() - 7)
+
+        return this.prismaService.question.count({
+            where: {
+                deletedAt: null,
+                createdAt: {
+                    gte: thisWeek
+                }
+            }
+        })
+    }
+
+    async getInteractionRate(): Promise<number> {
+        // Calculate participation rate: users who have answered questions / total active users
+        const [totalActiveUsers, usersWithAnswers] = await Promise.all([
+            this.prismaService.user.count({
+                where: {
+                    deletedAt: null,
+                    status: 'ACTIVE'
+                }
+            }),
+            this.prismaService.user.count({
+                where: {
+                    deletedAt: null,
+                    status: 'ACTIVE',
+                    userAnswerLogs: {
+                        some: {
+                            deletedAt: null
+                        }
+                    }
+                }
+            })
+        ])
+
+        if (totalActiveUsers === 0) return 0
+
+        return Math.round((usersWithAnswers / totalActiveUsers) * 100 * 10) / 10 // Round to 1 decimal place
+    }
+}

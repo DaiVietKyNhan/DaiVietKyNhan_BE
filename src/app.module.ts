@@ -32,6 +32,7 @@ import { AnswerModule } from './modules/answer/answer.module';
 import { UserAnswerlogModule } from './modules/user-answerlog/user-answerlog.module';
 import { AchievementModule } from './modules/achievement/achievement.module';
 import { RewardModule } from './modules/reward/reward.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -65,7 +66,8 @@ import { RewardModule } from './modules/reward/reward.module';
     AnswerModule,
     UserAnswerlogModule,
     AchievementModule,
-    RewardModule
+    RewardModule,
+    DashboardModule
   ],
 
   controllers: [],
