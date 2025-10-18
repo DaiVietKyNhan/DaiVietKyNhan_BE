@@ -67,9 +67,15 @@ export class UserRewardController {
     async exchangeReward(@Body() data: ExchangeRewardBodyDTO, @ActiveUser('userId') userId: number) {
         return this.userRewardService.exchangeReward({
             userId,
-            rewardId: data.rewardId,
-            code: data.code
+            rewardId: data.rewardId
         })
+    }
+
+    @Post('initialize-all-users-rewards')
+    @ApiOperation({ summary: 'Initialize all system rewards for all users' })
+    @ApiResponse({ status: 200, description: 'Khởi tạo tất cả reward cho tất cả users thành công' })
+    async initializeAllUsersRewards(@ActiveUser('userId') createdById: number) {
+        return this.userRewardService.addAllSystemRewardsToAllUsers({ createdById })
     }
 
     @Delete(':id')
