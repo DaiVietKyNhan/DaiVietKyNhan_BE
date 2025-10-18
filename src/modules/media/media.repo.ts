@@ -1,14 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../shared/services/prisma.service';
-import { MediaSchemaType, CreateMediaBodyType, UpdateMediaBodyType, QueryMediaType } from './entities/media.entities';
+import { MediaSchemaType, CreateMediaBodyType, UpdateMediaBodyType, QueryMediaType, BulkCreateMediaBodyType } from './entities/media.entities';
 
 @Injectable()
 export class MediaRepository {
     constructor(private readonly prismaService: PrismaService) { }
 
-    async create(data: CreateMediaBodyType): Promise<MediaSchemaType> {
+    async create(data: CreateMediaBodyType, createdById?: number): Promise<MediaSchemaType> {
+        // Tự động tính thuTu nếu không được cung cấp
+        const thuTu = data.thuTu !== undefined ? data.thuTu : await this.getNextThuTu(data.chiTietId)
+
         return this.prismaService.media.create({
-            data,
+            data: {
+                ...data,
+                thuTu,
+                createdById
+            },
             include: {
                 chiTiet: {
                     include: {
@@ -17,6 +24,67 @@ export class MediaRepository {
                 },
             },
         });
+    }
+
+    private async getNextThuTu(chiTietId: number): Promise<number> {
+        const lastRecord = await this.prismaService.media.findFirst({
+            where: {
+                chiTietId,
+                deletedAt: null
+            },
+            orderBy: {
+                thuTu: 'desc'
+            },
+            select: {
+                thuTu: true
+            }
+        })
+
+        return (lastRecord?.thuTu || 0) + 1
+    }
+
+    async bulkCreate(data: BulkCreateMediaBodyType, createdById?: number): Promise<MediaSchemaType[]> {
+        // Lấy thuTu hiện tại cao nhất cho chiTiết này
+        const lastMedia = await this.prismaService.media.findFirst({
+            where: {
+                chiTietId: data.chiTietId,
+                deletedAt: null
+            },
+            orderBy: {
+                thuTu: 'desc'
+            },
+            select: {
+                thuTu: true
+            }
+        });
+
+        const startThuTu = (lastMedia?.thuTu || 0) + 1;
+
+        const mediaData = data.medias.map((media, index) => ({
+            chiTietId: data.chiTietId,
+            type: data.type,
+            url: media.url,
+            fileName: media.fileName || null,
+            fileSize: media.fileSize || null,
+            mimeType: media.mimeType || null,
+            thuTu: media.thuTu !== undefined ? media.thuTu : startThuTu + index,
+            createdById
+        }));
+
+        return Promise.all(
+            mediaData.map(mediaItem =>
+                this.prismaService.media.create({
+                    data: mediaItem,
+                    include: {
+                        chiTiet: {
+                            include: {
+                                kyNhan: true,
+                            },
+                        },
+                    },
+                })
+            )
+        );
     }
 
     async findMany(query: QueryMediaType): Promise<{ data: MediaSchemaType[]; total: number }> {
@@ -88,7 +156,10 @@ export class MediaRepository {
 
     async findByChiTietId(chiTietId: number): Promise<MediaSchemaType[]> {
         return this.prismaService.media.findMany({
-            where: { chiTietId },
+            where: {
+                chiTietId,
+                deletedAt: null
+            },
             include: {
                 chiTiet: {
                     include: {
@@ -96,13 +167,58 @@ export class MediaRepository {
                     },
                 },
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: {
+                thuTu: 'asc',
+                createdAt: 'asc'
+            },
+        });
+    }
+
+    async findById(id: number): Promise<MediaSchemaType | null> {
+        return this.prismaService.media.findUnique({
+            where: {
+                id,
+                deletedAt: null
+            },
+            include: {
+                chiTiet: {
+                    include: {
+                        kyNhan: true,
+                    },
+                },
+            },
+        });
+    }
+
+    async softDelete(id: number, deletedById: number): Promise<MediaSchemaType> {
+        return this.prismaService.media.update({
+            where: { id },
+            data: {
+                deletedAt: new Date(),
+                deletedById
+            },
+        });
+    }
+
+    async deleteByChiTietId(chiTietId: number, deletedById: number): Promise<void> {
+        await this.prismaService.media.updateMany({
+            where: {
+                chiTietId,
+                deletedAt: null
+            },
+            data: {
+                deletedAt: new Date(),
+                deletedById
+            }
         });
     }
 
     async findByType(type: string): Promise<MediaSchemaType[]> {
         return this.prismaService.media.findMany({
-            where: { type: type as any },
+            where: {
+                type: type as any,
+                deletedAt: null
+            },
             include: {
                 chiTiet: {
                     include: {
@@ -110,7 +226,10 @@ export class MediaRepository {
                     },
                 },
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: {
+                thuTu: 'asc',
+                createdAt: 'asc'
+            },
         });
     }
 

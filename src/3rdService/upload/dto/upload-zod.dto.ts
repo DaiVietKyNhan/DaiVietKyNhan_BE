@@ -26,6 +26,37 @@ export const UploadFileBodySchema = z
   })
   .strict()
 
+// Schema cho upload image flexible
+export const UploadImageFlexibleBodySchema = z
+  .object({
+    folderName: z
+      .string()
+      .min(1, 'Folder name không được để trống')
+      .max(50, 'Folder name không được vượt quá 50 ký tự')
+      .regex(
+        /^[a-zA-Z0-9_-]+$/,
+        'Folder name chỉ được chứa chữ cái, số, dấu gạch ngang và gạch dưới'
+      ),
+    subFolder: z
+      .string()
+      .max(50, 'Sub folder name không được vượt quá 50 ký tự')
+      .regex(
+        /^[a-zA-Z0-9_-]+$/,
+        'Sub folder name chỉ được chứa chữ cái, số, dấu gạch ngang và gạch dưới'
+      )
+      .optional(),
+    customPath: z
+      .string()
+      .max(100, 'Custom path không được vượt quá 100 ký tự')
+      .regex(
+        /^[a-zA-Z0-9_/-]+$/,
+        'Custom path chỉ được chứa chữ cái, số, dấu gạch ngang, gạch dưới và dấu /'
+      )
+      .optional(),
+    image: z.any().optional() // File sẽ được handle bởi multer
+  })
+  .strict()
+
 // Response schema
 export const UploadFileResponseSchema = z.object({
   statusCode: z.number(),
@@ -36,13 +67,28 @@ export const UploadFileResponseSchema = z.object({
   })
 })
 
+// Response schema cho image flexible
+export const UploadImageFlexibleResponseSchema = z.object({
+  statusCode: z.number(),
+  message: z.string(),
+  data: z.object({
+    url: z.string().url(),
+    publicId: z.string().optional(),
+    folder: z.string().optional()
+  })
+})
+
 // Type definitions
 export type UploadFileBodyType = z.infer<typeof UploadFileBodySchema>
 export type UploadFileResponseType = z.infer<typeof UploadFileResponseSchema>
+export type UploadImageFlexibleBodyType = z.infer<typeof UploadImageFlexibleBodySchema>
+export type UploadImageFlexibleResponseType = z.infer<typeof UploadImageFlexibleResponseSchema>
 
 // DTOs
-export class UploadFileBodyDTO extends createZodDto(UploadFileBodySchema) {}
-export class UploadFileResponseDTO extends createZodDto(UploadFileResponseSchema) {}
+export class UploadFileBodyDTO extends createZodDto(UploadFileBodySchema) { }
+export class UploadFileResponseDTO extends createZodDto(UploadFileResponseSchema) { }
+export class UploadImageFlexibleBodyDTO extends createZodDto(UploadImageFlexibleBodySchema) { }
+export class UploadImageFlexibleResponseDTO extends createZodDto(UploadImageFlexibleResponseSchema) { }
 
 // Swagger DTO cho multipart form
 export class UploadFileSwaggerDTO {
