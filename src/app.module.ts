@@ -33,6 +33,7 @@ import { UserAnswerlogModule } from './modules/user-answerlog/user-answerlog.mod
 import { AchievementModule } from './modules/achievement/achievement.module';
 import { RewardModule } from './modules/reward/reward.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { ChiTietKyNhanModule } from './modules/chi-tiet-kynhan/chi-tiet-kynhan.module';
 
 @Module({
   imports: [
@@ -67,7 +68,8 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     UserAnswerlogModule,
     AchievementModule,
     RewardModule,
-    DashboardModule
+    DashboardModule,
+    ChiTietKyNhanModule
   ],
 
   controllers: [],

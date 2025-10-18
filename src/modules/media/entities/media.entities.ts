@@ -12,6 +12,16 @@ export const MediaSchema = z.object({
   chiTietId: z.number(),
   type: MediaTypeSchema,
   url: z.string().max(1000),
+  fileName: z.string().max(500).nullable(),
+  fileSize: z.number().nullable(), // Kích thước file tính bằng bytes
+  mimeType: z.string().max(100).nullable(),
+  thuTu: z.number().default(0),
+
+  createdById: z.number().nullable(),
+  updatedById: z.number().nullable(),
+  deletedById: z.number().nullable(),
+
+  deletedAt: z.date().nullable(),
   createdAt: z.date(),
   updatedAt: z.date()
 }).strict()
@@ -19,8 +29,33 @@ export const MediaSchema = z.object({
 export const CreateMediaBodySchema = MediaSchema.pick({
   chiTietId: true,
   type: true,
-  url: true
+  url: true,
+  fileName: true,
+  fileSize: true,
+  mimeType: true,
+  thuTu: true
+}).extend({
+  thuTu: z.number().optional()
 }).strict()
+
+// Bulk upload schema cho thư viện ảnh
+export const BulkCreateMediaBodySchema = z.object({
+  chiTietId: z.number(),
+  type: MediaTypeSchema,
+  medias: z.array(z.object({
+    url: z.string().url(),
+    fileName: z.string().optional(),
+    fileSize: z.number().optional(),
+    mimeType: z.string().optional(),
+    thuTu: z.number().optional()
+  })).min(1, 'Phải có ít nhất 1 media')
+}).strict()
+
+export const BulkCreateMediaResSchema = z.object({
+  statusCode: z.number(),
+  data: z.array(MediaSchema),
+  message: z.string()
+})
 
 export const UpdateMediaBodySchema = CreateMediaBodySchema.partial().strict()
 
@@ -61,3 +96,5 @@ export type UpdateMediaBodyType = z.infer<typeof UpdateMediaBodySchema>
 export type QueryMediaType = z.infer<typeof QueryMediaSchema>
 export type MediaResType = z.infer<typeof MediaResSchema>
 export type MediaListResType = z.infer<typeof MediaListResSchema>
+export type BulkCreateMediaBodyType = z.infer<typeof BulkCreateMediaBodySchema>
+export type BulkCreateMediaResType = z.infer<typeof BulkCreateMediaResSchema>
