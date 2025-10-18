@@ -30,11 +30,15 @@ export const CreateUserRewardBodySchema = UserRewardSchema.pick({
     valuePaid: true
 })
 
-export const UpdateUserRewardBodySchema = CreateUserRewardBodySchema.partial()
+export const UpdateUserRewardBodySchema = z.object({
+    status: z.enum(['PENDING', 'COMPLETED', 'CANCELLED']).optional(),
+    exchangedAt: z.any().optional(),
+    code: z.string().nullable().optional(),
+    valuePaid: z.number().optional()
+})
 
 export const ExchangeRewardBodySchema = z.object({
-    rewardId: z.number(),
-    code: z.string().max(100).optional() // Mã code nếu type = CODE
+    rewardId: z.number()
 }).strict()
 
 export const GetUserRewardResSchema = UserRewardSchema.extend({
