@@ -7,6 +7,7 @@ import { UserLandBargeService } from './user-land-barge.service'
 @Module({
   imports: [LandBargeModule],
   controllers: [UserLandBargeController],
-  providers: [UserLandBargeService, UserLandBargeRepo]
+  providers: [UserLandBargeService, UserLandBargeRepo],
+  exports: [UserLandBargeService, UserLandBargeRepo]
 })
 export class UserLandBargeModule {}

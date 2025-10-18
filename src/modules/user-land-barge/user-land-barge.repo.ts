@@ -164,7 +164,7 @@ export class UserLandBargeRepo {
     for (let i = 0; i < landIds.length; i++) {
       const landId = landIds[i]
       // First item is unlocked (true), others are locked (false)
-      const status = i === 0
+      const status = false
 
       // Check if already exists
       const existing = await this.findByUserIdAndLandId(userId, landId)
@@ -216,6 +216,61 @@ export class UserLandBargeRepo {
       where: {
         userId,
         deletedAt: null
+      },
+      include: {
+        landBarge: {
+          include: {
+            land: true
+          }
+        }
+      }
+    })
+  }
+
+  async updateStatusByUserIdAndLandId({
+    userId,
+    landId,
+    status,
+    updatedById
+  }: {
+    userId: number
+    landId: number
+    status: boolean
+    updatedById?: number
+  }): Promise<UserLandBargeType | null> {
+    // Find landBarge by landId
+    const landBarge = await this.prismaService.landBarge.findFirst({
+      where: {
+        landId,
+        deletedAt: null
+      }
+    })
+
+    if (!landBarge) {
+      return null
+    }
+
+    // Find and update userLandBarge by userId and landBargeId
+    const userLandBarge = await this.prismaService.userLandBarge.findFirst({
+      where: {
+        userId,
+        landBargeId: landBarge.id,
+        deletedAt: null
+      }
+    })
+
+    if (!userLandBarge) {
+      return null
+    }
+
+    // Update status
+    return this.prismaService.userLandBarge.update({
+      where: {
+        id: userLandBarge.id
+      },
+      data: {
+        status,
+        updatedById: updatedById ?? userId
       },
       include: {
         landBarge: true
