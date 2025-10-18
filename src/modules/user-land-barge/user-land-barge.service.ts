@@ -61,6 +61,8 @@ export class UserLandBargeService {
         landIds
       })
 
+    // console.log(createdUserLandBarges)
+
     return {
       statusCode: HttpStatus.OK,
       data: createdUserLandBarges,
@@ -93,10 +95,10 @@ export class UserLandBargeService {
     }
   }
 
-  getLandByUserId(userId: number) {
+  async getLandByUserId(userId: number) {
     return {
       statusCode: HttpStatus.OK,
-      data: this.UserLandBargeRepo.getByUser(userId),
+      data: await this.UserLandBargeRepo.getByUser(userId),
       message: ENTITY_MESSAGE.GET_SUCCESS
     }
   }

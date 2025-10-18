@@ -55,6 +55,12 @@ export const GetKyNhanByQuesIdSummaryParamsSchema = z
   })
   .strict()
 
+export const GetKyNhanSummaryByLandIdParamsSchema = z
+  .object({
+    landId: checkIdSchema('Id không hợp lệ')
+  })
+  .strict()
+
 export const GetKyNhanSummaryResSchema = CreateKyNhanSummaryResSchema
 export const GetKyNhanSummariesResSchema = z.object({
   statusCode: z.number(),
@@ -75,6 +81,9 @@ export type UpdateKyNhanSummaryBodyType = z.infer<typeof UpdateKyNhanSummaryBody
 export type GetKyNhanSummaryParamsType = z.infer<typeof GetKyNhanSummaryParamsSchema>
 export type GetKyNhanByQuesIdSummaryParamsType = z.infer<
   typeof GetKyNhanByQuesIdSummaryParamsSchema
+>
+export type GetKyNhanSummaryByLandIdParamsType = z.infer<
+  typeof GetKyNhanSummaryByLandIdParamsSchema
 >
 export type KyNhanSummaryTypeType = z.infer<typeof KyNhanSummarySchema>
 

@@ -1,4 +1,5 @@
 import { checkIdSchema } from '@/common/utils/id.validation'
+import { MotaKyNhanSchema } from '@/modules/mo-ta-ky-nhan/entities/mo-ta-ky-nhan.entity'
 import { extendZodWithOpenApi } from '@anatine/zod-openapi'
 import { patchNestJsSwagger } from 'nestjs-zod'
 import { z } from 'zod'
@@ -40,80 +41,106 @@ export const CreateKyNhanResSchema = z.object({
 })
 
 // Schema cho tạo kỳ nhân hoàn chỉnh với tất cả thông tin từ form
-export const CreateKyNhanCompleteBodySchema = z.object({
-  // Thông tin cơ bản kỳ nhân
-  name: z.string().min(1).max(500),
-  thoiKy: z.string().min(1),
-  chienCong: z.string().min(1),
-  landId: z.number().nullable().optional(),
-  active: z.boolean().default(false),
+export const CreateKyNhanCompleteBodySchema = z
+  .object({
+    // Thông tin cơ bản kỳ nhân
+    name: z.string().min(1).max(500),
+    thoiKy: z.string().min(1),
+    chienCong: z.string().min(1),
+    landId: z.number().nullable().optional(),
+    active: z.boolean().default(false),
 
-  // Thông tin hình ảnh cơ bản (từ form đầu tiên)
-  thongTinHinh: z.object({
-    tenHinh: z.string().min(1).max(500),
-    tomTatHinh: z.string().min(1).max(1000),
-    moTaNgan: z.string().min(1)
-  }).optional(),
+    // Thông tin hình ảnh cơ bản (từ form đầu tiên)
+    thongTinHinh: z
+      .object({
+        tenHinh: z.string().min(1).max(500),
+        tomTatHinh: z.string().min(1).max(1000),
+        moTaNgan: z.string().min(1)
+      })
+      .optional(),
 
-  // Thông tin cơ bản (các phần có thể có nhiều)
-  thongTinCoBan: z.array(z.object({
-    tieuDePhan: z.string().min(1).max(500),
-    noiDung: z.string().min(1)
-  })).optional(),
+    // Thông tin cơ bản (các phần có thể có nhiều)
+    thongTinCoBan: z
+      .array(
+        z.object({
+          tieuDePhan: z.string().min(1).max(500),
+          noiDung: z.string().min(1)
+        })
+      )
+      .optional(),
 
-  // Chi tiết kỳ nhân
-  chiTietKyNhan: z.object({
-    ten: z.string().min(1).max(500),
-    tinhCach: z.string().min(1),
-    quanHe: z.string().nullable().optional(),
-    trichDoan: z.string().min(1),
-    imgUrl: z.string().nullable().optional(),
+    // Chi tiết kỳ nhân
+    chiTietKyNhan: z.object({
+      ten: z.string().min(1).max(500),
+      tinhCach: z.string().min(1),
+      quanHe: z.string().nullable().optional(),
+      trichDoan: z.string().min(1),
+      imgUrl: z.string().nullable().optional(),
 
-    // Bối cảnh lịch sử và xuất thân
-    boiCanhLichSuVaXuatThan: z.array(z.object({
-      tieuDe: z.string().min(1).max(500),
-      noiDung: z.string().min(1),
-      nguon: z.string().nullable().optional()
-    })).optional(),
+      // Bối cảnh lịch sử và xuất thân
+      boiCanhLichSuVaXuatThan: z
+        .array(
+          z.object({
+            tieuDe: z.string().min(1).max(500),
+            noiDung: z.string().min(1),
+            nguon: z.string().nullable().optional()
+          })
+        )
+        .optional(),
 
-    // Sử sách viết gì
-    suSachVietGi: z.array(z.object({
-      tieuDe: z.string().min(1).max(500),
-      doanVan: z.string().min(1),
-      tacGia: z.string().max(500).nullable().optional(),
-      nguonSach: z.string().nullable().optional()
-    })).optional(),
+      // Sử sách viết gì
+      suSachVietGi: z
+        .array(
+          z.object({
+            tieuDe: z.string().min(1).max(500),
+            doanVan: z.string().min(1),
+            tacGia: z.string().max(500).nullable().optional(),
+            nguonSach: z.string().nullable().optional()
+          })
+        )
+        .optional(),
 
-    // Giai thoại dân gian và truyền thuyết
-    giaiThoaiDanGian: z.array(z.object({
-      tieuDe: z.string().min(1).max(500),
-      noiDung: z.string().min(1),
-      nguon: z.string().nullable().optional()
-    })).optional(),
+      // Giai thoại dân gian và truyền thuyết
+      giaiThoaiDanGian: z
+        .array(
+          z.object({
+            tieuDe: z.string().min(1).max(500),
+            noiDung: z.string().min(1),
+            nguon: z.string().nullable().optional()
+          })
+        )
+        .optional(),
 
-    // Tham khảo
-    thamKhao: z.string().nullable().optional(),
+      // Tham khảo
+      thamKhao: z.string().nullable().optional(),
 
-    // Thư viện ảnh
-    thuVienAnh: z.array(z.object({
-      url: z.string().url(),
-      fileName: z.string().optional(),
-      fileSize: z.number().optional(),
-      mimeType: z.string().optional()
-    })).optional()
+      // Thư viện ảnh
+      thuVienAnh: z
+        .array(
+          z.object({
+            url: z.string().url(),
+            fileName: z.string().optional(),
+            fileSize: z.number().optional(),
+            mimeType: z.string().optional()
+          })
+        )
+        .optional()
+    })
   })
-}).strict()
+  .strict()
 
 export const CreateKyNhanCompleteResSchema = z.object({
   statusCode: z.number(),
   data: KyNhanSchema.extend({
-    chiTietKyNhans: z.array(z.object({
-      id: z.number(),
-      ten: z.string(),
-      tinhCach: z.string(),
-      quanHe: z.string().nullable(),
-      trichDoan: z.string()
-    }))
+    chiTietKyNhans: z.array(
+      z.object({
+        id: z.number(),
+        ten: z.string(),
+        tinhCach: z.string(),
+        quanHe: z.string().nullable(),
+        trichDoan: z.string()
+      })
+    )
   }),
   message: z.string(),
   uploadWarnings: z.array(z.string()).optional()
@@ -121,7 +148,8 @@ export const CreateKyNhanCompleteResSchema = z.object({
 
 export const GetKyNhansUserSchema = z.array(
   KyNhanSchema.extend({
-    unlocked: z.boolean().default(false)
+    unlocked: z.boolean().default(false),
+    motaKyNhan: MotaKyNhanSchema.nullable().optional()
   })
 )
 
