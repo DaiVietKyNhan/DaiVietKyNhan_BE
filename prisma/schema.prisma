@@ -552,6 +552,8 @@ model ChangePointUserLog {
 
   reason   String @db.VarChar()
   newPoint Int
+  newCoin  Int
+  newHeart Int
 
   createdBy   User? @relation("ChangePointUserLogCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
   createdById Int?
@@ -559,6 +561,10 @@ model ChangePointUserLog {
   deletedById Int?
   updatedBy   User? @relation("ChangePointUserLogUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
   updatedById Int?
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model UserTestQuestionHome {
