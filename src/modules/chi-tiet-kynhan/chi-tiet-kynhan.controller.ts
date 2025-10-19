@@ -33,6 +33,8 @@ import {
     UpdateChiTietKyNhanCompleteBodyDTO,
     UpdateChiTietKyNhanCompleteResDTO
 } from './dto/chi-tiet-kynhan.zod-dto'
+import { CreateChiTietKyNhanCompleteBodySchema, UpdateChiTietKyNhanCompleteBodySchema } from './entities/chi-tiet-kynhan.entities'
+import { ZodError } from 'zod'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
 import { ChiTietKyNhanService } from './chi-tiet-kynhan.service'
 
@@ -41,6 +43,126 @@ import { ChiTietKyNhanService } from './chi-tiet-kynhan.service'
 @ApiBearerAuth()
 export class ChiTietKyNhanController {
     constructor(private readonly chiTietKyNhanService: ChiTietKyNhanService) { }
+
+    private parseJsonField(field: any, defaultValue: any = []): any {
+        if (field === null || field === undefined || field === '') {
+            return defaultValue
+        }
+
+        if (typeof field === 'string') {
+            try {
+                const parsed = JSON.parse(field)
+                // Nếu parsed là null/undefined, return defaultValue
+                if (parsed === null || parsed === undefined) return defaultValue
+                // Nếu parsed là array, return array
+                if (Array.isArray(parsed)) return parsed
+                // Nếu parsed là object, wrap trong array
+                if (parsed && typeof parsed === 'object') return [parsed]
+                return defaultValue
+            } catch (error) {
+                return defaultValue
+            }
+        }
+
+        // Nếu field không phải string
+        if (Array.isArray(field)) return field
+        // Nếu field là object và không null, wrap trong array
+        if (field && typeof field === 'object') return [field]
+        return defaultValue
+    }
+
+    private parseJsonFieldOptional(field: any): any {
+        if (field === null || field === undefined || field === '') {
+            return undefined
+        }
+
+        if (typeof field === 'string') {
+            try {
+                const parsed = JSON.parse(field)
+                // Nếu parsed là null/undefined, return undefined
+                if (parsed === null || parsed === undefined) return undefined
+                // Nếu parsed là array, return array
+                if (Array.isArray(parsed)) return parsed
+                // Nếu parsed là object, wrap trong array
+                if (parsed && typeof parsed === 'object') return [parsed]
+                return undefined
+            } catch (error) {
+                return undefined
+            }
+        }
+
+        // Nếu field không phải string
+        if (Array.isArray(field)) return field
+        // Nếu field là object và không null, wrap trong array
+        if (field && typeof field === 'object') return [field]
+        return undefined
+    }
+
+    private parseFormDataArrays(body: any, fieldName: string): any[] {
+        // Kiểm tra xem có field dạng JSON string không
+        if (body[fieldName]) {
+            return this.parseJsonField(body[fieldName], [])
+        }
+
+        // Parse array format như: fieldName[0][key], fieldName[1][key], etc.
+        const result: any[] = []
+        let index = 0
+
+        while (true) {
+            const item: any = {}
+            let hasItem = false
+
+            // Tìm tất cả keys cho index này
+            for (const key in body) {
+                const match = key.match(new RegExp(`^${fieldName}\\[${index}\\]\\[(.+)\\]$`))
+                if (match) {
+                    const propName = match[1]
+                    item[propName] = body[key]
+                    hasItem = true
+                }
+            }
+
+            if (!hasItem) break
+
+            result.push(item)
+            index++
+        }
+
+        return result.length > 0 ? result : []
+    }
+
+    private parseFormDataArraysOptional(body: any, fieldName: string): any[] | undefined {
+        // Kiểm tra xem có field dạng JSON string không
+        if (body[fieldName]) {
+            return this.parseJsonFieldOptional(body[fieldName])
+        }
+
+        // Parse array format như: fieldName[0][key], fieldName[1][key], etc.
+        const result: any[] = []
+        let index = 0
+
+        while (true) {
+            const item: any = {}
+            let hasItem = false
+
+            // Tìm tất cả keys cho index này
+            for (const key in body) {
+                const match = key.match(new RegExp(`^${fieldName}\\[${index}\\]\\[(.+)\\]$`))
+                if (match) {
+                    const propName = match[1]
+                    item[propName] = body[key]
+                    hasItem = true
+                }
+            }
+
+            if (!hasItem) break
+
+            result.push(item)
+            index++
+        }
+
+        return result.length > 0 ? result : undefined
+    }
 
     @Get()
     @ApiOperation({ summary: 'Lấy danh sách chi tiết kỳ nhân' })
@@ -97,21 +219,31 @@ export class ChiTietKyNhanController {
         },
         @ActiveUser('userId') userId: number
     ) {
-        // Parse form data
-        const payload: CreateChiTietKyNhanCompleteBodyDTO = {
-            kyNhanId: body.kyNhanId,
+        // Parse form data với Zod validation
+        const rawData = {
+            kyNhanId: body.kyNhanId ? body.kyNhanId.toString().trim() : '',
             thamKhao: body.thamKhao || null,
-            boiCanhLichSuVaXuatThan: body.boiCanhLichSuVaXuatThan ? JSON.parse(body.boiCanhLichSuVaXuatThan) : [],
-            suSachVietGi: body.suSachVietGi ? JSON.parse(body.suSachVietGi) : [],
-            giaiThoaiDanGian: body.giaiThoaiDanGian ? JSON.parse(body.giaiThoaiDanGian) : [],
-            thuVienAnh: body.thuVienAnh ? JSON.parse(body.thuVienAnh) : []
+            boiCanhLichSuVaXuatThan: this.parseFormDataArrays(body, 'boiCanhLichSuVaXuatThan'),
+            suSachVietGi: this.parseFormDataArrays(body, 'suSachVietGi'),
+            giaiThoaiDanGian: this.parseFormDataArrays(body, 'giaiThoaiDanGian'),
+            thuVienAnh: this.parseFormDataArrays(body, 'thuVienAnh')
         }
 
-        return this.chiTietKyNhanService.createFull({
-            data: payload,
-            createdById: userId,
-            thuVienAnhFiles: files.thuVienAnh || []
-        })
+        try {
+            const payload = CreateChiTietKyNhanCompleteBodySchema.parse(rawData)
+
+
+            return this.chiTietKyNhanService.createFull({
+                data: payload,
+                createdById: userId,
+                thuVienAnhFiles: files?.thuVienAnh || []
+            })
+        } catch (error) {
+            if (error instanceof ZodError) {
+                throw new BadRequestException(`Validation error: ${error.errors.map(e => e.message).join(', ')}`)
+            }
+            throw error
+        }
     }
 
     @Put(':chiTietKyNhanId/full')
@@ -134,21 +266,30 @@ export class ChiTietKyNhanController {
         },
         @ActiveUser('userId') userId: number
     ) {
-        // Parse form data
-        const payload: UpdateChiTietKyNhanCompleteBodyDTO = {
+        // Parse form data với Zod validation
+        const rawData = {
             thamKhao: body.thamKhao !== undefined ? body.thamKhao : null,
-            boiCanhLichSuVaXuatThan: body.boiCanhLichSuVaXuatThan ? JSON.parse(body.boiCanhLichSuVaXuatThan) : undefined,
-            suSachVietGi: body.suSachVietGi ? JSON.parse(body.suSachVietGi) : undefined,
-            giaiThoaiDanGian: body.giaiThoaiDanGian ? JSON.parse(body.giaiThoaiDanGian) : undefined,
-            thuVienAnh: body.thuVienAnh ? JSON.parse(body.thuVienAnh) : undefined
+            boiCanhLichSuVaXuatThan: this.parseFormDataArraysOptional(body, 'boiCanhLichSuVaXuatThan'),
+            suSachVietGi: this.parseFormDataArraysOptional(body, 'suSachVietGi'),
+            giaiThoaiDanGian: this.parseFormDataArraysOptional(body, 'giaiThoaiDanGian'),
+            thuVienAnh: this.parseFormDataArraysOptional(body, 'thuVienAnh')
         }
 
-        return this.chiTietKyNhanService.updateFull({
-            data: payload,
-            id: params.chiTietKyNhanId,
-            updatedById: userId,
-            thuVienAnhFiles: files.thuVienAnh || []
-        })
+        try {
+            const payload = UpdateChiTietKyNhanCompleteBodySchema.parse(rawData)
+
+            return this.chiTietKyNhanService.updateFull({
+                data: payload,
+                id: params.chiTietKyNhanId,
+                updatedById: userId,
+                thuVienAnhFiles: files?.thuVienAnh || []
+            })
+        } catch (error) {
+            if (error instanceof ZodError) {
+                throw new BadRequestException(`Validation error: ${error.errors.map(e => e.message).join(', ')}`)
+            }
+            throw error
+        }
     }
 
     @Put(':chiTietKyNhanId')

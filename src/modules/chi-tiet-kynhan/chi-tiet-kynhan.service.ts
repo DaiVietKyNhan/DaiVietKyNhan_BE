@@ -164,7 +164,6 @@ export class ChiTietKyNhanService {
         const uploadWarnings: Array<{ fileName: string; error: string }> = []
 
         try {
-
             // Upload thư viện ảnh nếu có
             if (thuVienAnhFiles && thuVienAnhFiles.length > 0) {
                 for (const file of thuVienAnhFiles) {
@@ -268,9 +267,17 @@ export class ChiTietKyNhanService {
                 }
 
                 // 5. Tạo Media (thư viện ảnh)
+                console.log('Creating media - uploadedThuVienAnhFiles:', uploadedThuVienAnhFiles.length)
+                console.log('Creating media - chiTietKyNhan.id:', chiTietKyNhan.id)
+
                 if (uploadedThuVienAnhFiles.length > 0) {
                     for (let index = 0; index < uploadedThuVienAnhFiles.length; index++) {
                         const { url, file } = uploadedThuVienAnhFiles[index]
+                        console.log(`Creating media ${index + 1}:`, {
+                            chiTietId: chiTietKyNhan.id,
+                            url: url,
+                            fileName: file.originalname
+                        })
                         await tx.media.create({
                             data: {
                                 chiTietId: chiTietKyNhan.id,
@@ -305,8 +312,20 @@ export class ChiTietKyNhanService {
                 return chiTietKyNhan
             })
 
+            // Debug: Log result
+            console.log('Transaction result:', result)
+            console.log('Result ID:', result?.id)
+
             // Fetch lại với đầy đủ relations
+            if (!result || !result.id) {
+                throw new Error('Failed to create ChiTietKyNhan record')
+            }
+
             const chiTietKyNhanWithRelations = await this.chiTietKyNhanRepo.findById(result.id)
+
+            if (!chiTietKyNhanWithRelations) {
+                throw new Error('Created record not found')
+            }
 
             return {
                 statusCode: HttpStatus.CREATED,

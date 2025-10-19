@@ -64,7 +64,7 @@ export const CloudinaryMultiMulterConfig = {
   }
 }
 
-// Multer config cho upload image với folder tùy chọn - giới hạn 3MB
+// Multer config cho upload image với folder tùy chọn - giới hạn 15MB, tối đa 10 files
 export const CloudinaryImageUploadConfig = {
   storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
@@ -76,8 +76,8 @@ export const CloudinaryImageUploadConfig = {
     }
   },
   limits: {
-    fileSize: 15 * 1024 * 1024, // 3MB
-    files: 1 // Chỉ cho phép 1 file
+    fileSize: 15 * 1024 * 1024, // 15MB
+    files: 10 // Tối đa 10 files (phù hợp với maxCount: 10 trong controller)
   }
 }
 
