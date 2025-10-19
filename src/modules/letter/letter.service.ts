@@ -3,9 +3,12 @@ import { PrismaService } from '@/shared/services/prisma.service'
 import {
   BadRequestException,
   ForbiddenException,
+  HttpStatus,
   Injectable,
   NotFoundException
 } from '@nestjs/common'
+
+import { PaginationQueryType } from '@/shared/models/request.model'
 import { LETTER_ERROR_MESSAGE } from './dto/letter.error'
 import { LetterRepo } from './letter.repo'
 
@@ -127,22 +130,49 @@ export class LetterService {
       ////       where: { id: fromUserId },
       ////       select: { coin: true }
       ////     })
+      // Log coin change nếu là lần đầu tiên (ngoài transaction để tránh rollback)
+      if (result.isFirstLetter) {
+        try {
+          const currentUser = await this.prismaService.user.findUnique({
+            where: { id: fromUserId },
+            select: { coin: true, point: true, heart: true }
+          })
 
-      //// if (currentUser) {
-      ////     await this.prismaService.changePointUserLog.create({
-      ////         data: {
-      ////             userId: fromUserId,
-      ////             newPoint: currentUser.coin,
-      // ////             reason: 'Thưởng lần đầu gửi thư',
-      ////             createdById: fromUserId
-      ////         }
-      ////     })
-      ////     console.log(`Coin change logged successfully`)
-      //// }
-      ////   } catch (error) {
-      ////     console.log('ChangePointUserLog error, skipping log creation:', error.message)
-      ////   }
-      ////! }
+          //// if (currentUser) {
+          ////     await this.prismaService.changePointUserLog.create({
+          ////         data: {
+          ////             userId: fromUserId,
+          ////             newPoint: currentUser.coin,
+          // ////             reason: 'Thưởng lần đầu gửi thư',
+          ////             createdById: fromUserId
+          ////         }
+          ////     })
+          ////     console.log(`Coin change logged successfully`)
+          //// }
+          ////   } catch (error) {
+          ////     console.log('ChangePointUserLog error, skipping log creation:', error.message)
+          ////   }
+          ////! }
+          // if (currentUser) {
+          //     await this.prismaService.changePointUserLog.create({
+          //         data: {
+          //             userId: fromUserId,
+          //             newPoint: currentUser.point || 0,
+          //             snapshotPoint: currentUser.point || 0,
+          //             newCoin: currentUser.coin || 0,
+          //             snapshotCoin: currentUser.coin || 0,
+          //             newHeart: currentUser.heart || 0,
+          //             snapshotHeart: currentUser.heart || 0,
+          //             reason: 'Thưởng lần đầu gửi thư',
+          //             createdById: fromUserId
+          //         }
+          //     })
+          //     console.log(`Coin change logged successfully`)
+          // }
+        } catch (error) {
+          console.log('ChangePointUserLog error, skipping log creation:', error.message)
+        }
+      }
 
       return {
         statusCode: 201,
@@ -272,6 +302,18 @@ export class LetterService {
       statusCode: 200,
       data: { unreadCount: count },
       message: ENTITY_MESSAGE.GET_SUCCESS
+    }
+  }
+
+  /**
+   * Lấy danh sách thư với phân trang
+   */
+  async list(pagination: PaginationQueryType) {
+    const data = await this.letterRepo.list(pagination)
+    return {
+      statusCode: HttpStatus.OK,
+      data,
+      message: ENTITY_MESSAGE.GET_LIST_SUCCESS
     }
   }
 }
