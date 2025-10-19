@@ -5,6 +5,67 @@ import { Injectable } from '@nestjs/common'
 export class DashboardRepo {
   constructor(private prismaService: PrismaService) {}
 
+  async getUserPlayStats() {
+    // Current month range
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = now.getMonth()
+    const startOfMonth = new Date(year, month, 1)
+    const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999)
+
+    // Previous month range
+    const prevMonth = month === 0 ? 11 : month - 1
+    const prevYear = month === 0 ? year - 1 : year
+    const startOfPrevMonth = new Date(prevYear, prevMonth, 1)
+    const endOfPrevMonth = new Date(prevYear, prevMonth + 1, 0, 23, 59, 59, 999)
+
+    // Total users (active, not deleted)
+    const totalUser = await this.prismaService.user.count({
+      where: { deletedAt: null, status: 'ACTIVE' }
+    })
+
+    // Total plays (sum of amountAttempt for logs in current month)
+    const logsThisMonth = await this.prismaService.userAnswerLog.findMany({
+      where: {
+        deletedAt: null,
+        createdAt: { gte: startOfMonth, lte: endOfMonth }
+      },
+      select: { amountAttempt: true }
+    })
+    const totalPlays = logsThisMonth.reduce((sum, l) => sum + l.amountAttempt, 0)
+
+    // Previous month: users created in prev month
+    const totalUserPrev = await this.prismaService.user.count({
+      where: {
+        deletedAt: null,
+        status: 'ACTIVE',
+        createdAt: { gte: startOfPrevMonth, lte: endOfPrevMonth }
+      }
+    })
+
+    // Previous month: total plays
+    const logsPrevMonth = await this.prismaService.userAnswerLog.findMany({
+      where: {
+        deletedAt: null,
+        createdAt: { gte: startOfPrevMonth, lte: endOfPrevMonth }
+      },
+      select: { amountAttempt: true }
+    })
+    const totalPlaysPrev = logsPrevMonth.reduce((sum, l) => sum + l.amountAttempt, 0)
+
+    // Percent change formulas
+    const ratemonthPre =
+      totalUserPrev > 0
+        ? Math.round(((totalUser - totalUserPrev) / totalUserPrev) * 100 * 100) / 100
+        : 0
+    const ratePlayPre =
+      totalPlaysPrev > 0
+        ? Math.round(((totalPlays - totalPlaysPrev) / totalPlaysPrev) * 100 * 100) / 100
+        : 0
+
+    return { totalUser, totalPlays, ratemonthPre, ratePlayPre }
+  }
+
   async getTotalUsers(): Promise<number> {
     return this.prismaService.user.count({
       where: {
@@ -233,19 +294,8 @@ export class DashboardRepo {
           ? Math.round(((newUsers - prevMonthUsers) / prevMonthUsers) * 100 * 100) / 100
           : 0
 
-      // Get total plays (user answer logs) in this month
-      const totalPlays = await this.prismaService.userAnswerLog.count({
-        where: {
-          deletedAt: null,
-          createdAt: {
-            gte: startDate,
-            lte: endDate
-          }
-        }
-      })
-
-      // Calculate pass rate (correct answers / total attempts)
-      const answerLogs = await this.prismaService.userAnswerLog.findMany({
+      // Get total plays in this month: sum of attempts across logs created in month
+      const logsThisMonth = await this.prismaService.userAnswerLog.findMany({
         where: {
           deletedAt: null,
           createdAt: {
@@ -254,44 +304,19 @@ export class DashboardRepo {
           }
         },
         select: {
+          amountAttempt: true,
           isCorrect: true
         }
       })
 
-      const correctAnswers = answerLogs.filter((log) => log.isCorrect).length
+      const totalPlays = logsThisMonth.reduce((sum, l) => sum + l.amountAttempt, 0)
+
+      // passRate (%): total correct over total attempts of the month
+      // Note: schema tracks final correctness per log; we approximate correct attempts as count of correct logs
+      const correctAnswers = logsThisMonth.filter((l) => l.isCorrect).length
+
       const passRate =
         totalPlays > 0 ? Math.round((correctAnswers / totalPlays) * 100 * 100) / 100 : 0
-
-      // Calculate land completion rate (COMPLETED lands / total lands)
-      const [completedLands, totalLandRecords] = await Promise.all([
-        this.prismaService.userLand.count({
-          where: {
-            deletedAt: null,
-            status: 'COMPLETED',
-            createdAt: {
-              gte: startDate,
-              lte: endDate
-            }
-          }
-        }),
-        this.prismaService.userLand.count({
-          where: {
-            deletedAt: null,
-            status: {
-              in: ['PENDING', 'COMPLETED']
-            },
-            createdAt: {
-              gte: startDate,
-              lte: endDate
-            }
-          }
-        })
-      ])
-
-      const landCompletionRate =
-        totalLandRecords > 0
-          ? Math.round((completedLands / totalLandRecords) * 100 * 100) / 100
-          : 0
 
       monthlyStats.push({
         month,
@@ -299,8 +324,7 @@ export class DashboardRepo {
         newUsers,
         changePercent,
         totalPlays,
-        passRate,
-        landCompletionRate
+        passRate
       })
     }
 
@@ -346,6 +370,8 @@ export class DashboardRepo {
       // Correct answers = count of logs where isCorrect = true (each counts as 1 correct answer)
       const correctAnswers = user.userAnswerLogs.filter((log) => log.isCorrect).length
 
+      // correctRate should be a ratio (0–1): correct answers / total attempts
+      // Round to 2 decimals for stability in UI
       const correctRate =
         totalAnswers > 0
           ? Math.round((correctAnswers / totalAnswers) * 100 * 100) / 100
@@ -411,10 +437,15 @@ export class DashboardRepo {
     })
 
     const landStats = lands.map((land) => {
-      // Calculate total answers for this land
+      // Calculate total answers for this land: sum of amountAttempt for all userAnswerLogs of questions in the land
       let totalAnswers = 0
       land.questions.forEach((question) => {
-        totalAnswers += question.userAnswerLogs.length
+        if (question.userAnswerLogs && question.userAnswerLogs.length > 0) {
+          totalAnswers += question.userAnswerLogs.reduce(
+            (sum, log) => sum + (log.amountAttempt ?? 0),
+            0
+          )
+        }
       })
 
       // Calculate average points from users in this land (PENDING or COMPLETED)
