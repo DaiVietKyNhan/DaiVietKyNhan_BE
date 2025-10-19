@@ -219,6 +219,22 @@ export class ChiTietKyNhanController {
         },
         @ActiveUser('userId') userId: number
     ) {
+        console.log('=== CONTROLLER CREATE FULL ===')
+        console.log('Files object:', files)
+        console.log('Files keys:', Object.keys(files || {}))
+        console.log('thuVienAnh files:', files?.thuVienAnh)
+        console.log('thuVienAnh length:', files?.thuVienAnh?.length || 0)
+        if (files?.thuVienAnh) {
+            console.log('File details:', files.thuVienAnh.map(f => ({
+                fieldname: f.fieldname,
+                originalname: f.originalname,
+                mimetype: f.mimetype,
+                size: f.size
+            })))
+        }
+        console.log('Body keys:', body ? Object.keys(body) : [])
+        console.log('Body:', body ? JSON.stringify(body, null, 2) : 'undefined')
+
         // Parse form data với Zod validation
         const rawData = {
             kyNhanId: body.kyNhanId ? body.kyNhanId.toString().trim() : '',
@@ -231,7 +247,7 @@ export class ChiTietKyNhanController {
 
         try {
             const payload = CreateChiTietKyNhanCompleteBodySchema.parse(rawData)
-
+            console.log('Parsed payload:', JSON.stringify(payload, null, 2))
 
             return this.chiTietKyNhanService.createFull({
                 data: payload,
