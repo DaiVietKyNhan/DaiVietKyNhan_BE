@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '@/shared/services/prisma.service'
 import { Prisma } from '@prisma/client'
+import { PaginationQueryType } from '@/shared/models/request.model'
+import { parseQs } from '@/common/utils/qs-parser'
+import { LETTER_FIELDS } from './entities/letter.entity'
 
 @Injectable()
 export class LetterRepo {
@@ -158,6 +161,51 @@ export class LetterRepo {
                 createdAt: 'desc'
             }
         })
+    }
+
+    async list(pagination: PaginationQueryType) {
+        const { where, orderBy } = parseQs(pagination.qs, LETTER_FIELDS)
+
+        const skip = (pagination.currentPage - 1) * pagination.pageSize
+        const take = pagination.pageSize
+
+        const [totalItems, data] = await Promise.all([
+            this.prismaService.letter.count({
+                where: { deletedAt: null, ...where }
+            }),
+            this.prismaService.letter.findMany({
+                where: { deletedAt: null, ...where },
+                include: {
+                    fromUser: {
+                        select: {
+                            id: true,
+                            name: true,
+                            avatar: true
+                        }
+                    },
+                    kyNhan: {
+                        select: {
+                            id: true,
+                            name: true,
+                            imgUrl: true
+                        }
+                    }
+                },
+                orderBy: orderBy || { createdAt: 'desc' },
+                skip,
+                take
+            })
+        ])
+
+        return {
+            results: data,
+            pagination: {
+                current: pagination.currentPage,
+                pageSize: pagination.pageSize,
+                totalPage: Math.ceil(totalItems / pagination.pageSize),
+                totalItem: totalItems
+            }
+        }
     }
 }
 

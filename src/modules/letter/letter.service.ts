@@ -1,8 +1,9 @@
-import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common'
+import { Injectable, BadRequestException, NotFoundException, ForbiddenException, HttpStatus } from '@nestjs/common'
 import { PrismaService } from '@/shared/services/prisma.service'
 import { LetterRepo } from './letter.repo'
 import { LETTER_ERROR_MESSAGE } from './dto/letter.error'
 import { ENTITY_MESSAGE } from '@/common/constants/message'
+import { PaginationQueryType } from '@/shared/models/request.model'
 
 @Injectable()
 export class LetterService {
@@ -115,14 +116,19 @@ export class LetterService {
                 try {
                     const currentUser = await this.prismaService.user.findUnique({
                         where: { id: fromUserId },
-                        select: { coin: true }
+                        select: { coin: true, point: true, heart: true }
                     })
 
                     if (currentUser) {
                         await this.prismaService.changePointUserLog.create({
                             data: {
                                 userId: fromUserId,
-                                newPoint: currentUser.coin,
+                                newPoint: currentUser.point || 0,
+                                snapshotPoint: currentUser.point || 0,
+                                newCoin: currentUser.coin || 0,
+                                snapshotCoin: currentUser.coin || 0,
+                                newHeart: currentUser.heart || 0,
+                                snapshotHeart: currentUser.heart || 0,
                                 reason: 'Thưởng lần đầu gửi thư',
                                 createdById: fromUserId
                             }
@@ -262,6 +268,18 @@ export class LetterService {
             statusCode: 200,
             data: { unreadCount: count },
             message: ENTITY_MESSAGE.GET_SUCCESS
+        }
+    }
+
+    /**
+     * Lấy danh sách thư với phân trang
+     */
+    async list(pagination: PaginationQueryType) {
+        const data = await this.letterRepo.list(pagination)
+        return {
+            statusCode: HttpStatus.OK,
+            data,
+            message: ENTITY_MESSAGE.GET_LIST_SUCCESS
         }
     }
 }

@@ -1,8 +1,10 @@
 import { ActiveUser } from '@/common/decorators/active-user.decorator'
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ZodSerializerDto } from 'nestjs-zod'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
+import { PaginationQueryDTO } from '@/shared/dtos/request.dto'
+import { PaginationResponseSchema } from '@/shared/models/response.model'
 import {
     CreateLetterBodyDTO,
     CreateLetterResDTO,
@@ -19,6 +21,13 @@ import { LetterService } from './letter.service'
 @ApiBearerAuth()
 export class LetterController {
     constructor(private readonly letterService: LetterService) { }
+
+    @Get()
+    @ApiOperation({ summary: 'Lấy danh sách thư với phân trang' })
+    @ZodSerializerDto(PaginationResponseSchema)
+    list(@Query() query: PaginationQueryDTO) {
+        return this.letterService.list(query)
+    }
 
     @Post()
     @ApiOperation({
