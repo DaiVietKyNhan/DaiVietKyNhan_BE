@@ -26,6 +26,14 @@ const MediaSchema = z.object({
     updatedAt: z.date()
 }).strict()
 
+// User schema for relations
+const UserRelationSchema = z.object({
+    id: z.number(),
+    email: z.string(),
+    name: z.string(),
+    avatar: z.string().nullable()
+}).nullable()
+
 extendZodWithOpenApi(z)
 patchNestJsSwagger()
 
@@ -33,11 +41,7 @@ export const ChiTietKyNhanSchema = z
     .object({
         id: z.number(),
         kyNhanId: z.number(),
-        ten: z.string().min(1).max(500),
-        tinhCach: z.string().min(1),
-        quanHe: z.string().nullable(),
-        trichDoan: z.string().min(1),
-        imgUrl: z.string().nullable(),
+        thamKhao: z.string().nullable(),
         createdById: z.number().nullable(),
         updatedById: z.number().nullable(),
         deletedById: z.number().nullable(),
@@ -55,40 +59,30 @@ export const ChiTietKyNhanSchema = z
         media: z.array(MediaSchema).optional(),
         boiCanhLichSuVaSuuThan: z.array(ChiTietKyNhanBoiCanhLichSuVaSuuThanSchema).optional(),
         suSachVietGi: z.array(ChiTietKyNhanSuSachVietGiSchema).optional(),
-        giaiThoaiDanGian: z.array(ChiTietKyNhanGiaiThoaiDanGianSchema).optional()
+        giaiThoaiDanGian: z.array(ChiTietKyNhanGiaiThoaiDanGianSchema).optional(),
+        createdBy: UserRelationSchema,
+        updatedBy: UserRelationSchema,
+        deletedBy: UserRelationSchema
     })
     .strict()
 
 export const CreateChiTietKyNhanBodySchema = ChiTietKyNhanSchema.pick({
     kyNhanId: true,
-    ten: true,
-    tinhCach: true,
-    quanHe: true,
-    trichDoan: true,
-    imgUrl: true
+    thamKhao: true
 }).strict()
 
-// Schema cho tạo kỳ nhân hoàn chỉnh với tất cả thông tin từ form
-export const CreateKyNhanCompleteBodySchema = z.object({
-    // Thông tin cơ bản kỳ nhân
-    kyNhanId: z.number().min(1),
-    ten: z.string().min(1).max(500),
-    tinhCach: z.string().min(1),
-    quanHe: z.string().nullable().optional(),
-    trichDoan: z.string().min(1),
 
-    // Thông tin hình ảnh cơ bản (từ form đầu tiên)
-    thongTinHinh: z.object({
-        tenHinh: z.string().min(1).max(500),
-        tomTatHinh: z.string().min(1).max(1000),
-        moTaNgan: z.string().min(1)
-    }).optional(),
+export const CreateChiTietKyNhanResSchema = z.object({
+    statusCode: z.number(),
+    data: ChiTietKyNhanSchema,
+    message: z.string()
+})
 
-    // Thông tin cơ bản (các phần có thể có nhiều)
-    thongTinCoBan: z.array(z.object({
-        tieuDePhan: z.string().min(1).max(500),
-        noiDung: z.string().min(1)
-    })).optional(),
+// Schema cho tạo chi tiết kỳ nhân hoàn chỉnh với tất cả thông tin từ form
+export const CreateChiTietKyNhanCompleteBodySchema = z.object({
+    // Thông tin cơ bản chi tiết kỳ nhân
+    kyNhanId: z.string().transform(val => Number(val)),
+    thamKhao: z.string().nullable().optional(),
 
     // Bối cảnh lịch sử và xuất thân
     boiCanhLichSuVaXuatThan: z.array(z.object({
@@ -112,10 +106,7 @@ export const CreateKyNhanCompleteBodySchema = z.object({
         nguon: z.string().nullable().optional()
     })).optional(),
 
-    // Tham khảo
-    thamKhao: z.string().nullable().optional(),
-
-    // Thư viện ảnh
+    // Thư viện ảnh (URLs from form data, or files uploaded separately)
     thuVienAnh: z.array(z.object({
         url: z.string().url(),
         fileName: z.string().optional(),
@@ -124,16 +115,63 @@ export const CreateKyNhanCompleteBodySchema = z.object({
     })).optional()
 }).strict()
 
-export const CreateChiTietKyNhanResSchema = z.object({
+export const CreateChiTietKyNhanCompleteResSchema = z.object({
     statusCode: z.number(),
     data: ChiTietKyNhanSchema,
-    message: z.string()
+    message: z.string(),
+    uploadWarnings: z.array(z.object({
+        fileName: z.string(),
+        error: z.string()
+    })).optional()
 })
 
-export const CreateKyNhanCompleteResSchema = z.object({
+// Schema cho cập nhật chi tiết kỳ nhân hoàn chỉnh
+export const UpdateChiTietKyNhanCompleteBodySchema = z.object({
+    thamKhao: z.string().nullable().optional(),
+
+    // Bối cảnh lịch sử và xuất thân
+    boiCanhLichSuVaXuatThan: z.array(z.object({
+        id: z.number().optional(), // ID nếu update, undefined nếu create mới
+        tieuDe: z.string().min(1).max(500),
+        noiDung: z.string().min(1),
+        nguon: z.string().nullable().optional()
+    })).optional(),
+
+    // Sử sách viết gì
+    suSachVietGi: z.array(z.object({
+        id: z.number().optional(), // ID nếu update, undefined nếu create mới
+        tieuDe: z.string().min(1).max(500),
+        doanVan: z.string().min(1),
+        tacGia: z.string().max(500).nullable().optional(),
+        nguonSach: z.string().nullable().optional()
+    })).optional(),
+
+    // Giai thoại dân gian và truyền thuyết
+    giaiThoaiDanGian: z.array(z.object({
+        id: z.number().optional(), // ID nếu update, undefined nếu create mới
+        tieuDe: z.string().min(1).max(500),
+        noiDung: z.string().min(1),
+        nguon: z.string().nullable().optional()
+    })).optional(),
+
+    // Thư viện ảnh (URLs from form data, or files uploaded separately)
+    thuVienAnh: z.array(z.object({
+        id: z.number().optional(), // ID nếu update, undefined nếu create mới
+        url: z.string().url(),
+        fileName: z.string().optional(),
+        fileSize: z.number().optional(),
+        mimeType: z.string().optional()
+    })).optional()
+}).strict()
+
+export const UpdateChiTietKyNhanCompleteResSchema = z.object({
     statusCode: z.number(),
     data: ChiTietKyNhanSchema,
-    message: z.string()
+    message: z.string(),
+    uploadWarnings: z.array(z.object({
+        fileName: z.string(),
+        error: z.string()
+    })).optional()
 })
 
 export const UpdateChiTietKyNhanBodySchema = CreateChiTietKyNhanBodySchema.partial().strict()
@@ -173,8 +211,10 @@ export const GetChiTietKyNhanListResSchema = z.object({
 // Types
 export type ChiTietKyNhanType = z.infer<typeof ChiTietKyNhanSchema>
 export type CreateChiTietKyNhanBodyType = z.infer<typeof CreateChiTietKyNhanBodySchema>
-export type CreateKyNhanCompleteBodyType = z.infer<typeof CreateKyNhanCompleteBodySchema>
-export type CreateKyNhanCompleteResType = z.infer<typeof CreateKyNhanCompleteResSchema>
+export type CreateChiTietKyNhanCompleteBodyType = z.infer<typeof CreateChiTietKyNhanCompleteBodySchema>
+export type CreateChiTietKyNhanCompleteResType = z.infer<typeof CreateChiTietKyNhanCompleteResSchema>
+export type UpdateChiTietKyNhanCompleteBodyType = z.infer<typeof UpdateChiTietKyNhanCompleteBodySchema>
+export type UpdateChiTietKyNhanCompleteResType = z.infer<typeof UpdateChiTietKyNhanCompleteResSchema>
 export type UpdateChiTietKyNhanBodyType = z.infer<typeof UpdateChiTietKyNhanBodySchema>
 export type GetChiTietKyNhanParamsType = z.infer<typeof GetChiTietKyNhanParamsSchema>
 export type GetChiTietKyNhanResType = z.infer<typeof GetChiTietKyNhanResSchema>

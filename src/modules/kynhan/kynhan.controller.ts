@@ -11,7 +11,6 @@ import {
   Put,
   Query,
   UploadedFile,
-  UploadedFiles,
   UseInterceptors
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiResponse } from '@nestjs/swagger'
@@ -19,8 +18,6 @@ import { ZodSerializerDto } from 'nestjs-zod'
 import {
   CreateKyNhanBodyDTO,
   CreateKyNhanResDTO,
-  CreateKyNhanCompleteBodyDTO,
-  CreateKyNhanCompleteResDTO,
   GetKyNhanUserResDTO,
   GetParamsKyNhanDTO,
   UpdateKyNhanBodyDTO,
@@ -28,7 +25,7 @@ import {
 } from 'src/modules/kynhan/dto/kynhan.zod-dto'
 
 import { CloudinaryImageUploadConfig } from '@/3rdService/upload/cloudinary/multer.config'
-import { FileInterceptor, FileFieldsInterceptor } from '@nestjs/platform-express'
+import { FileInterceptor } from '@nestjs/platform-express'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
 import { KynhanService } from './kynhan.service'
 
@@ -79,43 +76,6 @@ export class KynhanController {
     })
   }
 
-  @Post('full')
-  @ZodSerializerDto(CreateKyNhanCompleteResDTO)
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'imgUrl', maxCount: 1 },
-    { name: 'chiTietImgUrl', maxCount: 1 },
-    { name: 'thuVienAnh', maxCount: 10 }
-  ], {
-    ...CloudinaryImageUploadConfig,
-    limits: {
-      ...CloudinaryImageUploadConfig.limits,
-      files: 12 // 2 single images + 10 library images
-    }
-  }))
-  @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: 'Tạo kỳ nhân hoàn chỉnh với tất cả thông tin từ form' })
-  @ApiResponse({
-    status: 201,
-    description: 'Tạo kỳ nhân hoàn chỉnh thành công. Nếu có file upload thất bại, sẽ được báo cáo trong uploadWarnings',
-    type: CreateKyNhanCompleteResDTO
-  })
-  createFull(
-    @Body() body: CreateKyNhanCompleteBodyDTO,
-    @UploadedFiles() files: {
-      imgUrl?: Express.Multer.File[],
-      chiTietImgUrl?: Express.Multer.File[],
-      thuVienAnh?: Express.Multer.File[]
-    },
-    @ActiveUser('userId') userId: number
-  ) {
-    return this.kynhanService.createComplete({
-      data: body,
-      createdById: userId,
-      imgFile: files.imgUrl?.[0],
-      chiTietImgFile: files.chiTietImgUrl?.[0],
-      thuVienAnhFiles: files.thuVienAnh || []
-    })
-  }
 
   @Put(':kyNhanId')
   @ZodSerializerDto(UpdateKyNhanResDTO)
