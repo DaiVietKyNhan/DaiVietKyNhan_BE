@@ -1,75 +1,114 @@
+import { ActiveUser } from '@/common/decorators/active-user.decorator'
+import { PaginationQueryDTO } from '@/shared/dtos/request.dto'
+import { PaginationResponseSchema } from '@/shared/models/response.model'
 import {
-    Controller,
-    Get,
-    Post,
-    Body,
-    Patch,
-    Param,
-    Delete,
-    Query,
-    ParseIntPipe,
-    UseGuards,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { KyNhanService } from './kynhan.service';
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UploadedFile,
+  UseInterceptors
+} from '@nestjs/common'
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiResponse } from '@nestjs/swagger'
+import { ZodSerializerDto } from 'nestjs-zod'
+import {
+  CreateKyNhanBodyDTO,
+  CreateKyNhanResDTO,
+  GetKyNhanUserResDTO,
+  GetParamsKyNhanDTO,
+  UpdateKyNhanBodyDTO,
+  UpdateKyNhanResDTO
+} from 'src/modules/kynhan/dto/kynhan.zod-dto'
 
-import { AuthenticationGuard } from '../../common/guards/authentication.guard';
-import { CreateKyNhanBodyDTO, QueryKyNhanDTO, UpdateKyNhanBodyDTO } from './dto/kynhan.zod-dto';
+import { CloudinaryImageUploadConfig } from '@/3rdService/upload/cloudinary/multer.config'
+import { FileInterceptor } from '@nestjs/platform-express'
+import { MessageResDTO } from 'src/shared/dtos/response.dto'
+import { KynhanService } from './kynhan.service'
 
-@ApiTags('Kỳ Nhân')
-@ApiBearerAuth()
-@UseGuards(AuthenticationGuard)
 @Controller('kynhan')
-export class KyNhanController {
-    constructor(private readonly kyNhanService: KyNhanService) { }
+@ApiBearerAuth()
+export class KynhanController {
+  constructor(private readonly kynhanService: KynhanService) { }
 
-    @Post()
-    @ApiOperation({ summary: 'Tạo kỳ nhân mới' })
-    @ApiResponse({ status: 201, description: 'Tạo kỳ nhân thành công' })
-    @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ' })
-    create(@Body() createKyNhanDto: CreateKyNhanBodyDTO) {
-        return this.kyNhanService.create(createKyNhanDto);
-    }
+  @Get()
+  @ZodSerializerDto(PaginationResponseSchema)
+  list(@Query() query: PaginationQueryDTO) {
+    return this.kynhanService.list(query)
+  }
 
-    @Get()
-    @ApiOperation({ summary: 'Lấy danh sách kỳ nhân' })
-    @ApiResponse({ status: 200, description: 'Lấy danh sách thành công' })
-    findAll(@Query() query: QueryKyNhanDTO) {
-        return this.kyNhanService.findAll(query);
-    }
+  @Get(':kyNhanId')
+  @ZodSerializerDto(GetKyNhanUserResDTO)
+  findById(@Param() params: GetParamsKyNhanDTO) {
+    return this.kynhanService.findById(params.kyNhanId)
+  }
 
-    @Get(':id')
-    @ApiOperation({ summary: 'Lấy thông tin kỳ nhân theo ID' })
-    @ApiResponse({ status: 200, description: 'Lấy thông tin thành công' })
-    @ApiResponse({ status: 404, description: 'Không tìm thấy kỳ nhân' })
-    findOne(@Param('id', ParseIntPipe) id: number) {
-        return this.kyNhanService.findOneWithResponse(id);
-    }
+  @Get('list/user')
+  @ZodSerializerDto(GetKyNhanUserResDTO)
+  getListByUser(@ActiveUser('userId') userId: number) {
+    return this.kynhanService.getListByUser(userId)
+  }
 
-    @Patch(':id')
-    @ApiOperation({ summary: 'Cập nhật thông tin kỳ nhân' })
-    @ApiResponse({ status: 200, description: 'Cập nhật thành công' })
-    @ApiResponse({ status: 404, description: 'Không tìm thấy kỳ nhân' })
-    update(
-        @Param('id', ParseIntPipe) id: number,
-        @Body() updateKyNhanDto: UpdateKyNhanBodyDTO,
-    ) {
-        return this.kyNhanService.update(id, updateKyNhanDto);
+  @Post()
+  @ZodSerializerDto(CreateKyNhanResDTO)
+  @UseInterceptors(FileInterceptor('imgUrl', CloudinaryImageUploadConfig))
+  @ApiConsumes('multipart/form-data')
+  create(
+    @Body() body: any,
+    @UploadedFile() imgFile: Express.Multer.File,
+    @ActiveUser('userId') userId: number
+  ) {
+    const payload: CreateKyNhanBodyDTO = {
+      name: body.name,
+      thoiKy: body.thoiKy,
+      chienCong: body.chienCong,
+      landId: Number(body.landId),
+      imgUrl: '',
+      active: body.active === 'true' || body.active === true ? true : false
     }
+    return this.kynhanService.create({
+      data: payload,
+      createdById: userId,
+      imgFile
+    })
+  }
 
-    @Delete(':id')
-    @ApiOperation({ summary: 'Xóa kỳ nhân (soft delete)' })
-    @ApiResponse({ status: 200, description: 'Xóa thành công' })
-    @ApiResponse({ status: 404, description: 'Không tìm thấy kỳ nhân' })
-    remove(@Param('id', ParseIntPipe) id: number) {
-        return this.kyNhanService.remove(id);
-    }
 
-    @Patch(':id/restore')
-    @ApiOperation({ summary: 'Khôi phục kỳ nhân đã xóa' })
-    @ApiResponse({ status: 200, description: 'Khôi phục thành công' })
-    @ApiResponse({ status: 404, description: 'Không tìm thấy kỳ nhân đã xóa' })
-    restore(@Param('id', ParseIntPipe) id: number) {
-        return this.kyNhanService.restore(id);
-    }
+  @Put(':kyNhanId')
+  @ZodSerializerDto(UpdateKyNhanResDTO)
+  @UseInterceptors(FileInterceptor('imgUrl', CloudinaryImageUploadConfig))
+  @ApiConsumes('multipart/form-data')
+  update(
+    @Body() body: any,
+    @Param() params: GetParamsKyNhanDTO,
+    @UploadedFile() imgFile: Express.Multer.File,
+    @ActiveUser('userId') userId: number
+  ) {
+    const payload: UpdateKyNhanBodyDTO = {}
+    if (body.name !== undefined) payload.name = body.name
+    if (body.thoiKy !== undefined) payload.thoiKy = body.thoiKy
+    if (body.chienCong !== undefined) payload.chienCong = body.chienCong
+    if (body.active !== undefined)
+      payload.active = body.active === 'true' || body.active === true ? true : false
+    if (body.imgUrl !== undefined) payload.imgUrl = body.imgUrl
+    if (body.landId !== undefined) payload.landId = Number(body.landId)
+    return this.kynhanService.update({
+      data: payload,
+      id: params.kyNhanId,
+      updatedById: userId,
+      imgFile
+    })
+  }
+
+  @Delete(':kyNhanId')
+  @ZodSerializerDto(MessageResDTO)
+  delete(@Param() params: GetParamsKyNhanDTO, @ActiveUser('userId') userId: number) {
+    return this.kynhanService.delete({
+      id: params.kyNhanId,
+      deletedById: userId
+    })
+  }
 }

@@ -8,89 +8,165 @@ datasource db {
 }
 
 model User {
-  id          Int        @id @default(autoincrement())
-  email       String     @unique @db.VarChar(500)
-  name        String     @db.VarChar(500)
-  password    String     @db.VarChar(500)
-  phoneNumber String     @db.VarChar(50)
-  gender      Gender?
-  birthDate   DateTime?
-  avatar      String?    @db.VarChar(1000)
-  status      UserStatus @default(INACTIVE)
-  coin        Int        @default(0)
+  id                            Int                                   @id @default(autoincrement())
+  email                         String                                @unique @db.VarChar(500)
+  name                          String                                @db.VarChar(500)
+  password                      String                                @db.VarChar(500)
+  phoneNumber                   String?                               @db.VarChar(50)
+  avatar                        String?                               @db.VarChar(1000)
+  status                        UserStatus                            @default(INACTIVE)
+  roleId                        Int
+  createdById                   Int?
+  updatedById                   Int?
+  deletedById                   Int?
+  deletedAt                     DateTime?
+  createdAt                     DateTime                              @default(now())
+  updatedAt                     DateTime                              @updatedAt
+  birthDate                     DateTime?
+  gender                        Gender?
+  coin                          Int                                   @default(0)
+  point                         Int                                   @default(0)
+  pointTestHome                 Boolean                               @default(false)
+  figureId                      Int?
+  godProfileId                  Int?
+  heart                         Int                                   @default(3)
+  createdAchievements           Achievement[]                         @relation("AchievementCreatedBy")
+  deletedAchievements           Achievement[]                         @relation("AchievementDeletedBy")
+  updatedAchievements           Achievement[]                         @relation("AchievementUpdatedBy")
+  createdValidTextInputs        Answer[]                              @relation("ValidTextInputAnswerCreatedBy")
+  deletedValidTextInputs        Answer[]                              @relation("ValidTextInputAnswerDeletedBy")
+  updatedValidTextInputs        Answer[]                              @relation("ValidTextInputAnswerUpdatedBy")
+  createdAttendances            Attendance[]                          @relation("AttendanceCreatedBy")
+  deletedAttendances            Attendance[]                          @relation("AttendanceDeletedBy")
+  updatedAttendances            Attendance[]                          @relation("AttendanceUpdatedBy")
+  attendances                   Attendance[]
+  createdAttendanceConfigs      AttendanceConfig[]                    @relation("AttendanceConfigCreatedBy")
+  deletedAttendanceConfigs      AttendanceConfig[]                    @relation("AttendanceConfigDeletedBy")
+  updatedAttendanceConfigs      AttendanceConfig[]                    @relation("AttendanceConfigUpdatedBy")
+  createdChiTiets               ChiTietKyNhan[]                       @relation("ChiTietKyNhanCreatedBy")
+  deletedChiTiets               ChiTietKyNhan[]                       @relation("ChiTietKyNhanDeletedBy")
+  updatedChiTiets               ChiTietKyNhan[]                       @relation("ChiTietKyNhanUpdatedBy")
+  createdBoiCanhLichSuVaSuuThan ChiTietKyNhanBoiCanhLichSuVaSuuThan[] @relation("ChiTietKyNhanBoiCanhLichSuVaSuuThanCreatedBy")
+  deletedBoiCanhLichSuVaSuuThan ChiTietKyNhanBoiCanhLichSuVaSuuThan[] @relation("ChiTietKyNhanBoiCanhLichSuVaSuuThanDeletedBy")
+  updatedBoiCanhLichSuVaSuuThan ChiTietKyNhanBoiCanhLichSuVaSuuThan[] @relation("ChiTietKyNhanBoiCanhLichSuVaSuuThanUpdatedBy")
+  createdGiaiThoaiDanGian       ChiTietKyNhanGiaiThoaiDanGian[]       @relation("ChiTietKyNhanGiaiThoaiDanGianCreatedBy")
+  deletedGiaiThoaiDanGian       ChiTietKyNhanGiaiThoaiDanGian[]       @relation("ChiTietKyNhanGiaiThoaiDanGianDeletedBy")
+  updatedGiaiThoaiDanGian       ChiTietKyNhanGiaiThoaiDanGian[]       @relation("ChiTietKyNhanGiaiThoaiDanGianUpdatedBy")
+  createdSuSachVietGi           ChiTietKyNhanSuSachVietGi[]           @relation("ChiTietKyNhanSuSachVietGiCreatedBy")
+  deletedSuSachVietGi           ChiTietKyNhanSuSachVietGi[]           @relation("ChiTietKyNhanSuSachVietGiDeletedBy")
+  updatedSuSachVietGi           ChiTietKyNhanSuSachVietGi[]           @relation("ChiTietKyNhanSuSachVietGiUpdatedBy")
+  devices                       Device[]
+  createdFigures                Figure[]                              @relation("FigureCreatedBy")
+  deletedFigures                Figure[]                              @relation("FigureDeletedBy")
+  updatedFigures                Figure[]                              @relation("FigureUpdatedBy")
+  createdGodProfiles            GodProfile[]                          @relation("GodProfileCreatedBy")
+  deletedGodProfiles            GodProfile[]                          @relation("GodProfileDeletedBy")
+  updatedGodProfiles            GodProfile[]                          @relation("GodProfileUpdatedBy")
+  createdKyNhans                KyNhan[]                              @relation("KyNhanCreatedBy")
+  deletedKyNhans                KyNhan[]                              @relation("KyNhanDeletedBy")
+  updatedKyNhans                KyNhan[]                              @relation("KyNhanUpdatedBy")
+  createdKyNhanSummaries        KyNhanSummary[]                       @relation("KyNhanSummaryCreatedBy")
+  deletedKyNhanSummaries        KyNhanSummary[]                       @relation("KyNhanSummaryDeletedBy")
+  updatedKyNhanSummaries        KyNhanSummary[]                       @relation("KyNhanSummaryUpdatedBy")
+  createdLands                  Land[]                                @relation("LandCreatedBy")
+  deletedLands                  Land[]                                @relation("LandDeletedBy")
+  updatedLands                  Land[]                                @relation("LandUpdatedBy")
+  createdLandBarges             LandBarge[]                           @relation("LandBargeCreatedBy")
+  deletedLandBarges             LandBarge[]                           @relation("LandBargeDeletedBy")
+  updatedLandBarges             LandBarge[]                           @relation("LandBargeUpdatedBy")
+  createdMedias                 Media[]                               @relation("MediaCreatedBy")
+  deletedMedias                 Media[]                               @relation("MediaDeletedBy")
+  updatedMedias                 Media[]                               @relation("MediaUpdatedBy")
+  createdMotaKyNhans            MotaKyNhan[]                          @relation("MoTaKyNhanCreatedBy")
+  deletedMotaKyNhans            MotaKyNhan[]                          @relation("MoTaKyNhanDeletedBy")
+  updatedMotaKyNhans            MotaKyNhan[]                          @relation("MoTaKyNhanUpdatedBy")
+  createdPermissions            Permission[]                          @relation("PermissionCreatedBy")
+  deletedPermissions            Permission[]                          @relation("PermissionDeletedBy")
+  updatedPermissions            Permission[]                          @relation("PermissionUpdatedBy")
+  createdQuestions              Question[]                            @relation("QuestionCreatedBy")
+  deletedQuestions              Question[]                            @relation("QuestionDeletedBy")
+  updatedQuestions              Question[]                            @relation("QuestionUpdatedBy")
+  refreshTokens                 RefreshToken[]
+  createdRewards                Reward[]                              @relation("RewardCreatedBy")
+  deletedRewards                Reward[]                              @relation("RewardDeletedBy")
+  updatedRewards                Reward[]                              @relation("RewardUpdatedBy")
+  createdRoles                  Role[]                                @relation("RoleCreatedBy")
+  deletedRoles                  Role[]                                @relation("RoleDeletedBy")
+  updatedRoles                  Role[]                                @relation("RoleUpdatedBy")
+  createdSystemConfigs          SystemConfig[]                        @relation("SystemConfigCreatedBy")
+  deletedSystemConfigs          SystemConfig[]                        @relation("SystemConfigDeletedBy")
+  updatedSystemConfigs          SystemConfig[]                        @relation("SystemConfigUpdatedBy")
+  createdTestQuestionHomes      TestQuestionHome[]                    @relation("TestQuestionHomeCreatedBy")
+  deletedTestQuestionHomes      TestQuestionHome[]                    @relation("TestQuestionHomeDeletedBy")
+  updatedTestQuestionHomes      TestQuestionHome[]                    @relation("TestQuestionHomeUpdatedBy")
+  createdBy                     User?                                 @relation("CreatorUsers", fields: [createdById], references: [id], onUpdate: NoAction)
+  createdUsers                  User[]                                @relation("CreatorUsers")
+  deletedBy                     User?                                 @relation("DeletorUsers", fields: [deletedById], references: [id], onUpdate: NoAction)
+  deletedUsers                  User[]                                @relation("DeletorUsers")
+  figure                        Figure?                               @relation(fields: [figureId], references: [id], onUpdate: NoAction)
+  godProfile                    GodProfile?                           @relation(fields: [godProfileId], references: [id], onUpdate: NoAction)
+  role                          Role                                  @relation(fields: [roleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedBy                     User?                                 @relation("UpdatorUsers", fields: [updatedById], references: [id], onUpdate: NoAction)
+  updatedUsers                  User[]                                @relation("UpdatorUsers")
+  createdUserAchievements       UserAchievement[]                     @relation("UserAchievementCreatedBy")
+  deletedUserAchievements       UserAchievement[]                     @relation("UserAchievementDeletedBy")
+  updatedUserAchievements       UserAchievement[]                     @relation("UserAchievementUpdatedBy")
+  userAchievements              UserAchievement[]
+  createdUserAnswerLogs         UserAnswerLog[]                       @relation("UserAnswerLogCreatedBy")
+  deletedUserAnswerLogs         UserAnswerLog[]                       @relation("UserAnswerLogDeletedBy")
+  updatedUserAnswerLogs         UserAnswerLog[]                       @relation("UserAnswerLogUpdatedBy")
+  userAnswerLogs                UserAnswerLog[]
+  createdUserLands              UserLand[]                            @relation("UserLandCreatedBy")
+  deletedUserLands              UserLand[]                            @relation("UserLandDeletedBy")
+  updatedUserLands              UserLand[]                            @relation("UserLandUpdatedBy")
+  userLands                     UserLand[]
+  createdUserLandBarges         UserLandBarge[]                       @relation("UserLandBargeCreatedBy")
+  deletedUserLandBarges         UserLandBarge[]                       @relation("UserLandBargeDeletedBy")
+  updatedUserLandBarges         UserLandBarge[]                       @relation("UserLandBargeUpdatedBy")
+  userLandBarges                UserLandBarge[]
+  createdUserRewards            UserReward[]                          @relation("UserRewardCreatedBy")
+  deletedUserRewards            UserReward[]                          @relation("UserRewardDeletedBy")
+  updatedUserRewards            UserReward[]                          @relation("UserRewardUpdatedBy")
+  userRewards                   UserReward[]
+  createdUserTestQHs            UserTestQuestionHome[]                @relation("UserTestQuestionHomeCreatedBy")
+  deletedUserTestQHs            UserTestQuestionHome[]                @relation("UserTestQuestionHomeDeletedBy")
+  updatedUserTestQHs            UserTestQuestionHome[]                @relation("UserTestQuestionHomeUpdatedBy")
 
-  roleId Int
-  role   Role @relation(fields: [roleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdChangePointUserLogs ChangePointUserLog[] @relation("ChangePointUserLogCreatedBy")
+  updatedChangePointUserLogs ChangePointUserLog[] @relation("ChangePointUserLogUpdatedBy")
+  deletedChangePointUserLogs ChangePointUserLog[] @relation("ChangePointUserLogDeletedBy")
 
-  devices       Device[] // Liên kết 1-n với Device
-  refreshTokens RefreshToken[]
-  attendances   Attendance[]
-
-  createdPermissions       Permission[]       @relation("PermissionCreatedBy")
-  updatedPermissions       Permission[]       @relation("PermissionUpdatedBy")
-  deletedPermissions       Permission[]       @relation("PermissionDeletedBy")
-  createdRoles             Role[]             @relation("RoleCreatedBy")
-  updatedRoles             Role[]             @relation("RoleUpdatedBy")
-  deletedRoles             Role[]             @relation("RoleDeletedBy")
-  createdKyNhans           KyNhan[]           @relation("KyNhanCreatedBy")
-  updatedKyNhans           KyNhan[]           @relation("KyNhanUpdatedBy")
-  deletedKyNhans           KyNhan[]           @relation("KyNhanDeletedBy")
-  createdChiTiets          ChiTietKyNhan[]    @relation("ChiTietKyNhanCreatedBy")
-  updatedChiTiets          ChiTietKyNhan[]    @relation("ChiTietKyNhanUpdatedBy")
-  deletedChiTiets          ChiTietKyNhan[]    @relation("ChiTietKyNhanDeletedBy")
-  createdSystemConfigs     SystemConfig[]     @relation("SystemConfigCreatedBy")
-  updatedSystemConfigs     SystemConfig[]     @relation("SystemConfigUpdatedBy")
-  deletedSystemConfigs     SystemConfig[]     @relation("SystemConfigDeletedBy")
-  createdAttendances       Attendance[]       @relation("AttendanceCreatedBy")
-  updatedAttendances       Attendance[]       @relation("AttendanceUpdatedBy")
-  deletedAttendances       Attendance[]       @relation("AttendanceDeletedBy")
-  createdAttendanceConfigs AttendanceConfig[] @relation("AttendanceConfigCreatedBy")
-  updatedAttendanceConfigs AttendanceConfig[] @relation("AttendanceConfigUpdatedBy")
-  deletedAttendanceConfigs AttendanceConfig[] @relation("AttendanceConfigDeletedBy")
-
-  // 1 user có thể tạo ra nhiều user khác
-  // 1 user chỉ có thể được tạo ra bởi 1 user khác
-  // Tự quan hệ 1-n
-
-  createdById  Int?
-  createdBy    User?  @relation("CreatorUsers", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  createdUsers User[] @relation("CreatorUsers")
-
-  updatedById  Int?
-  updatedBy    User?  @relation("UpdatorUsers", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  updatedUsers User[] @relation("UpdatorUsers")
-  deletedById  Int?
-  deletedBy    User?  @relation("DeletorUsers", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  deletedUsers User[] @relation("DeletorUsers")
-
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  userTestQuestionHomes UserTestQuestionHome[]
+  userKyNhanSummaries   KyNhanSummary[]        @relation("KyNhanSummaryToUser")
+  userKynhans           KyNhan[]               @relation("KyNhanToUser")
+  changePointUserLogs   ChangePointUserLog[]
+  sentLetters           Letter[]               @relation("LetterFromUser")
+  deletedLetters        Letter[]               @relation("LetterDeletedBy")
 
   @@index([deletedAt])
-  @@index(email)
+  @@index([email])
 }
 
 model Device {
   id            Int            @id @default(autoincrement())
   userId        Int
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   userAgent     String
   ip            String
-  lastActive    DateTime       @updatedAt // Thay updatedAt bằng lastActive cho ý nghĩa rõ hơn
+  lastActive    DateTime       @updatedAt
   createdAt     DateTime       @default(now())
-  isActive      Boolean        @default(true) // Trạng thái thiết bị (đang login hay đã logout)
-  refreshTokens RefreshToken[] // Liên kết 1-n với RefreshToken
+  isActive      Boolean        @default(true)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  refreshTokens RefreshToken[]
 }
 
 model RefreshToken {
   token     String   @unique @db.VarChar(1000)
   userId    Int
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  deviceId  Int // Foreign key tới Device
-  device    Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  deviceId  Int
   expiresAt DateTime
   createdAt DateTime @default(now())
+  device    Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([expiresAt])
 }
@@ -102,18 +178,16 @@ model Permission {
   path        String     @db.VarChar(1000)
   method      HTTPMethod
   module      String     @default("") @db.VarChar(500)
-  roles       Role[]
-
   createdById Int?
-  createdBy   User? @relation("PermissionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
   updatedById Int?
-  updatedBy   User? @relation("PermissionUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
   deletedById Int?
-  deletedBy   User? @relation("PermissionDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
-
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  createdBy   User?      @relation("PermissionCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy   User?      @relation("PermissionDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  updatedBy   User?      @relation("PermissionUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  roles       Role[]     @relation("PermissionToRole")
 
   @@index([deletedAt])
 }
@@ -123,137 +197,597 @@ model Role {
   name        String       @db.VarChar(500)
   description String       @default("")
   isActive    Boolean      @default(true)
-  permissions Permission[]
-  users       User[]
-
   createdById Int?
-  createdBy   User? @relation("RoleCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
   updatedById Int?
-  updatedBy   User? @relation("RoleUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
   deletedById Int?
-  deletedBy   User? @relation("RoleDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
-
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  createdBy   User?        @relation("RoleCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy   User?        @relation("RoleDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  updatedBy   User?        @relation("RoleUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  users       User[]
+  permissions Permission[] @relation("PermissionToRole")
 
   @@index([deletedAt])
 }
 
 model KyNhan {
-  id        Int     @id @default(autoincrement())
-  name      String  @db.VarChar(500)
-  thoiKy    String  @db.VarChar(500)
-  chienCong String  @db.Text()
-  imgUrl    String? @db.VarChar(1000)
-  active    Boolean @default(false)
+  id              Int             @id @default(autoincrement())
+  name            String          @unique @db.VarChar(500)
+  thoiKy          String          @db.VarChar(500)
+  chienCong       String
+  imgUrl          String?         @db.VarChar(1000)
+  active          Boolean         @default(false)
+  deletedAt       DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  createdById     Int?
+  deletedById     Int?
+  updatedById     Int?
+  landId          Int?
+  chiTietKyNhans  ChiTietKyNhan[]
+  createdBy       User?           @relation("KyNhanCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy       User?           @relation("KyNhanDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  land            Land?           @relation(fields: [landId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedBy       User?           @relation("KyNhanUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  kyNhanSummaries KyNhanSummary[]
+  motaKyNhan      MotaKyNhan?
+  users           User[]          @relation("KyNhanToUser")
+  letters         Letter[]
 
-  chiTietKyNhans ChiTietKyNhan[] @relation("KyNhanToChiTietKyNhan")
+  @@index([deletedAt])
+}
 
-  createdById Int?
-  createdBy   User? @relation("KyNhanCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  updatedById Int?
-  updatedBy   User? @relation("KyNhanUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  deletedById Int?
-  deletedBy   User? @relation("KyNhanDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
-
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+model MotaKyNhan {
+  id            Int       @id @default(autoincrement())
+  ten           String    @db.VarChar(500)
+  danhHieu      String?   @db.VarChar(500)
+  namSinhNamMat String?   @db.VarChar(100)
+  queQuan       String?   @db.VarChar(500)
+  xuatThan      String?   @db.VarChar(500)
+  khoiNghia     String?   @db.VarChar(500)
+  nguoiDongHanh String?   @db.VarChar(500)
+  phuQuan       String?   @db.VarChar(500)
+  chienCong     String?   @db.VarChar(500)
+  dinhCao       String?   @db.VarChar(500)
+  ketCuc        String?   @db.VarChar(500)
+  imgUrl        String?   @db.VarChar(1000)
+  kyNhanId      Int       @unique
+  createdById   Int?
+  updatedById   Int?
+  deletedById   Int?
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  createdBy     User?     @relation("MoTaKyNhanCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy     User?     @relation("MoTaKyNhanDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  kyNhan        KyNhan    @relation(fields: [kyNhanId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  updatedBy     User?     @relation("MoTaKyNhanUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
 
   @@index([deletedAt])
 }
 
 model ChiTietKyNhan {
-  id Int @id @default(autoincrement())
-
-  kyNhanId Int
-  kyNhan   KyNhan @relation("KyNhanToChiTietKyNhan", fields: [kyNhanId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  tinhCach  String  @db.Text()
-  quanHe    String? @db.Text()
-  trichDoan String  @db.Text()
-  media     Media[]
-
-  createdById Int?
-  createdBy   User? @relation("ChiTietKyNhanCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  updatedById Int?
-  updatedBy   User? @relation("ChiTietKyNhanUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  deletedById Int?
-  deletedBy   User? @relation("ChiTietKyNhanDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
-
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id                     Int                                   @id @default(autoincrement())
+  kyNhanId               Int
+  deletedAt              DateTime?
+  createdAt              DateTime                              @default(now())
+  updatedAt              DateTime                              @updatedAt
+  createdById            Int?
+  deletedById            Int?
+  updatedById            Int?
+  thamKhao               String?
+  createdBy              User?                                 @relation("ChiTietKyNhanCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy              User?                                 @relation("ChiTietKyNhanDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  kyNhan                 KyNhan                                @relation(fields: [kyNhanId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  updatedBy              User?                                 @relation("ChiTietKyNhanUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  boiCanhLichSuVaSuuThan ChiTietKyNhanBoiCanhLichSuVaSuuThan[]
+  giaiThoaiDanGian       ChiTietKyNhanGiaiThoaiDanGian[]
+  suSachVietGi           ChiTietKyNhanSuSachVietGi[]
+  media                  Media[]
 
   @@index([deletedAt])
 }
 
-model SystemConfig {
-  id          Int      @id @default(autoincrement())
-  launchDate  DateTime // Ngày trang web chính thức mở
-  isActive    Boolean  @default(true)
-  createdById Int?
-  createdBy   User?    @relation("SystemConfigCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  updatedById Int?
-  updatedBy   User?    @relation("SystemConfigUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  deletedById Int?
-  deletedBy   User?    @relation("SystemConfigDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+model ChiTietKyNhanBoiCanhLichSuVaSuuThan {
+  id              Int           @id @default(autoincrement())
+  chiTietKyNhanId Int
+  tieuDe          String        @db.VarChar(500)
+  noiDung         String
+  nguon           String?
+  thuTu           Int           @default(0)
+  createdById     Int?
+  updatedById     Int?
+  deletedById     Int?
+  deletedAt       DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  chiTietKyNhan   ChiTietKyNhan @relation(fields: [chiTietKyNhanId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdBy       User?         @relation("ChiTietKyNhanBoiCanhLichSuVaSuuThanCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy       User?         @relation("ChiTietKyNhanBoiCanhLichSuVaSuuThanDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  updatedBy       User?         @relation("ChiTietKyNhanBoiCanhLichSuVaSuuThanUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
 
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  @@index([deletedAt])
+  @@index([chiTietKyNhanId])
+}
+
+model ChiTietKyNhanSuSachVietGi {
+  id              Int           @id @default(autoincrement())
+  chiTietKyNhanId Int
+  tieuDe          String        @db.VarChar(500)
+  doanVan         String
+  tacGia          String?       @db.VarChar(500)
+  nguonSach       String?
+  thuTu           Int           @default(0)
+  createdById     Int?
+  updatedById     Int?
+  deletedById     Int?
+  deletedAt       DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  chiTietKyNhan   ChiTietKyNhan @relation(fields: [chiTietKyNhanId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdBy       User?         @relation("ChiTietKyNhanSuSachVietGiCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy       User?         @relation("ChiTietKyNhanSuSachVietGiDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  updatedBy       User?         @relation("ChiTietKyNhanSuSachVietGiUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+
+  @@index([deletedAt])
+  @@index([chiTietKyNhanId])
+}
+
+model ChiTietKyNhanGiaiThoaiDanGian {
+  id              Int           @id @default(autoincrement())
+  chiTietKyNhanId Int
+  tieuDe          String        @db.VarChar(500)
+  noiDung         String
+  nguon           String?
+  thuTu           Int           @default(0)
+  createdById     Int?
+  updatedById     Int?
+  deletedById     Int?
+  deletedAt       DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  chiTietKyNhan   ChiTietKyNhan @relation(fields: [chiTietKyNhanId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdBy       User?         @relation("ChiTietKyNhanGiaiThoaiDanGianCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy       User?         @relation("ChiTietKyNhanGiaiThoaiDanGianDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  updatedBy       User?         @relation("ChiTietKyNhanGiaiThoaiDanGianUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+
+  @@index([deletedAt])
+  @@index([chiTietKyNhanId])
+}
+
+model KyNhanSummary {
+  id          Int       @id @default(autoincrement())
+  kyNhanId    Int
+  summary     String?   @db.VarChar
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  questionId  Int?
+  imgUrl      String?   @db.VarChar(1000)
+  createdBy   User?     @relation("KyNhanSummaryCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy   User?     @relation("KyNhanSummaryDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  kyNhan      KyNhan    @relation(fields: [kyNhanId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  question    Question? @relation(fields: [questionId], references: [id], onUpdate: NoAction)
+  updatedBy   User?     @relation("KyNhanSummaryUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  users       User[]    @relation("KyNhanSummaryToUser")
+
+  @@index([deletedAt])
+}
+
+model UserLand {
+  id          Int            @id @default(autoincrement())
+  userId      Int
+  landId      Int
+  status      UserLandStatus @default(LOCKED)
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+  deletedAt   DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  createdBy   User?          @relation("UserLandCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy   User?          @relation("UserLandDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  land        Land           @relation(fields: [landId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  updatedBy   User?          @relation("UserLandUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model Land {
+  id            Int           @id @default(autoincrement())
+  name          String        @db.VarChar(500)
+  order         Int           @default(0)
+  createdById   Int?
+  updatedById   Int?
+  deletedById   Int?
+  deletedAt     DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  totalQuestion Int           @default(0)
+  achievements  Achievement[]
+  kyNhans       KyNhan[]
+  createdBy     User?         @relation("LandCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy     User?         @relation("LandDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  updatedBy     User?         @relation("LandUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  landBarges    LandBarge?
+  questions     Question[]
+  userLands     UserLand[]
+}
+
+model LandBarge {
+  id             Int             @id @default(autoincrement())
+  landId         Int             @unique
+  imgUrl         String?         @db.VarChar(1000)
+  createdById    Int?
+  updatedById    Int?
+  deletedById    Int?
+  deletedAt      DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  createdBy      User?           @relation("LandBargeCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy      User?           @relation("LandBargeDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  land           Land            @relation(fields: [landId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  updatedBy      User?           @relation("LandBargeUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  userLandBarges UserLandBarge[]
+}
+
+model UserLandBarge {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  landBargeId Int
+  status      Boolean   @default(false)
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdBy   User?     @relation("UserLandBargeCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy   User?     @relation("UserLandBargeDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  landBarge   LandBarge @relation(fields: [landBargeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  updatedBy   User?     @relation("UserLandBargeUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model SystemConfig {
+  id          Int       @id @default(autoincrement())
+  launchDate  DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdById Int?
+  deletedAt   DateTime?
+  deletedById Int?
+  updatedById Int?
+  isActive    Boolean   @default(true)
+  createdBy   User?     @relation("SystemConfigCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy   User?     @relation("SystemConfigDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  updatedBy   User?     @relation("SystemConfigUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
 }
 
 model Media {
-  id        Int           @id @default(autoincrement())
-  chiTietId Int
-  chiTiet   ChiTietKyNhan @relation(fields: [chiTietId], references: [id], onDelete: Cascade)
-  type      MediaType
-  url       String        @db.VarChar(1000)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id          Int           @id @default(autoincrement())
+  chiTietId   Int
+  type        MediaType
+  url         String        @db.VarChar(1000)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  createdById Int?
+  deletedAt   DateTime?
+  deletedById Int?
+  fileName    String?       @db.VarChar(500)
+  fileSize    Int?
+  mimeType    String?       @db.VarChar(100)
+  thuTu       Int           @default(0)
+  updatedById Int?
+  chiTiet     ChiTietKyNhan @relation(fields: [chiTietId], references: [id], onDelete: Cascade)
+  createdBy   User?         @relation("MediaCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy   User?         @relation("MediaDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  updatedBy   User?         @relation("MediaUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+
+  @@index([deletedAt])
+  @@index([chiTietId])
 }
 
 model Attendance {
-  id        Int              @id @default(autoincrement())
-  date      DateTime
-  status    AttendanceStatus
-  coin      Int              @default(0)
-  bonusCoin Int              @default(0)
-
-  userId Int
-  user   User @relation(fields: [userId], references: [id])
-
+  id          Int              @id @default(autoincrement())
+  date        DateTime
+  status      AttendanceStatus
+  coin        Int              @default(0)
+  userId      Int
   createdById Int?
-  createdBy   User? @relation("AttendanceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
   updatedById Int?
-  updatedBy   User? @relation("AttendanceUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
   deletedById Int?
-  deletedBy   User? @relation("AttendanceDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
-
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  bonusCoin   Int              @default(0)
+  createdBy   User?            @relation("AttendanceCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy   User?            @relation("AttendanceDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  updatedBy   User?            @relation("AttendanceUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  user        User             @relation(fields: [userId], references: [id])
 
   @@unique([userId, date])
 }
 
 model AttendanceConfig {
-  id          Int     @id @default(autoincrement())
-  dayOfWeek   WeekDay @unique // 0=CN, 1=T2, ..., 6=T7
-  baseCoin    Int     @default(0) // điểm cơ bản
-  bonusCoin   Int     @default(0) // coin thưởng ngày đó
+  id          Int       @id @default(autoincrement())
+  dayOfWeek   WeekDay   @unique
+  bonusCoin   Int       @default(0)
   createdById Int?
-  createdBy   User?   @relation("AttendanceConfigCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
   updatedById Int?
-  updatedBy   User?   @relation("AttendanceConfigUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
   deletedById Int?
-  deletedBy   User?   @relation("AttendanceConfigDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  baseCoin    Int       @default(0)
+  createdBy   User?     @relation("AttendanceConfigCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy   User?     @relation("AttendanceConfigDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  updatedBy   User?     @relation("AttendanceConfigUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+}
+
+model TestQuestionHome {
+  id                    Int                        @id @default(autoincrement())
+  text                  String                     @db.VarChar
+  testQuestionHomeType  TestQuestionHomeType       @default(NORMAL)
+  answer                AnswerScale
+  createdById           Int?
+  updatedById           Int?
+  deletedById           Int?
+  deletedAt             DateTime?
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
+  testType              TestQuestionHomeTraitType?
+  createdBy             User?                      @relation("TestQuestionHomeCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy             User?                      @relation("TestQuestionHomeDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  updatedBy             User?                      @relation("TestQuestionHomeUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  userTestQuestionHomes UserTestQuestionHome[]
+}
+
+model ChangePointUserLog {
+  id Int @id @default(autoincrement())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  reason        String @db.VarChar()
+  newPoint      Int
+  snapshotPoint Int
+
+  newCoin       Int
+  snapshotCoin  Int
+  newHeart      Int
+  snapshotHeart Int
+
+  createdBy   User? @relation("ChangePointUserLogCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  createdById Int?
+  deletedBy   User? @relation("ChangePointUserLogDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  deletedById Int?
+  updatedBy   User? @relation("ChangePointUserLogUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  updatedById Int?
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+model UserTestQuestionHome {
+  id          Int              @id @default(autoincrement())
+  userId      Int
+  answer      AnswerScale
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+  deletedAt   DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  questionId  Int
+  createdBy   User?            @relation("UserTestQuestionHomeCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy   User?            @relation("UserTestQuestionHomeDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  question    TestQuestionHome @relation(fields: [questionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  updatedBy   User?            @relation("UserTestQuestionHomeUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model GodProfile {
+  id          Int                        @id @default(autoincrement())
+  title       String                     @db.VarChar(500)
+  textEmotion String                     @db.VarChar
+  description String
+  imgUrl      String?                    @db.VarChar
+  text_color  String?                    @db.VarChar
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+  deletedAt   DateTime?
+  createdAt   DateTime                   @default(now())
+  updatedAt   DateTime                   @updatedAt
+  traitType   TestQuestionHomeTraitType?
+  order       Int                        @default(0)
+  createdBy   User?                      @relation("GodProfileCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy   User?                      @relation("GodProfileDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  updatedBy   User?                      @relation("GodProfileUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  users       User[]
+}
+
+model Question {
+  id                  Int              @id @default(autoincrement())
+  text                String           @db.VarChar
+  questionType        QuestionType     @default(TEXT_INPUT)
+  allowSimilarAnswers Boolean          @default(false)
+  createdById         Int?
+  updatedById         Int?
+  deletedById         Int?
+  deletedAt           DateTime?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  landId              Int
+  point               Int              @default(100)
+  answerOptionType    answerOptionType @default(ONE)
+  answers             Answer[]
+  kynhanSummaries     KyNhanSummary[]
+  createdBy           User?            @relation("QuestionCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy           User?            @relation("QuestionDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  land                Land             @relation(fields: [landId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedBy           User?            @relation("QuestionUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  userAnswerLogs      UserAnswerLog[]
+}
+
+model Answer {
+  id          Int       @id @default(autoincrement())
+  text        String    @db.VarChar
+  questionId  Int
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdBy   User?     @relation("ValidTextInputAnswerCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy   User?     @relation("ValidTextInputAnswerDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  question    Question  @relation(fields: [questionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  updatedBy   User?     @relation("ValidTextInputAnswerUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+}
+
+model UserAnswerLog {
+  id            Int       @id @default(autoincrement())
+  questionId    Int
+  isCorrect     Boolean
+  createdById   Int?
+  updatedById   Int?
+  deletedById   Int?
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  userId        Int
+  amountAttempt Int       @default(0)
+  text          String[]
+  createdBy     User?     @relation("UserAnswerLogCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy     User?     @relation("UserAnswerLogDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  question      Question  @relation(fields: [questionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  updatedBy     User?     @relation("UserAnswerLogUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model Figure {
+  id          Int       @id @default(autoincrement())
+  imageUrl    String?   @db.VarChar
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdBy   User?     @relation("FigureCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy   User?     @relation("FigureDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  updatedBy   User?     @relation("FigureUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  users       User[]
+}
+
+model Achievement {
+  id               Int               @id @default(autoincrement())
+  name             String            @db.VarChar(500)
+  description      String?           @db.VarChar(1000)
+  type             AchievementType
+  requirement      Int
+  reward           Int               @default(0)
+  isActive         Boolean           @default(true)
+  order            Int               @default(0)
+  landId           Int?
+  createdById      Int?
+  updatedById      Int?
+  deletedById      Int?
+  deletedAt        DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  createdBy        User?             @relation("AchievementCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy        User?             @relation("AchievementDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  land             Land?             @relation(fields: [landId], references: [id], onUpdate: NoAction)
+  updatedBy        User?             @relation("AchievementUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  userAchievements UserAchievement[]
+
+  @@index([deletedAt])
+  @@index([type])
+}
+
+model UserAchievement {
+  id            Int                   @id @default(autoincrement())
+  userId        Int
+  achievementId Int
+  status        UserAchievementStatus @default(PENDING)
+  completedAt   DateTime?
+  rewardClaimed Boolean               @default(false)
+  createdById   Int?
+  updatedById   Int?
+  deletedById   Int?
+  deletedAt     DateTime?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  achievement   Achievement           @relation(fields: [achievementId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdBy     User?                 @relation("UserAchievementCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy     User?                 @relation("UserAchievementDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  updatedBy     User?                 @relation("UserAchievementUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([userId, achievementId])
+  @@index([deletedAt])
+  @@index([status])
+}
+
+model Reward {
+  id           Int          @id @default(autoincrement())
+  name         String       @db.VarChar(500)
+  description  String?      @db.VarChar(1000)
+  requireValue Int
+  gift         String       @db.VarChar(1000)
+  type         RewardType
+  limit        Int?
+  startDate    DateTime?
+  endDate      DateTime?
+  isActive     Boolean      @default(true)
+  imageUrl     String?      @db.VarChar(1000)
+  createdById  Int?
+  updatedById  Int?
+  deletedById  Int?
+  deletedAt    DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  createdBy    User?        @relation("RewardCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy    User?        @relation("RewardDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  updatedBy    User?        @relation("RewardUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  userRewards  UserReward[]
+
+  @@index([deletedAt])
+  @@index([type])
+  @@index([isActive])
+}
+
+model UserReward {
+  id          Int              @id @default(autoincrement())
+  userId      Int
+  rewardId    Int
+  status      UserRewardStatus @default(PENDING)
+  exchangedAt DateTime?
+  code        String?          @db.VarChar(100)
+  valuePaid   Int
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+  deletedAt   DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  createdBy   User?            @relation("UserRewardCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  deletedBy   User?            @relation("UserRewardDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  reward      Reward           @relation(fields: [rewardId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  updatedBy   User?            @relation("UserRewardUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([userId, rewardId])
+  @@index([deletedAt])
+  @@index([status])
 }
 
 enum VerificationCodeType {
@@ -302,4 +836,93 @@ enum WeekDay {
   THURSDAY
   FRIDAY
   SATURDAY
+}
+
+enum QuestionType {
+  TEXT_INPUT
+}
+
+enum QuestionStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+}
+
+enum QuestionDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum TestQuestionHomeType {
+  NORMAL
+  CONVERT
+}
+
+enum AnswerScale {
+  STRONGLY_DISAGREE
+  DISAGREE
+  NEUTRAL
+  AGREE
+  STRONGLY_AGREE
+}
+
+enum TestQuestionHomeTraitType {
+  CHOLERIC
+  SANGUINE
+  MELANCHOLIC
+  PHLEGMATIC
+}
+
+enum UserLandStatus {
+  LOCKED_FORCED
+  LOCKED
+  PENDING
+  COMPLETED
+}
+
+enum AchievementType {
+  KY_NHAN_SUMMARY_COUNT
+  LAND_COLLECTION
+}
+
+enum UserAchievementStatus {
+  PENDING
+  COMPLETED
+  CLAIMED
+}
+
+enum RewardType {
+  POINT
+  COIN
+  CODE
+}
+
+enum UserRewardStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum answerOptionType {
+  ONE
+  TWO
+}
+
+model Letter {
+  id          Int       @id @default(autoincrement())
+  fromUserId  Int
+  kyNhanId    Int
+  content     String    @db.Text
+  isRead      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  deletedById Int?
+
+  fromUser  User   @relation("LetterFromUser", fields: [fromUserId], references: [id])
+  kyNhan    KyNhan @relation(fields: [kyNhanId], references: [id])
+  deletedBy User?  @relation("LetterDeletedBy", fields: [deletedById], references: [id])
+
+  @@map("letters")
 }

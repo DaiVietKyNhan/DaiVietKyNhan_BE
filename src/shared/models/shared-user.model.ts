@@ -1,6 +1,8 @@
 import { UserStatus } from '@/common/constants/auth.constant'
 import { AUTH_MESSAGE } from '@/common/constants/message'
 import { Gender } from '@/common/constants/user.constant'
+import { FigureSchema } from '@/modules/figure/entities/figure.entity'
+import { GodProfileSchema } from '@/modules/god-profile/entities/god-profile.entity'
 import { RoleSchema } from 'src/shared/models/shared-role.model'
 import { z } from 'zod'
 
@@ -9,11 +11,16 @@ export const UserSchema = z.object({
   email: z.string().email(),
   name: z.string().min(1, AUTH_MESSAGE.NAME_IS_REQUIRED).max(100),
   password: z.string().min(6).max(100),
-  phoneNumber: z.string().min(9, AUTH_MESSAGE.PHONE_IS_INVALID).max(15),
+  phoneNumber: z.string().min(9, AUTH_MESSAGE.PHONE_IS_INVALID).max(15).nullable(),
   gender: z.enum([Gender.MALE, Gender.FEMALE, Gender.OTHER]).nullable(),
   birthDate: z.coerce.date().nullable(),
   avatar: z.string().nullable(),
   coin: z.number().min(0).default(0),
+  point: z.number().min(0).default(0),
+  heart: z.number().min(0).default(3),
+  figureId: z.number().nullable().optional(),
+  godProfileId: z.number().nullable().optional(),
+  pointTestHome: z.boolean().default(false),
   status: z.enum([UserStatus.ACTIVE, UserStatus.INACTIVE]),
   roleId: z.number().positive(),
   createdById: z.number().nullable(),
@@ -33,10 +40,13 @@ export const GetAccountProfileResSchema = z.object({
   data: UserSchema.omit({
     password: true
   }).extend({
+    phoneNumber: z.string().nullable(),
     role: RoleSchema.pick({
       id: true,
       name: true
-    })
+    }),
+    figure: FigureSchema.nullable().optional(),
+    godProfile: GodProfileSchema.nullable().optional()
   })
 })
 

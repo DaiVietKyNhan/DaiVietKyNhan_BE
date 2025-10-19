@@ -2,6 +2,7 @@ import { createZodDto } from 'nestjs-zod'
 import {
   CreateUserBodySchema,
   CreateUserResSchema,
+  GetKyNhansByUserResSchema,
   GetParamsIdOrEmailSchema,
   GetParamsUserSchema,
   GetUserWithRoleResSchema,
@@ -22,3 +23,5 @@ export class GetParamsUserDTO extends createZodDto(GetParamsUserSchema) {}
 export class GetParamsIdOrEmailDTO extends createZodDto(GetParamsIdOrEmailSchema) {}
 
 export class GetUserWithRoleResDTO extends createZodDto(GetUserWithRoleResSchema) {}
+
+export class GetKyNhansByUserResDTO extends createZodDto(GetKyNhansByUserResSchema) {}

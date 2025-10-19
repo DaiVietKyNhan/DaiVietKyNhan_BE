@@ -10,14 +10,34 @@ import { TransformInterceptor } from './common/interceptor/transform.interceptor
 import { AttendanceModule } from './modules/attendance/attendance.module'
 import { AttendenceConfigModule } from './modules/attendence-config/attendence-config.module'
 import { AuthModule } from './modules/auth/auth.module'
-import { ChiTietKyNhanModule } from './modules/chitietkynhan/chitietkynhan.module'
+
+import { AchievementModule } from './modules/achievement/achievement.module'
+import { AnswerModule } from './modules/answer/answer.module'
+import { ChangePointUserLogModule } from './modules/change-point-user-log/change-point-user-log.module'
+import { ChiTietKyNhanModule } from './modules/chi-tiet-kynhan/chi-tiet-kynhan.module'
+import { DashboardModule } from './modules/dashboard/dashboard.module'
+import { FigureModule } from './modules/figure/figure.module'
+import { GodProfileModule } from './modules/god-profile/god-profile.module'
+import { KynhanSummaryModule } from './modules/kynhan-summary/kynhan-summary.module'
 import { KyNhanModule } from './modules/kynhan/kynhan.module'
+import { LandBargeModule } from './modules/land-barge/land-barge.module'
+import { LandModule } from './modules/land/land.module'
+import { LetterModule } from './modules/letter/letter.module'
 import { MediaModule } from './modules/media/media.module'
+import { MoTaKyNhanModule } from './modules/mo-ta-ky-nhan/mo-ta-ky-nhan.module'
 import { PermissionModule } from './modules/permission/permission.module'
+import { QuestionModule } from './modules/question/question.module'
+import { RewardModule } from './modules/reward/reward.module'
 import { RoleModule } from './modules/role/role.module'
+import { SystemConfigModule } from './modules/system-config/system-config.module'
+import { TestQuestionHomeModule } from './modules/test-question-home/test-question-home.module'
+import { UserAnswerlogModule } from './modules/user-answerlog/user-answerlog.module'
+import { UserLandBargeModule } from './modules/user-land-barge/user-land-barge.module'
+import { UserLandModule } from './modules/user-land/user-land.module'
+import { UserTestQuestionHomeModule } from './modules/user-test-question-home/user-test-question-home.module'
+import { UserModule } from './modules/user/user.module'
 import { SharedModule } from './shared/shared.module'
-import { SystemConfigModule } from './modules/system-config/system-config.module';
-import { UserModule } from './modules/user/user.module';
+import { WebsocketsModule } from './websockets/websockets.module'
 
 @Module({
   imports: [
@@ -32,12 +52,32 @@ import { UserModule } from './modules/user/user.module';
     RoleModule,
     PermissionModule,
     KyNhanModule,
-    ChiTietKyNhanModule,
+
     MediaModule,
     AttendenceConfigModule,
     AttendanceModule,
     SystemConfigModule,
-    UserModule
+    UserModule,
+    WebsocketsModule,
+    TestQuestionHomeModule,
+    UserTestQuestionHomeModule,
+    GodProfileModule,
+    FigureModule,
+    MoTaKyNhanModule,
+    LandModule,
+    UserLandModule,
+    KynhanSummaryModule,
+    QuestionModule,
+    AnswerModule,
+    UserAnswerlogModule,
+    AchievementModule,
+    RewardModule,
+    DashboardModule,
+    LandBargeModule,
+    UserLandBargeModule,
+    ChiTietKyNhanModule,
+    LetterModule,
+    ChangePointUserLogModule
   ],
 
   controllers: [],

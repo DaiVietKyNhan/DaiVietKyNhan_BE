@@ -15,7 +15,7 @@ export type WhereUniqueUserType = { id: number } | { email: string }
 
 @Injectable()
 export class SharedUserRepository {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) { }
 
   findUnique(where: WhereUniqueUserType): Promise<UserType | null> {
     return this.prismaService.user.findFirst({
@@ -32,7 +32,9 @@ export class SharedUserRepository {
         deletedAt: null
       },
       include: {
-        role: true
+        role: true,
+        figure: true,
+        godProfile: true
       }
     })
   }
@@ -87,6 +89,7 @@ export class SharedUserRepository {
     return this.prismaService.user.count({
       where: {
         deletedAt: null,
+        status: 'ACTIVE',
         role: {
           name: roleName
         }
@@ -128,6 +131,133 @@ export class SharedUserRepository {
       data: {
         coin: {
           decrement: amount
+        }
+      }
+    })
+  }
+
+  updateUserPointHome(userId: number, pointTestHome: boolean): Promise<UserType | null> {
+    return this.prismaService.user.update({
+      where: {
+        id: userId,
+        deletedAt: null
+      },
+      data: {
+        pointTestHome
+      }
+    })
+  }
+  updateUserById(userId: number, data: Partial<UserType>): Promise<UserType | null> {
+    return this.prismaService.user.update({
+      where: {
+        id: userId,
+        deletedAt: null
+      },
+      data
+    })
+  }
+
+  addpointByUserId({ userId, amount }: { userId: number; amount: number }) {
+    return this.prismaService.user.update({
+      where: {
+        id: userId,
+        deletedAt: null
+      },
+      data: {
+        point: {
+          increment: amount
+        }
+      }
+    })
+  }
+
+  minuspointByUserId({ userId, amount }: { userId: number; amount: number }) {
+    return this.prismaService.user.update({
+      where: {
+        id: userId,
+        deletedAt: null
+      },
+      data: {
+        point: {
+          decrement: amount
+        }
+      }
+    })
+  }
+
+  minusHeart({ userId, amount }: { userId: number; amount: number }) {
+    return this.prismaService.user.update({
+      where: {
+        id: userId,
+        deletedAt: null
+      },
+      data: {
+        heart: {
+          decrement: amount
+        }
+      }
+    })
+  }
+  addHeart({ userId, amount }: { userId: number; amount: number }) {
+    return this.prismaService.user.update({
+      where: {
+        id: userId,
+        deletedAt: null
+      },
+      data: {
+        heart: {
+          increment: amount
+        }
+      }
+    })
+  }
+
+  // Connect KyNhanSummary relations to user, ignoring already-connected items
+  async addKyNhanSummariesToUser(
+    userId: number,
+    summaryIds: number[]
+  ): Promise<UserType | null> {
+    if (!summaryIds?.length) return this.findUnique({ id: userId })
+
+    const existing = await this.prismaService.user.findUnique({
+      where: { id: userId, deletedAt: null },
+      select: { userKyNhanSummaries: { select: { id: true } } }
+    })
+
+    const existingIds = new Set(existing?.userKyNhanSummaries.map((s) => s.id) ?? [])
+    const toConnect = summaryIds.filter((id) => !existingIds.has(id))
+
+    if (!toConnect.length) return this.findUnique({ id: userId })
+
+    return this.prismaService.user.update({
+      where: { id: userId, deletedAt: null },
+      data: {
+        userKyNhanSummaries: {
+          connect: toConnect.map((id) => ({ id }))
+        }
+      }
+    })
+  }
+
+  // Connect KyNhan relations to user, ignoring already-connected items
+  async addKynhansToUser(userId: number, kynhanIds: number[]): Promise<UserType | null> {
+    if (!kynhanIds?.length) return this.findUnique({ id: userId })
+
+    const existing = await this.prismaService.user.findUnique({
+      where: { id: userId, deletedAt: null },
+      select: { userKynhans: { select: { id: true } } }
+    })
+
+    const existingIds = new Set(existing?.userKynhans.map((s) => s.id) ?? [])
+    const toConnect = kynhanIds.filter((id) => !existingIds.has(id))
+
+    if (!toConnect.length) return this.findUnique({ id: userId })
+
+    return this.prismaService.user.update({
+      where: { id: userId, deletedAt: null },
+      data: {
+        userKynhans: {
+          connect: toConnect.map((id) => ({ id }))
         }
       }
     })

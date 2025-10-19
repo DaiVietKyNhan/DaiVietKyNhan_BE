@@ -34,9 +34,11 @@ import { SharedUserRepository } from '@/shared/repositories/shared-user.repo'
 import { HashingService } from '@/shared/services/hashing.service'
 import { TokenService } from '@/shared/services/token.service'
 import { AccessTokenPayloadCreate } from '@/shared/types/jwt.type'
+import { NotificationService } from '@/websockets/notification.service'
 import { InjectQueue } from '@nestjs/bull'
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common'
 import { Queue } from 'bull'
+import { UserAchievementService } from '@/modules/achievement/user-achievement.service'
 
 @Injectable()
 export class AuthService {
@@ -47,11 +49,12 @@ export class AuthService {
     private readonly authRepository: AuthRepository,
     private readonly sharedUserRepository: SharedUserRepository,
     private readonly mailService: MailService,
-
     private readonly bullQueueService: BullQueueService,
+    private readonly notificationService: NotificationService,
     @InjectQueue('user-deletion') private readonly deletionQueue: Queue,
-    private readonly tokenService: TokenService
-  ) {}
+    private readonly tokenService: TokenService,
+    private readonly userAchievementService: UserAchievementService
+  ) { }
 
   async login(body: LoginBodyType & { userAgent: string; ip: string }) {
     // 1. Lấy thông tin user, kiểm tra user có tồn tại hay không, mật khẩu có đúng không
@@ -95,6 +98,7 @@ export class AuthService {
       ...userWithoutPassword,
       ...tokens
     }
+
     return {
       data,
       message: 'Đăng nhập thành công'
@@ -112,7 +116,7 @@ export class AuthService {
           password: hashedPassword,
           roleId,
           name: body.name,
-          phoneNumber: body.phoneNumber
+          phoneNumber: body.phoneNumber ?? ''
         })
       ])
       //Todo: sửa lại thành 30 ngày sau khi hoàn thiện chức năng
@@ -145,7 +149,20 @@ export class AuthService {
       const content = 'XÁC THỰC MAIL CỦA BẠN: '
       const bodyContent = 'Vui lòng nhập nhấn nút XÁC THỰC để xác thực tài khoản của bạn.'
       this.mailService.generateAndSendOtp(emailLower, template, content, bodyContent)
-
+      if (envConfig.NEXTJS_APP_URL) {
+        try {
+          await fetch(`${envConfig.NEXTJS_APP_URL}/api/revalidate?tag=modifyUser`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+          console.log('Sent revalidation request to Next.js')
+        } catch (err) {
+          // Log error nhưng không throw để không ảnh hưởng đến response chính
+          console.warn('Failed to send revalidation request to Next.js:', err.message)
+        }
+      }
       return {
         data: null,
         message: AUTH_MESSAGE.REGISTER_SUCCESS
@@ -277,7 +294,7 @@ export class AuthService {
 
     // Send email
     const registerEmailLowerCase = user.email.toLowerCase()
-    const template = 'otp'
+    const template = 'forgot-password'
     const content = 'Mã OTP của bạn là: '
     const bodyContent = 'Vui lòng nhập mã OTP để xác thực tài khoản của bạn.'
     this.mailService.generateAndSendOtp(
@@ -431,7 +448,7 @@ export class AuthService {
     // Gửi revalidation request đến Next.js (nếu có cấu hình)
     if (envConfig.NEXTJS_APP_URL) {
       try {
-        await fetch(`${envConfig.NEXTJS_APP_URL}/api/revalidate?tag=userProfile`, {
+        await fetch(`${envConfig.NEXTJS_APP_URL}/api/revalidate?tag=modifyUser`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -454,6 +471,15 @@ export class AuthService {
   async verifiedEmail(email: string) {
     try {
       const data = await this.authRepository.verifyEmail(email)
+
+      // 🔔 Gọi WebSocket để thông báo có user mới verify thành công
+      await this.notificationService.notifyNewUserRegistered()
+
+      // 🌟 Khởi tạo toàn bộ UserAchievement ở trạng thái PENDING cho user vừa verify
+      if (data?.id) {
+        await this.userAchievementService.initializeForUser(data.id)
+      }
+
       return {
         data,
         message: 'Xác thực email thành công'

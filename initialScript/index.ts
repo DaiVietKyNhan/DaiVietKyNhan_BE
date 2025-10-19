@@ -68,6 +68,12 @@ const main = async () => {
   }
 }
 
+// Import và chạy script tạo achievements
+import './create-achievements'
+
+// Import và chạy script tạo rewards
+import './create-rewards'
+
 main()
   .then(({ createdAccountCount, createdRoleCount }) => {
     console.log(`Created ${createdRoleCount} roles`)

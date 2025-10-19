@@ -1,4 +1,6 @@
 import { TypeOfVerificationCode } from '@/common/constants/auth.constant'
+import { FigureSchema } from '@/modules/figure/entities/figure.entity'
+import { GodProfileSchema } from '@/modules/god-profile/entities/god-profile.entity'
 import { extendZodWithOpenApi } from '@anatine/zod-openapi'
 import { patchNestJsSwagger } from 'nestjs-zod'
 import { RoleSchema } from 'src/shared/models/shared-role.model'
@@ -29,24 +31,30 @@ export const LoginBodySchema = UserSchema.pick({
 export const LoginResSchema = z
   .object({
     statusCode: z.number(),
-    data: z.object({
+    data: UserSchema.pick({
+      id: true,
+      name: true,
+      email: true,
+      status: true,
+      phoneNumber: true,
+      gender: true,
+      figureId: true,
+      godProfileId: true,
+      coin: true,
+      pointTestHome: true,
+      point: true,
+      heart: true,
+      birthDate: true,
+      roleId: true,
+      avatar: true
+    }).extend({
+      phoneNumber: z.string().nullable(),
       accessToken: z.string(),
       refreshToken: z.string(),
-      ...UserSchema.pick({
-        id: true,
-        name: true,
-        email: true,
-        status: true,
-        phoneNumber: true,
-        gender: true,
-        coin: true,
-        birthDate: true,
-        roleId: true,
-        avatar: true
-      }).shape,
-      role: RoleSchema
+      role: RoleSchema,
+      figure: FigureSchema.nullable().optional(),
+      godProfile: GodProfileSchema.nullable().optional()
     }),
-
     message: z.string()
   })
   .strict()
@@ -179,7 +187,9 @@ export const UpdateMeBodySchema = UserSchema.pick({
 
 export const AccountResSchema = z.object({
   statusCode: z.number(),
-  data: UserSchema.omit({ password: true }),
+  data: UserSchema.omit({ password: true }).extend({
+    figure: FigureSchema.nullable().optional()
+  }),
   message: z.string()
 })
 
