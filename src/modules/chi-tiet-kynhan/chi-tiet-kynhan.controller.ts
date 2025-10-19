@@ -285,7 +285,7 @@ export class ChiTietKyNhanController {
         @ActiveUser('userId') userId: number
     ) {
 
-        // Parse form data với Zod validation (giống createFull)
+        // Parse form data với Zod validation 
         const rawData = {
             kyNhanId: body.kyNhanId ? body.kyNhanId.toString().trim() : '',
             thamKhao: body.thamKhao || null,

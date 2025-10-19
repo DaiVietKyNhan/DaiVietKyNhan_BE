@@ -134,10 +134,57 @@ export class ChiTietKyNhanService {
 
     async delete({ id, deletedById }: { id: number; deletedById: number }) {
         try {
-            await this.chiTietKyNhanRepo.delete({
-                id,
-                deletedById
+            // Lấy danh sách media trước khi xóa để xóa files trên Cloudinary
+            const mediaToDelete = await this.prismaService.media.findMany({
+                where: {
+                    chiTietId: id,
+                    deletedAt: null
+                },
+                select: {
+                    id: true,
+                    url: true,
+                    fileName: true
+                }
             })
+
+            // Xóa files trên Cloudinary
+            for (const media of mediaToDelete) {
+                try {
+                    await this.uploadService.deleteFile(media.url, 'chi-tiet-kynhan/media')
+                    console.log(`☁️ Deleted file from Cloudinary: ${media.url}`)
+                } catch (cloudError) {
+                    console.error(`⚠️ Failed to delete from Cloudinary: ${media.url}`, cloudError)
+                    // Tiếp tục dù có lỗi cloud
+                }
+            }
+
+            // Soft delete trong transaction để đảm bảo consistency
+            await this.prismaService.$transaction(async (tx) => {
+                // Xóa media trước
+                await tx.media.updateMany({
+                    where: {
+                        chiTietId: id,
+                        deletedAt: null
+                    },
+                    data: {
+                        deletedAt: new Date(),
+                        deletedById
+                    }
+                })
+
+                // Xóa ChiTietKyNhan
+                await tx.chiTietKyNhan.update({
+                    where: {
+                        id,
+                        deletedAt: null
+                    },
+                    data: {
+                        deletedAt: new Date(),
+                        deletedById
+                    }
+                })
+            })
+
             return {
                 statusCode: HttpStatus.OK,
                 data: null,
@@ -437,6 +484,20 @@ export class ChiTietKyNhanService {
                 }
             }
 
+            // Lấy danh sách media hiện tại để xử lý sync
+            const existingMedia = await this.prismaService.media.findMany({
+                where: {
+                    chiTietId: id,
+                    deletedAt: null
+                },
+                select: {
+                    id: true,
+                    url: true,
+                    fileName: true,
+                    fileSize: true
+                }
+            })
+
             // Tạo transaction để update tất cả records
             const result = await this.prismaService.$transaction(async (tx) => {
                 // 1. Update ChiTietKyNhan
@@ -516,46 +577,92 @@ export class ChiTietKyNhanService {
                     }
                 }
 
-                if (uploadedThuVienAnhFiles.length > 0) {
-                    // Nếu có ảnh mới upload, thêm vào thư viện ảnh hiện tại (không xóa ảnh cũ)
-                    const existingMediaCount = await tx.media.count({
-                        where: {
-                            chiTietId: id,
-                            deletedAt: null
-                        }
+                // 5. Xử lý Media (thư viện ảnh) - Sync thông minh với Frontend
+                console.log('=== Processing Media Sync ===')
+                console.log('Data thuVienAnh:', data.thuVienAnh)
+                console.log('Existing media count:', existingMedia.length)
+                console.log('Uploaded files count:', uploadedThuVienAnhFiles.length)
+
+                if (data.thuVienAnh && Array.isArray(data.thuVienAnh)) {
+                    console.log('Smart syncing media with Frontend...')
+
+                    // Tạo map existing media để check nhanh
+                    const existingMediaMap = new Map<number, typeof existingMedia[0]>()
+                    existingMedia.forEach(media => {
+                        existingMediaMap.set(media.id, media)
                     })
 
-                    for (let index = 0; index < uploadedThuVienAnhFiles.length; index++) {
-                        const { url, file } = uploadedThuVienAnhFiles[index]
-                        await tx.media.create({
-                            data: {
-                                chiTietId: id,
-                                type: 'IMAGE',
-                                url: url,
-                                fileName: file.originalname,
-                                fileSize: file.size,
-                                mimeType: file.mimetype,
-                                thuTu: existingMediaCount + index + 1, // Thứ tự tiếp theo
-                                createdById: updatedById
-                            }
-                        })
-                    }
-                }
+                    // Tìm những media nào được giữ lại (có ID trong Frontend data)
+                    const keepMediaIds = new Set<number>()
+                    const newMediaFromData: any[] = []
 
-                // Chỉ xử lý data.thuVienAnh khi nó thực sự có dữ liệu (không phải từ form parsing)
-                if (data.thuVienAnh && Array.isArray(data.thuVienAnh) && data.thuVienAnh.length > 0 && data.thuVienAnh[0]?.url) {
-                    // Xóa tất cả media cũ chỉ khi có data URLs hợp lệ
-                    await tx.media.updateMany({
-                        where: { chiTietId: id },
-                        data: {
-                            deletedAt: new Date(),
-                            deletedById: updatedById
-                        }
-                    })
-
-                    // Thêm media mới từ data URLs
                     for (let index = 0; index < data.thuVienAnh.length; index++) {
                         const item = data.thuVienAnh[index]
+
+                        if (item.id && existingMediaMap.has(item.id)) {
+                            // Media cũ được giữ lại - chỉ cập nhật thứ tự
+                            keepMediaIds.add(item.id)
+                            await tx.media.update({
+                                where: { id: item.id },
+                                data: { thuTu: index + 1 }
+                            })
+                            console.log(`🔄 Updated order for existing media ID: ${item.id}`)
+                        } else {
+                            // Media mới từ Frontend data (không có ID hoặc ID không tồn tại)
+                            newMediaFromData.push({
+                                ...item,
+                                index: index
+                            })
+                        }
+                    }
+
+                    // Kiểm tra duplicate với uploaded files trước khi xóa
+                    const uploadedFilesInfo = uploadedThuVienAnhFiles.map(f => ({
+                        fileName: f.file.originalname,
+                        fileSize: f.file.size
+                    }))
+
+                    // Xóa những media không còn trong danh sách Frontend và không phải là duplicate với uploaded files
+                    const mediaToDelete = existingMedia.filter(media => {
+                        if (keepMediaIds.has(media.id)) return false // Được giữ lại
+
+                        // Kiểm tra xem có trùng với file upload không
+                        const isDuplicate = uploadedFilesInfo.some(uploaded =>
+                            uploaded.fileName === media.fileName && uploaded.fileSize === media.fileSize
+                        )
+
+                        if (isDuplicate) {
+                            console.log(`🔄 Skipping delete - duplicate with upload: ${media.fileName}`)
+                        }
+
+                        return !isDuplicate // Chỉ xóa nếu không trùng
+                    })
+
+                    console.log(`🗑️ Media to delete: ${mediaToDelete.length}`)
+
+                    for (const media of mediaToDelete) {
+                        // Xóa file trên Cloudinary trước
+                        try {
+                            await this.uploadService.deleteFile(media.url, 'chi-tiet-kynhan/media')
+                            console.log(`☁️ Deleted file from Cloudinary: ${media.url}`)
+                        } catch (cloudError) {
+                            console.error(`⚠️ Failed to delete from Cloudinary: ${media.url}`, cloudError)
+                            // Tiếp tục xóa trong DB dù có lỗi cloud
+                        }
+
+                        // Soft delete trong database
+                        await tx.media.update({
+                            where: { id: media.id },
+                            data: {
+                                deletedAt: new Date(),
+                                deletedById: updatedById
+                            }
+                        })
+                        console.log(`❌ Deleted media ID: ${media.id} - ${media.fileName}`)
+                    }
+
+                    // Thêm media mới từ Frontend data
+                    for (const item of newMediaFromData) {
                         await tx.media.create({
                             data: {
                                 chiTietId: id,
@@ -564,10 +671,65 @@ export class ChiTietKyNhanService {
                                 fileName: item.fileName,
                                 fileSize: item.fileSize,
                                 mimeType: item.mimeType,
-                                thuTu: index + 1,
+                                thuTu: item.index + 1,
                                 createdById: updatedById
                             }
                         })
+                        console.log(`✅ Added new media from data: ${item.fileName}`)
+                    }
+                }
+
+                // Xử lý files upload mới
+                if (uploadedThuVienAnhFiles.length > 0) {
+                    console.log('Processing newly uploaded files...')
+
+                    // Lấy media hiện tại để kiểm tra duplicate
+                    const currentMedia = await tx.media.findMany({
+                        where: {
+                            chiTietId: id,
+                            deletedAt: null
+                        },
+                        select: {
+                            fileName: true,
+                            fileSize: true
+                        }
+                    })
+
+                    // Đếm media hiện tại để đặt thứ tự cho files mới
+                    const currentMediaCount = currentMedia.length
+                    let addedCount = 0
+
+                    for (let index = 0; index < uploadedThuVienAnhFiles.length; index++) {
+                        const { url, file } = uploadedThuVienAnhFiles[index]
+
+                        // Kiểm tra duplicate với media hiện tại
+                        const isDuplicate = currentMedia.some(media =>
+                            media.fileName === file.originalname && media.fileSize === file.size
+                        )
+
+                        if (!isDuplicate) {
+                            await tx.media.create({
+                                data: {
+                                    chiTietId: id,
+                                    type: 'IMAGE',
+                                    url: url,
+                                    fileName: file.originalname,
+                                    fileSize: file.size,
+                                    mimeType: file.mimetype,
+                                    thuTu: currentMediaCount + addedCount + 1,
+                                    createdById: updatedById
+                                }
+                            })
+                            // Cập nhật currentMedia để tránh duplicate trong cùng request
+                            currentMedia.push({
+                                fileName: file.originalname,
+                                fileSize: file.size
+                            })
+                            addedCount++
+                            console.log(`📸 Added new uploaded file: ${file.originalname}`)
+                        } else {
+                            console.log(`⏭️ Skipped duplicate uploaded file: ${file.originalname}`)
+                        }
                     }
                 }
 
