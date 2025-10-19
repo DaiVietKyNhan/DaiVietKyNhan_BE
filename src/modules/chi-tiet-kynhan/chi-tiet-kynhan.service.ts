@@ -160,6 +160,10 @@ export class ChiTietKyNhanService {
         createdById: number
         thuVienAnhFiles?: Express.Multer.File[]
     }) {
+        console.log('=== CREATE FULL START ===')
+        console.log('Service - thuVienAnhFiles received:', thuVienAnhFiles?.length || 0)
+        console.log('Service - data:', JSON.stringify(data, null, 2))
+
         const uploadedThuVienAnhFiles: Array<{ url: string; file: Express.Multer.File }> = []
         const uploadWarnings: Array<{ fileName: string; error: string }> = []
 
@@ -335,6 +339,9 @@ export class ChiTietKyNhanService {
             }
 
         } catch (error) {
+            console.error('=== CREATE FULL ERROR ===')
+            console.error('Error:', error)
+            console.error('Error message:', error?.message)
             // Cleanup uploaded files nếu có lỗi
             const filesToCleanup = [
                 ...uploadedThuVienAnhFiles.map(item => item.url)
