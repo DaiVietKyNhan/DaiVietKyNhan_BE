@@ -28,7 +28,9 @@ export const ChangePointUserLogSchema = z
 export const CreateChangePointUserLogBodySchema = ChangePointUserLogSchema.pick({
   userId: true,
   reason: true,
-  newPoint: true
+  newPoint: true,
+  newCoin: true,
+  newHeart: true
 }).strict()
 
 export const CreateChangePointUserLogResSchema = z.object({

@@ -116,15 +116,4 @@ export class ChangePointUserLogRepo {
       }
     })
   }
-
-  createMany({
-    data
-  }: {
-    data: CreateChangePointUserLogBodyType[]
-  }): Promise<{ count: number }> {
-    return this.prismaService.changePointUserLog.createMany({
-      data: data,
-      skipDuplicates: true
-    })
-  }
 }
