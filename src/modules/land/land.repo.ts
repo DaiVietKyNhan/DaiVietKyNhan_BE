@@ -169,6 +169,8 @@ export class LandRepo {
           select: {
             id: true,
             text: true,
+            questionType: true,
+            answerOptionType: true,
             userAnswerLogs: {
               where: {
                 userId,
