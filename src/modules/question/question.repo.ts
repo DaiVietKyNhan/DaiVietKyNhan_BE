@@ -140,7 +140,7 @@ export class QuestionRepo {
     const skip = (pagination.currentPage - 1) * pagination.pageSize
     const take = pagination.pageSize
 
-    const [totalItems, data] = await Promise.all([
+    const [totalItems, questions] = await Promise.all([
       this.prismaService.question.count({
         where: { deletedAt: null, ...where }
       }),
@@ -154,8 +154,48 @@ export class QuestionRepo {
       })
     ])
 
+    // Calculate rate for each question
+    const questionsWithRate = await Promise.all(
+      questions.map(async (question) => {
+        // Get answer logs for this question
+        const answerLogs = await this.prismaService.userAnswerLog.findMany({
+          where: {
+            questionId: question.id,
+            deletedAt: null
+          },
+          select: {
+            amountAttempt: true,
+            isCorrect: true
+          }
+        })
+
+        let rate: number | null = null
+
+        // If there are answer logs, calculate the rate
+        if (answerLogs.length > 0) {
+          let totalAttempts = 0
+          let totalCorrect = 0
+
+          for (const log of answerLogs) {
+            totalAttempts += log.amountAttempt
+            if (log.isCorrect) {
+              totalCorrect += 1
+            }
+          }
+
+          // Calculate correct rate
+          rate = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100 * 100) / 100 : 0
+        }
+
+        return {
+          ...question,
+          rate
+        }
+      })
+    )
+
     return {
-      results: data,
+      results: questionsWithRate,
       pagination: {
         current: pagination.currentPage,
         pageSize: pagination.pageSize,
