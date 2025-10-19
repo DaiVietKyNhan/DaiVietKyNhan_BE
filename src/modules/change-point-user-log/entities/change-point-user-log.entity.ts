@@ -13,8 +13,11 @@ export const ChangePointUserLogSchema = z
     userId: z.number(),
     reason: z.string(),
     newPoint: z.number().min(0),
+    snapshotPoint: z.number().min(0),
     newCoin: z.number().min(0),
+    snapshotCoin: z.number().min(0),
     newHeart: z.number().min(0).max(3),
+    snapshotHeart: z.number().min(0).max(3),
 
     createdById: z.number().nullable(),
     updatedById: z.number().nullable(),

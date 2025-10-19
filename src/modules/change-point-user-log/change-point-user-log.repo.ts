@@ -2,6 +2,7 @@ import { PaginationQueryType } from '@/shared/models/request.model'
 import { Injectable } from '@nestjs/common'
 
 import { parseQs } from '@/common/utils/qs-parser'
+import { NotFoundRecordException } from '@/shared/error'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import {
   CHANGE_POINT_USER_LOG_FIELDS,
@@ -14,7 +15,7 @@ import {
 export class ChangePointUserLogRepo {
   constructor(private prismaService: PrismaService) {}
 
-  create({
+  async create({
     createdById,
     data
   }: {
@@ -23,8 +24,18 @@ export class ChangePointUserLogRepo {
   }): Promise<ChangePointUserLogType> {
     const { userId, reason, newPoint, newCoin, newHeart } = data
 
-    // Transaction: update User fields then create log
     return this.prismaService.$transaction(async (tx) => {
+      const user = await tx.user.findFirst({
+        where: { id: userId, deletedAt: null },
+        select: { point: true, coin: true, heart: true }
+      })
+
+      if (!user) throw NotFoundRecordException
+
+      const snapshotPoint = user.point ?? 0
+      const snapshotCoin = user.coin ?? 0
+      const snapshotHeart = user.heart ?? 0
+
       await tx.user.update({
         where: { id: userId, deletedAt: null },
         data: {
@@ -39,8 +50,11 @@ export class ChangePointUserLogRepo {
           userId,
           reason,
           newPoint,
+          snapshotPoint,
           newCoin,
+          snapshotCoin,
           newHeart,
+          snapshotHeart,
           createdById
         }
       })
@@ -49,7 +63,7 @@ export class ChangePointUserLogRepo {
     })
   }
 
-  update({
+  async update({
     id,
     updatedById,
     data
@@ -58,19 +72,24 @@ export class ChangePointUserLogRepo {
     updatedById: number
     data: UpdateChangePointUserLogBodyType
   }): Promise<ChangePointUserLogType> {
-    // Transaction: fetch existing to ensure userId unchanged; update user with provided fields; update log
     return this.prismaService.$transaction(async (tx) => {
-      const existing = await tx.changePointUserLog.findUnique({
+      const existing = await tx.changePointUserLog.findFirst({
         where: { id, deletedAt: null }
       })
-      if (!existing) {
-        // Prisma will throw NotFound if we try to update non-existent; but for clarity:
-        throw new Error('RECORD_NOT_FOUND')
-      }
+      if (!existing) throw NotFoundRecordException
 
-      const { reason, newPoint, newCoin, newHeart } = data
+      const { reason, newPoint, newCoin, newHeart } = data as any
 
-      // Update user with only provided fields
+      const user = await tx.user.findFirst({
+        where: { id: existing.userId, deletedAt: null },
+        select: { point: true, coin: true, heart: true }
+      })
+      if (!user) throw NotFoundRecordException
+
+      const snapshotPoint = user.point ?? 0
+      const snapshotCoin = user.coin ?? 0
+      const snapshotHeart = user.heart ?? 0
+
       const userUpdate: any = {}
       if (typeof newPoint === 'number') userUpdate.point = newPoint
       if (typeof newCoin === 'number') userUpdate.coin = newCoin
@@ -84,15 +103,15 @@ export class ChangePointUserLogRepo {
       }
 
       const updated = await tx.changePointUserLog.update({
-        where: {
-          id,
-          deletedAt: null
-        },
+        where: { id, deletedAt: null },
         data: {
           ...(reason !== undefined ? { reason } : {}),
           ...(newPoint !== undefined ? { newPoint } : {}),
           ...(newCoin !== undefined ? { newCoin } : {}),
           ...(newHeart !== undefined ? { newHeart } : {}),
+          ...(newPoint !== undefined ? { snapshotPoint } : {}),
+          ...(newCoin !== undefined ? { snapshotCoin } : {}),
+          ...(newHeart !== undefined ? { snapshotHeart } : {}),
           updatedById
         }
       })
@@ -101,32 +120,18 @@ export class ChangePointUserLogRepo {
     })
   }
 
-  delete(
-    {
-      id,
-      deletedById
-    }: {
-      id: number
-      deletedById: number
-    },
-    isHard?: boolean
+  async delete(
+    { id, deletedById }: { id: number; deletedById: number },
+    isHard = false
   ): Promise<ChangePointUserLogType> {
-    return isHard
-      ? this.prismaService.changePointUserLog.delete({
-          where: {
-            id
-          }
-        })
-      : this.prismaService.changePointUserLog.update({
-          where: {
-            id,
-            deletedAt: null
-          },
-          data: {
-            deletedAt: new Date(),
-            deletedById
-          }
-        })
+    if (isHard) {
+      return this.prismaService.changePointUserLog.delete({ where: { id } })
+    }
+
+    return this.prismaService.changePointUserLog.update({
+      where: { id, deletedAt: null },
+      data: { deletedAt: new Date(), deletedById }
+    })
   }
 
   async list(pagination: PaginationQueryType) {
@@ -141,7 +146,9 @@ export class ChangePointUserLogRepo {
       }),
       this.prismaService.changePointUserLog.findMany({
         where: { deletedAt: null, ...where },
-        include: { user: true },
+        include: {
+          user: true
+        },
         orderBy,
         skip,
         take
@@ -159,12 +166,9 @@ export class ChangePointUserLogRepo {
     }
   }
 
-  findById(id: number): Promise<ChangePointUserLogType | null> {
-    return this.prismaService.changePointUserLog.findUnique({
-      where: {
-        id,
-        deletedAt: null
-      }
+  async findById(id: number): Promise<ChangePointUserLogType | null> {
+    return this.prismaService.changePointUserLog.findFirst({
+      where: { id, deletedAt: null }
     })
   }
 }
