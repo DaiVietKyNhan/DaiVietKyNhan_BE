@@ -220,10 +220,20 @@ export class ChiTietKyNhanController {
         @ActiveUser('userId') userId: number
     ) {
         console.log('=== CONTROLLER CREATE FULL ===')
-        console.log('Files received:', files)
-        console.log('thuVienAnhFiles:', files?.thuVienAnh)
-        console.log('thuVienAnhFiles length:', files?.thuVienAnh?.length || 0)
-        console.log('Body:', JSON.stringify(body, null, 2))
+        console.log('Files object:', files)
+        console.log('Files keys:', Object.keys(files || {}))
+        console.log('thuVienAnh files:', files?.thuVienAnh)
+        console.log('thuVienAnh length:', files?.thuVienAnh?.length || 0)
+        if (files?.thuVienAnh) {
+            console.log('File details:', files.thuVienAnh.map(f => ({
+                fieldname: f.fieldname,
+                originalname: f.originalname,
+                mimetype: f.mimetype,
+                size: f.size
+            })))
+        }
+        console.log('Body keys:', body ? Object.keys(body) : [])
+        console.log('Body:', body ? JSON.stringify(body, null, 2) : 'undefined')
 
         // Parse form data với Zod validation
         const rawData = {
