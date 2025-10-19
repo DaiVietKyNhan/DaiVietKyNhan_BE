@@ -140,6 +140,8 @@ model User {
   userKyNhanSummaries   KyNhanSummary[]        @relation("KyNhanSummaryToUser")
   userKynhans           KyNhan[]               @relation("KyNhanToUser")
   changePointUserLogs   ChangePointUserLog[]
+  sentLetters           Letter[]               @relation("LetterFromUser")
+  deletedLetters        Letter[]               @relation("LetterDeletedBy")
 
   @@index([deletedAt])
   @@index([email])
@@ -232,6 +234,7 @@ model KyNhan {
   kyNhanSummaries KyNhanSummary[]
   motaKyNhan      MotaKyNhan?
   users           User[]          @relation("KyNhanToUser")
+  letters         Letter[]
 
   @@index([deletedAt])
 }
@@ -894,4 +897,22 @@ enum UserRewardStatus {
 enum answerOptionType {
   ONE
   TWO
+}
+
+model Letter {
+  id          Int       @id @default(autoincrement())
+  fromUserId  Int
+  kyNhanId    Int
+  content     String    @db.Text
+  isRead      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  deletedById Int?
+
+  fromUser  User   @relation("LetterFromUser", fields: [fromUserId], references: [id])
+  kyNhan    KyNhan @relation(fields: [kyNhanId], references: [id])
+  deletedBy User?  @relation("LetterDeletedBy", fields: [deletedById], references: [id])
+
+  @@map("letters")
 }

@@ -21,6 +21,7 @@ import { KynhanSummaryModule } from './modules/kynhan-summary/kynhan-summary.mod
 import { KyNhanModule } from './modules/kynhan/kynhan.module'
 import { LandBargeModule } from './modules/land-barge/land-barge.module'
 import { LandModule } from './modules/land/land.module'
+import { LetterModule } from './modules/letter/letter.module'
 import { MediaModule } from './modules/media/media.module'
 import { MoTaKyNhanModule } from './modules/mo-ta-ky-nhan/mo-ta-ky-nhan.module'
 import { PermissionModule } from './modules/permission/permission.module'
@@ -73,7 +74,8 @@ import { WebsocketsModule } from './websockets/websockets.module'
     DashboardModule,
     LandBargeModule,
     UserLandBargeModule,
-    ChiTietKyNhanModule
+    ChiTietKyNhanModule,
+    LetterModule
   ],
 
   controllers: [],
@@ -90,4 +92,4 @@ import { WebsocketsModule } from './websockets/websockets.module'
     }
   ]
 })
-export class AppModule {}
+export class AppModule { }
