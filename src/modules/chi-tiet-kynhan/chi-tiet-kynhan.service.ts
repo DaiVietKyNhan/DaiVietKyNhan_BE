@@ -391,6 +391,9 @@ export class ChiTietKyNhanService {
 
 
 
+            console.log('=== UPDATE FULL - Uploading new images ===')
+            console.log('thuVienAnhFiles received:', thuVienAnhFiles?.length || 0)
+
             // Upload thư viện ảnh mới nếu có
             if (thuVienAnhFiles && thuVienAnhFiles.length > 0) {
                 for (const file of thuVienAnhFiles) {
@@ -513,9 +516,35 @@ export class ChiTietKyNhanService {
                     }
                 }
 
-                // 5. Update/Create Media (thư viện ảnh)
-                if (uploadedThuVienAnhFiles.length > 0 || data.thuVienAnh !== undefined) {
-                    // Xóa tất cả media cũ
+                if (uploadedThuVienAnhFiles.length > 0) {
+                    // Nếu có ảnh mới upload, thêm vào thư viện ảnh hiện tại (không xóa ảnh cũ)
+                    const existingMediaCount = await tx.media.count({
+                        where: {
+                            chiTietId: id,
+                            deletedAt: null
+                        }
+                    })
+
+                    for (let index = 0; index < uploadedThuVienAnhFiles.length; index++) {
+                        const { url, file } = uploadedThuVienAnhFiles[index]
+                        await tx.media.create({
+                            data: {
+                                chiTietId: id,
+                                type: 'IMAGE',
+                                url: url,
+                                fileName: file.originalname,
+                                fileSize: file.size,
+                                mimeType: file.mimetype,
+                                thuTu: existingMediaCount + index + 1, // Thứ tự tiếp theo
+                                createdById: updatedById
+                            }
+                        })
+                    }
+                }
+
+                // Chỉ xử lý data.thuVienAnh khi nó thực sự có dữ liệu (không phải từ form parsing)
+                if (data.thuVienAnh && Array.isArray(data.thuVienAnh) && data.thuVienAnh.length > 0 && data.thuVienAnh[0]?.url) {
+                    // Xóa tất cả media cũ chỉ khi có data URLs hợp lệ
                     await tx.media.updateMany({
                         where: { chiTietId: id },
                         data: {
@@ -524,40 +553,21 @@ export class ChiTietKyNhanService {
                         }
                     })
 
-                    // Thêm media mới từ files upload
-                    if (uploadedThuVienAnhFiles.length > 0) {
-                        for (let index = 0; index < uploadedThuVienAnhFiles.length; index++) {
-                            const { url, file } = uploadedThuVienAnhFiles[index]
-                            await tx.media.create({
-                                data: {
-                                    chiTietId: id,
-                                    type: 'IMAGE',
-                                    url: url,
-                                    fileName: file.originalname,
-                                    fileSize: file.size,
-                                    mimeType: file.mimetype,
-                                    thuTu: index + 1,
-                                    createdById: updatedById
-                                }
-                            })
-                        }
-                    } else if (data.thuVienAnh && data.thuVienAnh.length > 0) {
-                        // Hoặc từ data URLs
-                        for (let index = 0; index < data.thuVienAnh.length; index++) {
-                            const item = data.thuVienAnh[index]
-                            await tx.media.create({
-                                data: {
-                                    chiTietId: id,
-                                    type: 'IMAGE',
-                                    url: item.url,
-                                    fileName: item.fileName,
-                                    fileSize: item.fileSize,
-                                    mimeType: item.mimeType,
-                                    thuTu: index + 1,
-                                    createdById: updatedById
-                                }
-                            })
-                        }
+                    // Thêm media mới từ data URLs
+                    for (let index = 0; index < data.thuVienAnh.length; index++) {
+                        const item = data.thuVienAnh[index]
+                        await tx.media.create({
+                            data: {
+                                chiTietId: id,
+                                type: 'IMAGE',
+                                url: item.url,
+                                fileName: item.fileName,
+                                fileSize: item.fileSize,
+                                mimeType: item.mimeType,
+                                thuTu: index + 1,
+                                createdById: updatedById
+                            }
+                        })
                     }
                 }
 
@@ -619,6 +629,7 @@ export class ChiTietKyNhanService {
         console.log('=== UPSERT FULL START ===')
         console.log('Service - kyNhanId:', data.kyNhanId)
         console.log('Service - userId:', userId)
+        console.log('Service - thuVienAnhFiles length:', thuVienAnhFiles?.length || 0)
 
         // Kiểm tra xem đã có ChiTietKyNhan cho kyNhanId chưa
         const existing = await this.chiTietKyNhanRepo.findByKyNhanId(data.kyNhanId)
@@ -644,6 +655,7 @@ export class ChiTietKyNhanService {
                 thuVienAnh: data.thuVienAnh
             }
 
+            console.log('Calling updateFull with thuVienAnhFiles:', thuVienAnhFiles?.length || 0)
             return this.updateFull({
                 data: updateData,
                 id: existing[0].id,
