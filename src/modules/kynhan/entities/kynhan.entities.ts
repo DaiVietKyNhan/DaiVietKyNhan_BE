@@ -1,5 +1,4 @@
 import { checkIdSchema } from '@/common/utils/id.validation'
-import { MotaKyNhanSchema } from '@/modules/mo-ta-ky-nhan/entities/mo-ta-ky-nhan.entity'
 import { extendZodWithOpenApi } from '@anatine/zod-openapi'
 import { patchNestJsSwagger } from 'nestjs-zod'
 import { z } from 'zod'
@@ -148,8 +147,7 @@ export const CreateKyNhanCompleteResSchema = z.object({
 
 export const GetKyNhansUserSchema = z.array(
   KyNhanSchema.extend({
-    unlocked: z.boolean().default(false),
-    motaKyNhan: MotaKyNhanSchema.nullable().optional()
+    unlocked: z.boolean().default(false)
   })
 )
 
