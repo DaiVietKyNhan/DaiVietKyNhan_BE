@@ -7,6 +7,15 @@ import { DashboardRepo } from './dashboard.repo'
 export class DashboardService {
   constructor(private readonly dashboardRepo: DashboardRepo) {}
 
+  async getUserPlayStats() {
+    const stats = await this.dashboardRepo.getUserPlayStats()
+    return {
+      statusCode: HttpStatus.OK,
+      data: stats,
+      message: ENTITY_MESSAGE.GET_SUCCESS
+    }
+  }
+
   async getStats() {
     const [
       totalUsers,
@@ -85,7 +94,7 @@ export class DashboardService {
     }
   }
 
-  async getUserStats() {
+  async getUserStatsMonth() {
     const monthlyStats = await this.dashboardRepo.getUserStatsByMonth()
     return {
       statusCode: HttpStatus.OK,
