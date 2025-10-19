@@ -1,5 +1,6 @@
 import { PaginationQueryType } from '@/shared/models/request.model'
 import { Injectable } from '@nestjs/common'
+import { Prisma } from '@prisma/client'
 
 import { parseQs } from '@/common/utils/qs-parser'
 import { PrismaService } from 'src/shared/services/prisma.service'
@@ -14,6 +15,82 @@ import {
 export class ChiTietKyNhanRepo {
     constructor(private prismaService: PrismaService) { }
 
+    private get includeWithRelations() {
+        return {
+            kyNhan: {
+                select: {
+                    id: true,
+                    name: true,
+                    thoiKy: true,
+                    chienCong: true,
+                    imgUrl: true,
+                    active: true
+                }
+            },
+            media: {
+                where: {
+                    deletedAt: null
+                },
+                orderBy: [
+                    {
+                        thuTu: Prisma.SortOrder.asc
+                    },
+                    {
+                        createdAt: Prisma.SortOrder.asc
+                    }
+                ]
+            },
+            boiCanhLichSuVaSuuThan: {
+                where: {
+                    deletedAt: null
+                },
+                orderBy: {
+                    thuTu: Prisma.SortOrder.asc
+                }
+            },
+            suSachVietGi: {
+                where: {
+                    deletedAt: null
+                },
+                orderBy: {
+                    thuTu: Prisma.SortOrder.asc
+                }
+            },
+            giaiThoaiDanGian: {
+                where: {
+                    deletedAt: null
+                },
+                orderBy: {
+                    thuTu: Prisma.SortOrder.asc
+                }
+            },
+            createdBy: {
+                select: {
+                    id: true,
+                    email: true,
+                    name: true,
+                    avatar: true
+                }
+            },
+            updatedBy: {
+                select: {
+                    id: true,
+                    email: true,
+                    name: true,
+                    avatar: true
+                }
+            },
+            deletedBy: {
+                select: {
+                    id: true,
+                    email: true,
+                    name: true,
+                    avatar: true
+                }
+            }
+        }
+    }
+
     create({
         createdById,
         data
@@ -26,52 +103,8 @@ export class ChiTietKyNhanRepo {
                 ...data,
                 createdById
             },
-            include: {
-                kyNhan: {
-                    select: {
-                        id: true,
-                        name: true,
-                        thoiKy: true,
-                        chienCong: true,
-                        imgUrl: true,
-                        active: true
-                    }
-                },
-                media: {
-                    where: {
-                        deletedAt: null
-                    },
-                    orderBy: {
-                        thuTu: 'asc',
-                        createdAt: 'asc'
-                    }
-                },
-                boiCanhLichSuVaSuuThan: {
-                    where: {
-                        deletedAt: null
-                    },
-                    orderBy: {
-                        thuTu: 'asc'
-                    }
-                },
-                suSachVietGi: {
-                    where: {
-                        deletedAt: null
-                    },
-                    orderBy: {
-                        thuTu: 'asc'
-                    }
-                },
-                giaiThoaiDanGian: {
-                    where: {
-                        deletedAt: null
-                    },
-                    orderBy: {
-                        thuTu: 'asc'
-                    }
-                }
-            }
-        })
+            include: this.includeWithRelations
+        }) as Promise<ChiTietKyNhanType>
     }
 
     update({
@@ -92,52 +125,8 @@ export class ChiTietKyNhanRepo {
                 ...data,
                 updatedById
             },
-            include: {
-                kyNhan: {
-                    select: {
-                        id: true,
-                        name: true,
-                        thoiKy: true,
-                        chienCong: true,
-                        imgUrl: true,
-                        active: true
-                    }
-                },
-                media: {
-                    where: {
-                        deletedAt: null
-                    },
-                    orderBy: {
-                        thuTu: 'asc',
-                        createdAt: 'asc'
-                    }
-                },
-                boiCanhLichSuVaSuuThan: {
-                    where: {
-                        deletedAt: null
-                    },
-                    orderBy: {
-                        thuTu: 'asc'
-                    }
-                },
-                suSachVietGi: {
-                    where: {
-                        deletedAt: null
-                    },
-                    orderBy: {
-                        thuTu: 'asc'
-                    }
-                },
-                giaiThoaiDanGian: {
-                    where: {
-                        deletedAt: null
-                    },
-                    orderBy: {
-                        thuTu: 'asc'
-                    }
-                }
-            }
-        })
+            include: this.includeWithRelations
+        }) as Promise<ChiTietKyNhanType>
     }
 
     delete(
@@ -151,12 +140,13 @@ export class ChiTietKyNhanRepo {
         isHard?: boolean
     ): Promise<ChiTietKyNhanType> {
         return isHard
-            ? this.prismaService.chiTietKyNhan.delete({
+            ? (this.prismaService.chiTietKyNhan.delete({
                 where: {
                     id
-                }
-            })
-            : this.prismaService.chiTietKyNhan.update({
+                },
+                include: this.includeWithRelations
+            }) as Promise<ChiTietKyNhanType>)
+            : (this.prismaService.chiTietKyNhan.update({
                 where: {
                     id,
                     deletedAt: null
@@ -165,20 +155,8 @@ export class ChiTietKyNhanRepo {
                     deletedAt: new Date(),
                     deletedById
                 },
-                include: {
-                    kyNhan: {
-                        select: {
-                            id: true,
-                            name: true,
-                            thoiKy: true,
-                            chienCong: true,
-                            imgUrl: true,
-                            active: true
-                        }
-                    },
-                    media: true
-                }
-            })
+                include: this.includeWithRelations
+            }) as Promise<ChiTietKyNhanType>)
     }
 
     async list(pagination: PaginationQueryType) {
@@ -193,55 +171,11 @@ export class ChiTietKyNhanRepo {
             }),
             this.prismaService.chiTietKyNhan.findMany({
                 where: { deletedAt: null, ...where },
-                include: {
-                    kyNhan: {
-                        select: {
-                            id: true,
-                            name: true,
-                            thoiKy: true,
-                            chienCong: true,
-                            imgUrl: true,
-                            active: true
-                        }
-                    },
-                    media: {
-                        where: {
-                            deletedAt: null
-                        },
-                        orderBy: {
-                            thuTu: 'asc',
-                            createdAt: 'asc'
-                        }
-                    },
-                    boiCanhLichSuVaSuuThan: {
-                        where: {
-                            deletedAt: null
-                        },
-                        orderBy: {
-                            thuTu: 'asc'
-                        }
-                    },
-                    suSachVietGi: {
-                        where: {
-                            deletedAt: null
-                        },
-                        orderBy: {
-                            thuTu: 'asc'
-                        }
-                    },
-                    giaiThoaiDanGian: {
-                        where: {
-                            deletedAt: null
-                        },
-                        orderBy: {
-                            thuTu: 'asc'
-                        }
-                    }
-                },
+                include: this.includeWithRelations,
                 orderBy,
                 skip,
                 take
-            })
+            }) as Promise<ChiTietKyNhanType[]>
         ])
 
         return {
@@ -261,52 +195,8 @@ export class ChiTietKyNhanRepo {
                 id,
                 deletedAt: null
             },
-            include: {
-                kyNhan: {
-                    select: {
-                        id: true,
-                        name: true,
-                        thoiKy: true,
-                        chienCong: true,
-                        imgUrl: true,
-                        active: true
-                    }
-                },
-                media: {
-                    where: {
-                        deletedAt: null
-                    },
-                    orderBy: {
-                        thuTu: 'asc',
-                        createdAt: 'asc'
-                    }
-                },
-                boiCanhLichSuVaSuuThan: {
-                    where: {
-                        deletedAt: null
-                    },
-                    orderBy: {
-                        thuTu: 'asc'
-                    }
-                },
-                suSachVietGi: {
-                    where: {
-                        deletedAt: null
-                    },
-                    orderBy: {
-                        thuTu: 'asc'
-                    }
-                },
-                giaiThoaiDanGian: {
-                    where: {
-                        deletedAt: null
-                    },
-                    orderBy: {
-                        thuTu: 'asc'
-                    }
-                }
-            }
-        })
+            include: this.includeWithRelations
+        }) as Promise<ChiTietKyNhanType | null>
     }
 
     findByKyNhanId(kyNhanId: number): Promise<ChiTietKyNhanType[]> {
@@ -315,109 +205,11 @@ export class ChiTietKyNhanRepo {
                 kyNhanId,
                 deletedAt: null
             },
-            include: {
-                kyNhan: {
-                    select: {
-                        id: true,
-                        name: true,
-                        thoiKy: true,
-                        chienCong: true,
-                        imgUrl: true,
-                        active: true
-                    }
-                },
-                media: {
-                    where: {
-                        deletedAt: null
-                    },
-                    orderBy: {
-                        thuTu: 'asc',
-                        createdAt: 'asc'
-                    }
-                },
-                boiCanhLichSuVaSuuThan: {
-                    where: {
-                        deletedAt: null
-                    },
-                    orderBy: {
-                        thuTu: 'asc'
-                    }
-                },
-                suSachVietGi: {
-                    where: {
-                        deletedAt: null
-                    },
-                    orderBy: {
-                        thuTu: 'asc'
-                    }
-                },
-                giaiThoaiDanGian: {
-                    where: {
-                        deletedAt: null
-                    },
-                    orderBy: {
-                        thuTu: 'asc'
-                    }
-                }
-            },
+            include: this.includeWithRelations,
             orderBy: {
-                createdAt: 'asc'
+                createdAt: Prisma.SortOrder.asc
             }
-        })
+        }) as Promise<ChiTietKyNhanType[]>
     }
 
-    findExistByNameAndKyNhan(ten: string, kyNhanId: number): Promise<ChiTietKyNhanType | null> {
-        return this.prismaService.chiTietKyNhan.findFirst({
-            where: {
-                ten,
-                kyNhanId,
-                deletedAt: null
-            },
-            include: {
-                kyNhan: {
-                    select: {
-                        id: true,
-                        name: true,
-                        thoiKy: true,
-                        chienCong: true,
-                        imgUrl: true,
-                        active: true
-                    }
-                },
-                media: {
-                    where: {
-                        deletedAt: null
-                    },
-                    orderBy: {
-                        thuTu: 'asc',
-                        createdAt: 'asc'
-                    }
-                },
-                boiCanhLichSuVaSuuThan: {
-                    where: {
-                        deletedAt: null
-                    },
-                    orderBy: {
-                        thuTu: 'asc'
-                    }
-                },
-                suSachVietGi: {
-                    where: {
-                        deletedAt: null
-                    },
-                    orderBy: {
-                        thuTu: 'asc'
-                    }
-                },
-                giaiThoaiDanGian: {
-                    where: {
-                        deletedAt: null
-                    },
-                    orderBy: {
-                        thuTu: 'asc'
-                    }
-                }
-            }
-        })
-    }
 }
