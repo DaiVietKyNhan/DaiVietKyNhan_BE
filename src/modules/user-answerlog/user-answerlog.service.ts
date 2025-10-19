@@ -71,17 +71,10 @@ export class UserAnswerLogService {
   }) {
     try {
       let landId = 0
-      //check xem user da tra loi cau hoi chua
-      const isHave = await this.userAnswerLogRepo.checkHasAnswered(
-        data.questionId,
-        createdById
-      )
-      if (isHave) {
-        // laasu user check tim ===0 khi cut
-        const user = await this.sharedUserRepo.findUnique({ id: createdById })
-        if (!user || user.heart < 1) {
-          throw UserNotEnoughHeartException
-        }
+      //check xem user du tim khong
+      const user = await this.sharedUserRepo.findUnique({ id: createdById })
+      if (!user || user.heart < 1) {
+        throw UserNotEnoughHeartException
       }
 
       //check coi người dùng đã trả lời đúng câu hỏi này chưa
