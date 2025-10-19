@@ -21,11 +21,31 @@ export class ChangePointUserLogRepo {
     createdById: number | null
     data: CreateChangePointUserLogBodyType
   }): Promise<ChangePointUserLogType> {
-    return this.prismaService.changePointUserLog.create({
-      data: {
-        ...data,
-        createdById
-      }
+    const { userId, reason, newPoint, newCoin, newHeart } = data
+
+    // Transaction: update User fields then create log
+    return this.prismaService.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: userId, deletedAt: null },
+        data: {
+          point: newPoint,
+          coin: newCoin,
+          heart: newHeart
+        }
+      })
+
+      const created = await tx.changePointUserLog.create({
+        data: {
+          userId,
+          reason,
+          newPoint,
+          newCoin,
+          newHeart,
+          createdById
+        }
+      })
+
+      return created
     })
   }
 
@@ -38,15 +58,46 @@ export class ChangePointUserLogRepo {
     updatedById: number
     data: UpdateChangePointUserLogBodyType
   }): Promise<ChangePointUserLogType> {
-    return this.prismaService.changePointUserLog.update({
-      where: {
-        id,
-        deletedAt: null
-      },
-      data: {
-        ...data,
-        updatedById
+    // Transaction: fetch existing to ensure userId unchanged; update user with provided fields; update log
+    return this.prismaService.$transaction(async (tx) => {
+      const existing = await tx.changePointUserLog.findUnique({
+        where: { id, deletedAt: null }
+      })
+      if (!existing) {
+        // Prisma will throw NotFound if we try to update non-existent; but for clarity:
+        throw new Error('RECORD_NOT_FOUND')
       }
+
+      const { reason, newPoint, newCoin, newHeart } = data
+
+      // Update user with only provided fields
+      const userUpdate: any = {}
+      if (typeof newPoint === 'number') userUpdate.point = newPoint
+      if (typeof newCoin === 'number') userUpdate.coin = newCoin
+      if (typeof newHeart === 'number') userUpdate.heart = newHeart
+
+      if (Object.keys(userUpdate).length > 0) {
+        await tx.user.update({
+          where: { id: existing.userId, deletedAt: null },
+          data: userUpdate
+        })
+      }
+
+      const updated = await tx.changePointUserLog.update({
+        where: {
+          id,
+          deletedAt: null
+        },
+        data: {
+          ...(reason !== undefined ? { reason } : {}),
+          ...(newPoint !== undefined ? { newPoint } : {}),
+          ...(newCoin !== undefined ? { newCoin } : {}),
+          ...(newHeart !== undefined ? { newHeart } : {}),
+          updatedById
+        }
+      })
+
+      return updated
     })
   }
 
@@ -90,7 +141,7 @@ export class ChangePointUserLogRepo {
       }),
       this.prismaService.changePointUserLog.findMany({
         where: { deletedAt: null, ...where },
-
+        include: { user: true },
         orderBy,
         skip,
         take

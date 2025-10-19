@@ -12,9 +12,9 @@ export const ChangePointUserLogSchema = z
 
     userId: z.number(),
     reason: z.string(),
-    newPoint: z.number().min(0).default(0),
-    newCoin: z.number().min(0).default(0),
-    newHeart: z.number().min(0).default(0),
+    newPoint: z.number().min(0),
+    newCoin: z.number().min(0),
+    newHeart: z.number().min(0).max(3),
 
     createdById: z.number().nullable(),
     updatedById: z.number().nullable(),
@@ -39,8 +39,14 @@ export const CreateChangePointUserLogResSchema = z.object({
   message: z.string()
 })
 
-export const UpdateChangePointUserLogBodySchema =
-  CreateChangePointUserLogBodySchema.partial().strict()
+export const UpdateChangePointUserLogBodySchema = ChangePointUserLogSchema.pick({
+  newPoint: true,
+  newCoin: true,
+  newHeart: true,
+  reason: true
+})
+  .partial()
+  .strict()
 
 export const UpdateChangePointUserLogResSchema = z.object({
   statusCode: z.number(),

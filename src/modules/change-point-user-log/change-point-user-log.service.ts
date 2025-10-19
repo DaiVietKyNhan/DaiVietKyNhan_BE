@@ -1,6 +1,6 @@
 import { ENTITY_MESSAGE } from '@/common/constants/message'
 import { PaginationQueryType } from '@/shared/models/request.model'
-import { HttpStatus, Injectable } from '@nestjs/common'
+import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common'
 
 import { NotFoundRecordException } from 'src/shared/error'
 import {
@@ -86,6 +86,11 @@ export class ChangePointUserLogService {
     updatedById: number
   }) {
     try {
+      // Disallow changing userId: our Update schema has no userId, but double-check if client sends it
+      if ((data as any).userId !== undefined) {
+        throw new BadRequestException('Không được phép thay đổi user')
+      }
+
       const updatedChangePointUserLog = await this.ChangePointUserLogRepo.update({
         id,
         updatedById,
