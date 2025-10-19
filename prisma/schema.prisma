@@ -131,9 +131,15 @@ model User {
   createdUserTestQHs            UserTestQuestionHome[]                @relation("UserTestQuestionHomeCreatedBy")
   deletedUserTestQHs            UserTestQuestionHome[]                @relation("UserTestQuestionHomeDeletedBy")
   updatedUserTestQHs            UserTestQuestionHome[]                @relation("UserTestQuestionHomeUpdatedBy")
-  userTestQuestionHomes         UserTestQuestionHome[]
-  userKyNhanSummaries           KyNhanSummary[]                       @relation("KyNhanSummaryToUser")
-  userKynhans                   KyNhan[]                              @relation("KyNhanToUser")
+
+  createdChangePointUserLogs ChangePointUserLog[] @relation("ChangePointUserLogCreatedBy")
+  updatedChangePointUserLogs ChangePointUserLog[] @relation("ChangePointUserLogUpdatedBy")
+  deletedChangePointUserLogs ChangePointUserLog[] @relation("ChangePointUserLogDeletedBy")
+
+  userTestQuestionHomes UserTestQuestionHome[]
+  userKyNhanSummaries   KyNhanSummary[]        @relation("KyNhanSummaryToUser")
+  userKynhans           KyNhan[]               @relation("KyNhanToUser")
+  changePointUserLogs   ChangePointUserLog[]
 
   @@index([deletedAt])
   @@index([email])
@@ -536,6 +542,23 @@ model TestQuestionHome {
   deletedBy             User?                      @relation("TestQuestionHomeDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
   updatedBy             User?                      @relation("TestQuestionHomeUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
   userTestQuestionHomes UserTestQuestionHome[]
+}
+
+model ChangePointUserLog {
+  id Int @id @default(autoincrement())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  reason   String @db.VarChar()
+  newPoint Int
+
+  createdBy   User? @relation("ChangePointUserLogCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
+  createdById Int?
+  deletedBy   User? @relation("ChangePointUserLogDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  deletedById Int?
+  updatedBy   User? @relation("ChangePointUserLogUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  updatedById Int?
 }
 
 model UserTestQuestionHome {

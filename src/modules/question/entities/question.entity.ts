@@ -34,6 +34,10 @@ const QuestionWithAnswersSchema = QuestionSchema.extend({
   answers: z.array(AnswerSchema)
 })
 
+const QuestionWithRateSchema = QuestionSchema.extend({
+  rate: z.number().nullable()
+})
+
 export const CreateQuestionBodySchema = QuestionSchema.pick({
   text: true,
   questionType: true,
@@ -79,6 +83,7 @@ export const GetQuestionResSchema = z
 // Types
 export type QuestionType = z.infer<typeof QuestionSchema>
 export type QuestionWithAnswersType = z.infer<typeof QuestionWithAnswersSchema>
+export type QuestionWithRateType = z.infer<typeof QuestionWithRateSchema>
 export type CreateQuestionBodyType = z.infer<typeof CreateQuestionBodySchema>
 export type UpdateQuestionBodyType = z.infer<typeof UpdateQuestionBodySchema>
 export type GetQuestionParamsType = z.infer<typeof GetQuestionParamsSchema>
