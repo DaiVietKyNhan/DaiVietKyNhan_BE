@@ -266,6 +266,7 @@ export class KynhanService {
             tinhCach: data.chiTietKyNhan.tinhCach,
             quanHe: data.chiTietKyNhan.quanHe,
             trichDoan: data.chiTietKyNhan.trichDoan,
+            thamKhao: data.chiTietKyNhan.thamKhao || null,
             imgUrl: chiTietImgUrl || data.chiTietKyNhan.imgUrl || null,
             createdById
           }
@@ -273,13 +274,15 @@ export class KynhanService {
 
         // 3. Tạo Bối cảnh lịch sử và xuất thân
         if (data.chiTietKyNhan.boiCanhLichSuVaXuatThan && data.chiTietKyNhan.boiCanhLichSuVaXuatThan.length > 0) {
-          for (const item of data.chiTietKyNhan.boiCanhLichSuVaXuatThan) {
+          for (let index = 0; index < data.chiTietKyNhan.boiCanhLichSuVaXuatThan.length; index++) {
+            const item = data.chiTietKyNhan.boiCanhLichSuVaXuatThan[index]
             await tx.chiTietKyNhanBoiCanhLichSuVaSuuThan.create({
               data: {
                 chiTietKyNhanId: chiTietKyNhan.id,
                 tieuDe: item.tieuDe,
                 noiDung: item.noiDung,
                 nguon: item.nguon,
+                thuTu: index + 1,
                 createdById
               }
             })

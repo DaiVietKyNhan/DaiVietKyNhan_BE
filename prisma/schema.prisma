@@ -302,6 +302,7 @@ model ChiTietKyNhan {
   tinhCach               String                                @db.Text()
   quanHe                 String?                               @db.Text()
   trichDoan              String                                @db.Text()
+  thamKhao               String?                               @db.Text()
   imgUrl                 String?                               @db.VarChar(1000)
   media                  Media[]
   boiCanhLichSuVaSuuThan ChiTietKyNhanBoiCanhLichSuVaSuuThan[]

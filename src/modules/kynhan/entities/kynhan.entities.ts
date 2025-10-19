@@ -9,7 +9,7 @@ patchNestJsSwagger()
 export const KyNhanSchema = z
   .object({
     id: z.number(),
-    name: z.string().min(1).max(255),
+    name: z.string().min(1).max(500),
     thoiKy: z.string().min(1),
     chienCong: z.string().min(1),
     imgUrl: z.string().max(1000).nullable(),
@@ -45,21 +45,9 @@ export const CreateKyNhanCompleteBodySchema = z.object({
   name: z.string().min(1).max(500),
   thoiKy: z.string().min(1),
   chienCong: z.string().min(1),
-  landId: z.number().nullable().optional(),
-  active: z.boolean().default(false),
+  landId: z.union([z.number(), z.string().transform(val => val ? Number(val) : null)]).nullable().optional(),
+  active: z.union([z.boolean(), z.string().transform(val => val === 'true' || val === '1')]).default(false),
 
-  // Thông tin hình ảnh cơ bản (từ form đầu tiên)
-  thongTinHinh: z.object({
-    tenHinh: z.string().min(1).max(500),
-    tomTatHinh: z.string().min(1).max(1000),
-    moTaNgan: z.string().min(1)
-  }).optional(),
-
-  // Thông tin cơ bản (các phần có thể có nhiều)
-  thongTinCoBan: z.array(z.object({
-    tieuDePhan: z.string().min(1).max(500),
-    noiDung: z.string().min(1)
-  })).optional(),
 
   // Chi tiết kỳ nhân
   chiTietKyNhan: z.object({
