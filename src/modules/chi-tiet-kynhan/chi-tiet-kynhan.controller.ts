@@ -284,9 +284,6 @@ export class ChiTietKyNhanController {
         },
         @ActiveUser('userId') userId: number
     ) {
-        console.log('=== CONTROLLER UPSERT FULL ===')
-        console.log('Files received:', files?.thuVienAnh?.length || 0)
-        console.log('Body keys:', body ? Object.keys(body) : [])
 
         // Parse form data với Zod validation (giống createFull)
         const rawData = {
