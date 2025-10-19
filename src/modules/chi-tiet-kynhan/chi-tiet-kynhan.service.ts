@@ -601,4 +601,55 @@ export class ChiTietKyNhanService {
             throw error
         }
     }
+
+    /**
+     * Upsert (Create hoặc Update) Chi Tiết Kỳ Nhân hoàn chỉnh
+     * - Nếu chưa tồn tại ChiTietKyNhan cho kyNhanId → Create
+     * - Nếu đã tồn tại → Update
+     */
+    async upsertFull({
+        data,
+        userId,
+        thuVienAnhFiles
+    }: {
+        data: CreateChiTietKyNhanCompleteBodyType
+        userId: number
+        thuVienAnhFiles?: Express.Multer.File[]
+    }) {
+        console.log('=== UPSERT FULL START ===')
+        console.log('Service - kyNhanId:', data.kyNhanId)
+        console.log('Service - userId:', userId)
+
+        // Kiểm tra xem đã có ChiTietKyNhan cho kyNhanId chưa
+        const existing = await this.chiTietKyNhanRepo.findByKyNhanId(data.kyNhanId)
+
+        if (!existing || existing.length === 0) {
+            // Chưa có → Tạo mới
+            console.log('No existing ChiTietKyNhan found → Creating new')
+            return this.createFull({
+                data,
+                createdById: userId,
+                thuVienAnhFiles
+            })
+        } else {
+            // Đã có → Update
+            console.log('Existing ChiTietKyNhan found → Updating ID:', existing[0].id)
+
+            // Convert CreateChiTietKyNhanCompleteBodyType sang UpdateChiTietKyNhanCompleteBodyType
+            const updateData: UpdateChiTietKyNhanCompleteBodyType = {
+                thamKhao: data.thamKhao,
+                boiCanhLichSuVaXuatThan: data.boiCanhLichSuVaXuatThan,
+                suSachVietGi: data.suSachVietGi,
+                giaiThoaiDanGian: data.giaiThoaiDanGian,
+                thuVienAnh: data.thuVienAnh
+            }
+
+            return this.updateFull({
+                data: updateData,
+                id: existing[0].id,
+                updatedById: userId,
+                thuVienAnhFiles
+            })
+        }
+    }
 }

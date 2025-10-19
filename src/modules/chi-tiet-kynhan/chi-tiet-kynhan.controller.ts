@@ -262,6 +262,59 @@ export class ChiTietKyNhanController {
         }
     }
 
+    @Post('upsert')
+    @ZodSerializerDto(CreateChiTietKyNhanCompleteResDTO)
+    @UseInterceptors(FileFieldsInterceptor([
+        { name: 'thuVienAnh', maxCount: 10 }
+    ], CloudinaryImageUploadConfig))
+    @ApiConsumes('multipart/form-data')
+    @ApiOperation({
+        summary: 'Tạo hoặc cập nhật chi tiết kỳ nhân (Upsert)',
+        description: 'Nếu chưa tồn tại ChiTietKyNhan cho kyNhanId → Tạo mới. Nếu đã tồn tại → Cập nhật.'
+    })
+    @ApiResponse({
+        status: 201,
+        description: 'Tạo hoặc cập nhật chi tiết kỳ nhân thành công',
+        type: CreateChiTietKyNhanCompleteResDTO
+    })
+    upsertFull(
+        @Body() body: any,
+        @UploadedFiles() files: {
+            thuVienAnh?: Express.Multer.File[]
+        },
+        @ActiveUser('userId') userId: number
+    ) {
+        console.log('=== CONTROLLER UPSERT FULL ===')
+        console.log('Files received:', files?.thuVienAnh?.length || 0)
+        console.log('Body keys:', body ? Object.keys(body) : [])
+
+        // Parse form data với Zod validation (giống createFull)
+        const rawData = {
+            kyNhanId: body.kyNhanId ? body.kyNhanId.toString().trim() : '',
+            thamKhao: body.thamKhao || null,
+            boiCanhLichSuVaXuatThan: this.parseFormDataArrays(body, 'boiCanhLichSuVaXuatThan'),
+            suSachVietGi: this.parseFormDataArrays(body, 'suSachVietGi'),
+            giaiThoaiDanGian: this.parseFormDataArrays(body, 'giaiThoaiDanGian'),
+            thuVienAnh: this.parseFormDataArrays(body, 'thuVienAnh')
+        }
+
+        try {
+            const payload = CreateChiTietKyNhanCompleteBodySchema.parse(rawData)
+            console.log('Parsed payload for upsert')
+
+            return this.chiTietKyNhanService.upsertFull({
+                data: payload,
+                userId: userId,
+                thuVienAnhFiles: files?.thuVienAnh || []
+            })
+        } catch (error) {
+            if (error instanceof ZodError) {
+                throw new BadRequestException(`Validation error: ${error.errors.map(e => e.message).join(', ')}`)
+            }
+            throw error
+        }
+    }
+
     @Put(':chiTietKyNhanId/full')
     @ZodSerializerDto(UpdateChiTietKyNhanCompleteResDTO)
     @UseInterceptors(FileFieldsInterceptor([

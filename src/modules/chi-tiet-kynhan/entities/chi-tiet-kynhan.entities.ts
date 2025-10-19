@@ -57,9 +57,9 @@ export const ChiTietKyNhanSchema = z
             active: z.boolean()
         }).optional(),
         media: z.array(MediaSchema).optional(),
-        boiCanhLichSuVaSuuThan: z.array(ChiTietKyNhanBoiCanhLichSuVaSuuThanSchema).optional(),
-        suSachVietGi: z.array(ChiTietKyNhanSuSachVietGiSchema).optional(),
-        giaiThoaiDanGian: z.array(ChiTietKyNhanGiaiThoaiDanGianSchema).optional(),
+        boiCanhLichSuVaSuuThan: z.array(ChiTietKyNhanBoiCanhLichSuVaSuuThanSchema),
+        suSachVietGi: z.array(ChiTietKyNhanSuSachVietGiSchema),
+        giaiThoaiDanGian: z.array(ChiTietKyNhanGiaiThoaiDanGianSchema),
         createdBy: UserRelationSchema,
         updatedBy: UserRelationSchema,
         deletedBy: UserRelationSchema
