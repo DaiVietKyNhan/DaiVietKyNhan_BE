@@ -19,18 +19,18 @@ import {
 @Controller('change-point-user-log')
 @ApiBearerAuth()
 export class ChangePointUserLogController {
-  constructor(private readonly ChangePointUserLogService: ChangePointUserLogService) {}
+  constructor(private readonly changePointUserLogService: ChangePointUserLogService) {}
 
   @Get()
   @ZodSerializerDto(PaginationResponseSchema)
   list(@Query() query: PaginationQueryDTO) {
-    return this.ChangePointUserLogService.list(query)
+    return this.changePointUserLogService.list(query)
   }
 
   @Get(':id')
   @ZodSerializerDto(GetChangePointUserLogResDTO)
   findById(@Param() params: GetParamsChangePointUserLogDTO) {
-    return this.ChangePointUserLogService.findById(params.id)
+    return this.changePointUserLogService.findById(params.id)
   }
 
   @Post()
@@ -39,7 +39,7 @@ export class ChangePointUserLogController {
     @Body() body: CreateChangePointUserLogBodyDTO,
     @ActiveUser('userId') userId: number
   ) {
-    return this.ChangePointUserLogService.create({
+    return this.changePointUserLogService.create({
       data: body,
       createdById: userId
     })
@@ -52,7 +52,7 @@ export class ChangePointUserLogController {
     @Param() params: GetParamsChangePointUserLogDTO,
     @ActiveUser('userId') userId: number
   ) {
-    return this.ChangePointUserLogService.update({
+    return this.changePointUserLogService.update({
       data: body,
       id: params.id,
       updatedById: userId
@@ -65,7 +65,7 @@ export class ChangePointUserLogController {
     @Param() params: GetParamsChangePointUserLogDTO,
     @ActiveUser('userId') userId: number
   ) {
-    return this.ChangePointUserLogService.delete({
+    return this.changePointUserLogService.delete({
       id: params.id,
       deletedById: userId
     })
