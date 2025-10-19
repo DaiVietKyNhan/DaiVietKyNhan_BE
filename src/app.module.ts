@@ -13,6 +13,7 @@ import { AuthModule } from './modules/auth/auth.module'
 
 import { AchievementModule } from './modules/achievement/achievement.module'
 import { AnswerModule } from './modules/answer/answer.module'
+import { ChangePointUserLogModule } from './modules/change-point-user-log/change-point-user-log.module'
 import { ChiTietKyNhanModule } from './modules/chi-tiet-kynhan/chi-tiet-kynhan.module'
 import { DashboardModule } from './modules/dashboard/dashboard.module'
 import { FigureModule } from './modules/figure/figure.module'
@@ -37,7 +38,6 @@ import { UserTestQuestionHomeModule } from './modules/user-test-question-home/us
 import { UserModule } from './modules/user/user.module'
 import { SharedModule } from './shared/shared.module'
 import { WebsocketsModule } from './websockets/websockets.module'
-import { ChangePointUserLogModule } from './modules/change-point-user-log/change-point-user-log.module';
 
 @Module({
   imports: [
@@ -76,9 +76,8 @@ import { ChangePointUserLogModule } from './modules/change-point-user-log/change
     LandBargeModule,
     UserLandBargeModule,
     ChiTietKyNhanModule,
-    LetterModule
+    LetterModule,
     ChangePointUserLogModule
-
   ],
 
   controllers: [],
@@ -95,4 +94,4 @@ import { ChangePointUserLogModule } from './modules/change-point-user-log/change
     }
   ]
 })
-export class AppModule { }
+export class AppModule {}

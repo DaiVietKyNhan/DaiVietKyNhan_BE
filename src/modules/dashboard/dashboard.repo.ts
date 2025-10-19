@@ -180,4 +180,271 @@ export class DashboardRepo {
 
     return { averagePoint, maxPoint, totalUserLargePoint }
   }
+
+  async getUserStatsByMonth() {
+    const currentYear = new Date().getFullYear()
+    const monthNames = [
+      'Tháng 1',
+      'Tháng 2',
+      'Tháng 3',
+      'Tháng 4',
+      'Tháng 5',
+      'Tháng 6',
+      'Tháng 7',
+      'Tháng 8',
+      'Tháng 9',
+      'Tháng 10',
+      'Tháng 11',
+      'Tháng 12'
+    ]
+
+    const monthlyStats: any[] = []
+
+    for (let month = 1; month <= 12; month++) {
+      const startDate = new Date(currentYear, month - 1, 1)
+      const endDate = new Date(currentYear, month, 0, 23, 59, 59, 999)
+      const prevMonthStart = new Date(currentYear, month - 2, 1)
+      const prevMonthEnd = new Date(currentYear, month - 1, 0, 23, 59, 59, 999)
+
+      // Get new users in this month
+      const newUsers = await this.prismaService.user.count({
+        where: {
+          deletedAt: null,
+          createdAt: {
+            gte: startDate,
+            lte: endDate
+          }
+        }
+      })
+
+      // Get previous month users for percentage change
+      const prevMonthUsers = await this.prismaService.user.count({
+        where: {
+          deletedAt: null,
+          createdAt: {
+            gte: prevMonthStart,
+            lte: prevMonthEnd
+          }
+        }
+      })
+
+      const changePercent =
+        prevMonthUsers > 0
+          ? Math.round(((newUsers - prevMonthUsers) / prevMonthUsers) * 100 * 100) / 100
+          : 0
+
+      // Get total plays (user answer logs) in this month
+      const totalPlays = await this.prismaService.userAnswerLog.count({
+        where: {
+          deletedAt: null,
+          createdAt: {
+            gte: startDate,
+            lte: endDate
+          }
+        }
+      })
+
+      // Calculate pass rate (correct answers / total attempts)
+      const answerLogs = await this.prismaService.userAnswerLog.findMany({
+        where: {
+          deletedAt: null,
+          createdAt: {
+            gte: startDate,
+            lte: endDate
+          }
+        },
+        select: {
+          isCorrect: true
+        }
+      })
+
+      const correctAnswers = answerLogs.filter((log) => log.isCorrect).length
+      const passRate =
+        totalPlays > 0 ? Math.round((correctAnswers / totalPlays) * 100 * 100) / 100 : 0
+
+      // Calculate land completion rate (COMPLETED lands / total lands)
+      const [completedLands, totalLandRecords] = await Promise.all([
+        this.prismaService.userLand.count({
+          where: {
+            deletedAt: null,
+            status: 'COMPLETED',
+            createdAt: {
+              gte: startDate,
+              lte: endDate
+            }
+          }
+        }),
+        this.prismaService.userLand.count({
+          where: {
+            deletedAt: null,
+            status: {
+              in: ['PENDING', 'COMPLETED']
+            },
+            createdAt: {
+              gte: startDate,
+              lte: endDate
+            }
+          }
+        })
+      ])
+
+      const landCompletionRate =
+        totalLandRecords > 0
+          ? Math.round((completedLands / totalLandRecords) * 100 * 100) / 100
+          : 0
+
+      monthlyStats.push({
+        month,
+        monthName: monthNames[month - 1],
+        newUsers,
+        changePercent,
+        totalPlays,
+        passRate,
+        landCompletionRate
+      })
+    }
+
+    return monthlyStats
+  }
+
+  async getTopPlayers(limit = 10) {
+    // Get users with their answer statistics
+    const users = await this.prismaService.user.findMany({
+      where: {
+        deletedAt: null,
+        status: 'ACTIVE',
+        userAnswerLogs: {
+          some: {
+            deletedAt: null
+          }
+        }
+      },
+      select: {
+        id: true,
+        name: true,
+        point: true,
+        userAnswerLogs: {
+          where: {
+            deletedAt: null
+          },
+          select: {
+            isCorrect: true,
+            amountAttempt: true
+          }
+        }
+      }
+    })
+
+    // Calculate stats for each user
+    const playerStats = users.map((user) => {
+      // Total attempts = sum of all amountAttempt from all answer logs
+      const totalAnswers = user.userAnswerLogs.reduce(
+        (sum, log) => sum + log.amountAttempt,
+        0
+      )
+
+      // Correct answers = count of logs where isCorrect = true (each counts as 1 correct answer)
+      const correctAnswers = user.userAnswerLogs.filter((log) => log.isCorrect).length
+
+      const correctRate =
+        totalAnswers > 0
+          ? Math.round((correctAnswers / totalAnswers) * 100 * 100) / 100
+          : 0
+
+      return {
+        userId: user.id,
+        name: user.name,
+        totalAnswers,
+        correctRate,
+        currentPoints: user.point
+      }
+    })
+
+    // Sort by points desc, then by correctRate desc
+    playerStats.sort((a, b) => {
+      if (b.currentPoints !== a.currentPoints) {
+        return b.currentPoints - a.currentPoints
+      }
+      return b.correctRate - a.correctRate
+    })
+
+    return playerStats.slice(0, limit)
+  }
+
+  async getLandStatistics() {
+    const lands = await this.prismaService.land.findMany({
+      where: {
+        deletedAt: null
+      },
+      select: {
+        id: true,
+        name: true,
+        questions: {
+          where: {
+            deletedAt: null
+          },
+          select: {
+            userAnswerLogs: {
+              where: {
+                deletedAt: null
+              }
+            }
+          }
+        },
+        userLands: {
+          where: {
+            deletedAt: null,
+            status: {
+              in: ['PENDING', 'COMPLETED']
+            }
+          },
+          select: {
+            status: true,
+            user: {
+              select: {
+                point: true
+              }
+            }
+          }
+        }
+      }
+    })
+
+    const landStats = lands.map((land) => {
+      // Calculate total answers for this land
+      let totalAnswers = 0
+      land.questions.forEach((question) => {
+        totalAnswers += question.userAnswerLogs.length
+      })
+
+      // Calculate average points from users in this land (PENDING or COMPLETED)
+      const userPoints = land.userLands.map((ul) => ul.user.point)
+      const averagePoints =
+        userPoints.length > 0
+          ? Math.round(
+              (userPoints.reduce((sum, p) => sum + p, 0) / userPoints.length) * 100
+            ) / 100
+          : 0
+
+      // Calculate completion rate
+      const completedCount = land.userLands.filter(
+        (ul) => ul.status === 'COMPLETED'
+      ).length
+      const totalUserLands = land.userLands.length
+      const completionRate =
+        totalUserLands > 0
+          ? Math.round((completedCount / totalUserLands) * 100 * 100) / 100
+          : 0
+
+      return {
+        landId: land.id,
+        landName: land.name,
+        totalAnswers,
+        averagePoints,
+        completionRate
+      }
+    })
+
+    return landStats
+  }
 }

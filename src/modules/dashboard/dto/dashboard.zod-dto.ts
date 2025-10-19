@@ -48,3 +48,56 @@ export const PointsStatsResSchema = z.object({
 })
 
 export class PointsStatsResDTO extends createZodDto(PointsStatsResSchema) {}
+
+// User stats by month
+export const MonthlyUserStatsSchema = z.object({
+  month: z.number(),
+  monthName: z.string(),
+  newUsers: z.number(),
+  changePercent: z.number(),
+  totalPlays: z.number(),
+  passRate: z.number(),
+  landCompletionRate: z.number()
+})
+
+export const UserStatsResSchema = z.object({
+  statusCode: z.number(),
+  data: z.array(MonthlyUserStatsSchema),
+  message: z.string()
+})
+
+export class UserStatsResDTO extends createZodDto(UserStatsResSchema) {}
+
+// Top players leaderboard
+export const TopPlayerSchema = z.object({
+  userId: z.number(),
+  name: z.string(),
+  totalAnswers: z.number(),
+  correctRate: z.number(),
+  currentPoints: z.number()
+})
+
+export const TopPlayersResSchema = z.object({
+  statusCode: z.number(),
+  data: z.array(TopPlayerSchema),
+  message: z.string()
+})
+
+export class TopPlayersResDTO extends createZodDto(TopPlayersResSchema) {}
+
+// Land statistics
+export const LandStatsItemSchema = z.object({
+  landId: z.number(),
+  landName: z.string(),
+  totalAnswers: z.number(),
+  averagePoints: z.number(),
+  completionRate: z.number()
+})
+
+export const LandStatsResSchema = z.object({
+  statusCode: z.number(),
+  data: z.array(LandStatsItemSchema),
+  message: z.string()
+})
+
+export class LandStatsResDTO extends createZodDto(LandStatsResSchema) {}
