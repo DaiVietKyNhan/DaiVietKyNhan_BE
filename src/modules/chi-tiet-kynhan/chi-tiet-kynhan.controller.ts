@@ -268,7 +268,7 @@ export class ChiTietKyNhanController {
         { name: 'thuVienAnh', maxCount: 10 }
     ], CloudinaryImageUploadConfig))
     @ApiConsumes('multipart/form-data')
-    @ApiOperation({ 
+    @ApiOperation({
         summary: 'Tạo hoặc cập nhật chi tiết kỳ nhân (Upsert)',
         description: 'Nếu chưa tồn tại ChiTietKyNhan cho kyNhanId → Tạo mới. Nếu đã tồn tại → Cập nhật.'
     })
