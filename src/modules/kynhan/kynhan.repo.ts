@@ -132,6 +132,7 @@ export class KynhanRepo {
       where: {
         deletedAt: null
       },
+
       orderBy: {
         id: 'asc'
       }

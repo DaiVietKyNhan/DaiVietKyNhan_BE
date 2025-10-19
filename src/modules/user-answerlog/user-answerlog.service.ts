@@ -14,6 +14,7 @@ import {
 import { AchievementCheckerService } from '../achievement/achievement-checker.service'
 import { KyNhanSummaryRepo } from '../kynhan-summary/kynhan-summary.repo'
 import { QuestionRepo } from '../question/question.repo'
+import { UserLandBargeRepo } from '../user-land-barge/user-land-barge.repo'
 import { UserLandRepo } from '../user-land/user-land.repo'
 import {
   AnswerMustBeUniqueAndAtLeastTwoException,
@@ -35,6 +36,7 @@ export class UserAnswerLogService {
     private readonly kyNhanSummaryRepo: KyNhanSummaryRepo,
     private readonly sharedUserRepo: SharedUserRepository,
     private readonly userLandRepo: UserLandRepo,
+    private readonly userLandBargeRepo: UserLandBargeRepo,
 
     private readonly achievementCheckerService: AchievementCheckerService
   ) {}
@@ -416,11 +418,19 @@ export class UserAnswerLogService {
     const currentLand = landsUser[currentIndex]
 
     // Set current land to COMPLETED
-    await this.userLandRepo.update({
-      id: currentLand.id,
-      updatedById: userId,
-      data: { status: 'COMPLETED' }
-    })
+    await Promise.all([
+      this.userLandRepo.update({
+        id: currentLand.id,
+        updatedById: userId,
+        data: { status: 'COMPLETED' }
+      }),
+      this.userLandBargeRepo.updateStatusByUserIdAndLandId({
+        userId,
+        landId,
+        status: true,
+        updatedById: userId
+      })
+    ])
 
     // Handle next land progression
     if (currentIndex + 1 < landsUser.length) {

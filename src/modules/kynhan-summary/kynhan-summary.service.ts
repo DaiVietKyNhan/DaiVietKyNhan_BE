@@ -246,4 +246,13 @@ export class KyNhanSummaryService {
       message: ENTITY_MESSAGE.GET_SUCCESS
     }
   }
+
+  async findListByLandId(landId: number) {
+    const kynhanSummaries = await this.kyNhanSummaryRepo.findByLandId(landId)
+    return {
+      statusCode: HttpStatus.OK,
+      data: kynhanSummaries,
+      message: ENTITY_MESSAGE.GET_SUCCESS
+    }
+  }
 }

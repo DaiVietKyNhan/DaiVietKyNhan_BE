@@ -61,7 +61,9 @@ export const LandWithQuestionAndUserAnswerLogSchema = LandSchema.extend({
   questions: z.array(
     QuestionSchema.pick({
       id: true,
-      text: true
+      text: true,
+      questionType: true,
+      answerOptionType: true
     })
       .extend({
         userAnswerLogs: z.array(

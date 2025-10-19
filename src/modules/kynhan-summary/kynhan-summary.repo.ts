@@ -125,4 +125,29 @@ export class KyNhanSummaryRepo {
       }
     })
   }
+
+  async findByLandId(landId: number): Promise<KyNhanSummaryTypeType[]> {
+    // First, get all kyNhanIds in the land
+    const kyNhans = await this.prismaService.kyNhan.findMany({
+      where: {
+        landId,
+        deletedAt: null
+      },
+      select: {
+        id: true
+      }
+    })
+
+    const kyNhanIds = kyNhans.map((kn) => kn.id)
+
+    // Then, get all KyNhanSummary with those kyNhanIds
+    return this.prismaService.kyNhanSummary.findMany({
+      where: {
+        kyNhanId: {
+          in: kyNhanIds
+        },
+        deletedAt: null
+      }
+    })
+  }
 }

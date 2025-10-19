@@ -9,8 +9,9 @@ import {
   isNotFoundPrismaError,
   isUniqueConstraintPrismaError
 } from 'src/shared/helpers'
-import { LandRepo } from '../land/land.repo'
 import { AchievementCheckerService } from '../achievement/achievement-checker.service'
+import { LandRepo } from '../land/land.repo'
+import { UserLandBargeService } from '../user-land-barge/user-land-barge.service'
 import { UserLandAlreadyExistsException } from './dto/user-land.error'
 import {
   CreateUserLandBodyType,
@@ -24,8 +25,9 @@ export class UserLandService {
     private userLandRepo: UserLandRepo,
     private readonly sharedUserRepo: SharedUserRepository,
     private readonly landRepo: LandRepo,
-    private readonly achievementCheckerService: AchievementCheckerService
-  ) { }
+    private readonly achievementCheckerService: AchievementCheckerService,
+    private readonly userLandBargeServe: UserLandBargeService
+  ) {}
 
   async list(pagination: PaginationQueryType) {
     const data = await this.userLandRepo.list(pagination)
@@ -61,11 +63,14 @@ export class UserLandService {
     const landIds = lands.map((land) => land.id)
 
     // createOrUpdate cho từng vùng đất
-    const createdUserLands =
-      await this.userLandRepo.createOrUpdateWithUserIdAndListLandId({
+    const [createdUserLands] = await Promise.all([
+      this.userLandRepo.createOrUpdateWithUserIdAndListLandId({
         userId,
         landIds
-      })
+      }),
+
+      this.userLandBargeServe.createListForUser({ userId })
+    ])
 
     return {
       statusCode: HttpStatus.OK,
@@ -188,7 +193,15 @@ export class UserLandService {
     }
   }
 
-  async completeLand({ userId, landId, updatedById }: { userId: number; landId: number; updatedById: number }) {
+  async completeLand({
+    userId,
+    landId,
+    updatedById
+  }: {
+    userId: number
+    landId: number
+    updatedById: number
+  }) {
     try {
       // Tìm UserLand record
       const userLand = await this.userLandRepo.findByUserIdAndLandId(userId, landId)

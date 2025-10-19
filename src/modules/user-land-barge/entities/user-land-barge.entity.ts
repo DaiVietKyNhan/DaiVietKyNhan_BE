@@ -62,7 +62,7 @@ export const GetUserLandBargeResSchema = z
   .object({
     statusCode: z.number(),
     data: UserLandBargeSchema.extend({
-      land: LandSchema.optional()
+      land: LandBargeSchema.optional()
     }),
     message: z.string()
   })
@@ -77,7 +77,9 @@ export const GetUserLandBargesResSchema = z
     statusCode: z.number(),
     data: z.array(
       UserLandBargeSchema.extend({
-        landBarge: LandSchema.nullable()
+        landBarge: LandBargeSchema.extend({
+          land: LandSchema.nullable()
+        }).nullable()
       })
     ),
     message: z.string()
@@ -87,8 +89,10 @@ export const GetUserLandBargesResSchema = z
 export const CreateUserLandBargeListResSchema = z.object({
   statusCode: z.number(),
   data: z.array(
-    UserLandBargeSchema.extend({
-      landBarge: LandSchema.nullable()
+    z.object({
+      ...UserLandBargeSchema.extend({
+        landBarge: LandBargeSchema.nullable()
+      }).shape
     })
   ),
   message: z.string()
