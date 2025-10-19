@@ -551,9 +551,9 @@ model ChangePointUserLog {
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   reason   String @db.VarChar()
-  newPoint Int?
-  newCoin  Int?
-  newHeart Int?
+  newPoint Int
+  newCoin  Int
+  newHeart Int
 
   createdBy   User? @relation("ChangePointUserLogCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
   createdById Int?

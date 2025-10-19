@@ -36,6 +36,7 @@ import { UserTestQuestionHomeModule } from './modules/user-test-question-home/us
 import { UserModule } from './modules/user/user.module'
 import { SharedModule } from './shared/shared.module'
 import { WebsocketsModule } from './websockets/websockets.module'
+import { ChangePointUserLogModule } from './modules/change-point-user-log/change-point-user-log.module';
 
 @Module({
   imports: [
@@ -73,7 +74,8 @@ import { WebsocketsModule } from './websockets/websockets.module'
     DashboardModule,
     LandBargeModule,
     UserLandBargeModule,
-    ChiTietKyNhanModule
+    ChiTietKyNhanModule,
+    ChangePointUserLogModule
   ],
 
   controllers: [],
