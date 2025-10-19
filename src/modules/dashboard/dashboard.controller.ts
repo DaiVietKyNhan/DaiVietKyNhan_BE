@@ -5,8 +5,11 @@ import { ZodSerializerDto } from 'nestjs-zod'
 import { DashboardService } from './dashboard.service'
 import {
   DashboardStatsResDTO,
+  LandStatsResDTO,
   PointsStatsResDTO,
-  QuestionStatsResDTO
+  QuestionStatsResDTO,
+  TopPlayersResDTO,
+  UserStatsResDTO
 } from './dto/dashboard.zod-dto'
 
 @ApiTags('Dashboard')
@@ -25,6 +28,24 @@ export class DashboardController {
   @ZodSerializerDto(PointsStatsResDTO)
   getPointsStats() {
     return this.dashboardService.getPointsStats()
+  }
+
+  @Get('user/stats')
+  @ZodSerializerDto(UserStatsResDTO)
+  getUserStats() {
+    return this.dashboardService.getUserStats()
+  }
+
+  @Get('top-user/stats')
+  @ZodSerializerDto(TopPlayersResDTO)
+  getGameUserStats() {
+    return this.dashboardService.getGameUserStats()
+  }
+
+  @Get('land/stats')
+  @ZodSerializerDto(LandStatsResDTO)
+  getLandStats() {
+    return this.dashboardService.getLandStats()
   }
 
   @Get('stats')

@@ -84,4 +84,31 @@ export class DashboardService {
       message: ENTITY_MESSAGE.GET_SUCCESS
     }
   }
+
+  async getUserStats() {
+    const monthlyStats = await this.dashboardRepo.getUserStatsByMonth()
+    return {
+      statusCode: HttpStatus.OK,
+      data: monthlyStats,
+      message: ENTITY_MESSAGE.GET_SUCCESS
+    }
+  }
+
+  async getGameUserStats() {
+    const topPlayers = await this.dashboardRepo.getTopPlayers(10)
+    return {
+      statusCode: HttpStatus.OK,
+      data: topPlayers,
+      message: ENTITY_MESSAGE.GET_SUCCESS
+    }
+  }
+
+  async getLandStats() {
+    const landStats = await this.dashboardRepo.getLandStatistics()
+    return {
+      statusCode: HttpStatus.OK,
+      data: landStats,
+      message: ENTITY_MESSAGE.GET_SUCCESS
+    }
+  }
 }
