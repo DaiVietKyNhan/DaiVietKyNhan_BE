@@ -21,6 +21,7 @@ import { KynhanSummaryModule } from './modules/kynhan-summary/kynhan-summary.mod
 import { KyNhanModule } from './modules/kynhan/kynhan.module'
 import { LandBargeModule } from './modules/land-barge/land-barge.module'
 import { LandModule } from './modules/land/land.module'
+import { LetterModule } from './modules/letter/letter.module'
 import { MediaModule } from './modules/media/media.module'
 import { MoTaKyNhanModule } from './modules/mo-ta-ky-nhan/mo-ta-ky-nhan.module'
 import { PermissionModule } from './modules/permission/permission.module'
@@ -75,7 +76,9 @@ import { ChangePointUserLogModule } from './modules/change-point-user-log/change
     LandBargeModule,
     UserLandBargeModule,
     ChiTietKyNhanModule,
+    LetterModule
     ChangePointUserLogModule
+
   ],
 
   controllers: [],
@@ -92,4 +95,4 @@ import { ChangePointUserLogModule } from './modules/change-point-user-log/change
     }
   ]
 })
-export class AppModule {}
+export class AppModule { }
