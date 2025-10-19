@@ -62,3 +62,12 @@ export const GetLetterParamsSchema = z.object({
     letterId: checkIdSchema(ENTITY_MESSAGE.ID_INVALID)
 })
 
+// Types
+export type CreateLetterBodyType = z.infer<typeof CreateLetterBodySchema>
+export type UpdateLetterBodyType = z.infer<typeof UpdateLetterBodySchema>
+export type LetterType = z.infer<typeof LetterSchema>
+
+// Fields for parseQs
+type LetterFieldType = keyof z.infer<typeof LetterSchema>
+export const LETTER_FIELDS = Object.keys(LetterSchema.shape) as LetterFieldType[]
+
