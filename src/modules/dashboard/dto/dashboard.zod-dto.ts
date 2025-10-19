@@ -1,5 +1,25 @@
-import { createZodDto } from 'nestjs-zod'
+import { extendZodWithOpenApi } from '@anatine/zod-openapi'
+import { createZodDto, patchNestJsSwagger } from 'nestjs-zod'
 import { z } from 'zod'
+
+extendZodWithOpenApi(z)
+patchNestJsSwagger()
+
+// User play stats (current + percent change vs previous month)
+export const UserPlayStatsSchema = z.object({
+  totalUser: z.number(),
+  totalPlays: z.number(),
+  ratemonthPre: z.number(), // percent change in user count vs previous month
+  ratePlayPre: z.number() // percent change in total plays vs previous month
+})
+
+export const UserPlayStatsResSchema = z.object({
+  statusCode: z.number(),
+  data: UserPlayStatsSchema,
+  message: z.string()
+})
+
+export class UserPlayStatsResDTO extends createZodDto(UserPlayStatsResSchema) {}
 
 const DashboardStatSchema = z.object({
   value: z.union([z.number(), z.string()]),
@@ -56,8 +76,7 @@ export const MonthlyUserStatsSchema = z.object({
   newUsers: z.number(),
   changePercent: z.number(),
   totalPlays: z.number(),
-  passRate: z.number(),
-  landCompletionRate: z.number()
+  passRate: z.number()
 })
 
 export const UserStatsResSchema = z.object({

@@ -9,6 +9,7 @@ import {
   PointsStatsResDTO,
   QuestionStatsResDTO,
   TopPlayersResDTO,
+  UserPlayStatsResDTO,
   UserStatsResDTO
 } from './dto/dashboard.zod-dto'
 
@@ -30,19 +31,25 @@ export class DashboardController {
     return this.dashboardService.getPointsStats()
   }
 
-  @Get('user/stats')
-  @ZodSerializerDto(UserStatsResDTO)
-  getUserStats() {
-    return this.dashboardService.getUserStats()
+  @Get('user-play/stats')
+  @ZodSerializerDto(UserPlayStatsResDTO)
+  getUserPlayStats() {
+    return this.dashboardService.getUserPlayStats()
   }
 
-  @Get('top-user/stats')
+  @Get('user-play/months')
+  @ZodSerializerDto(UserStatsResDTO)
+  getUserStatsMonth() {
+    return this.dashboardService.getUserStatsMonth()
+  }
+
+  @Get('user-play/top-user/stats')
   @ZodSerializerDto(TopPlayersResDTO)
   getGameUserStats() {
     return this.dashboardService.getGameUserStats()
   }
 
-  @Get('land/stats')
+  @Get('user-play/land/stats')
   @ZodSerializerDto(LandStatsResDTO)
   getLandStats() {
     return this.dashboardService.getLandStats()
