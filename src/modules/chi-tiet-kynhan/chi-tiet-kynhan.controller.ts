@@ -81,7 +81,6 @@ export class ChiTietKyNhanController {
     @Post('full')
     @ZodSerializerDto(CreateChiTietKyNhanCompleteResDTO)
     @UseInterceptors(FileFieldsInterceptor([
-        { name: 'imgUrl', maxCount: 1 },
         { name: 'thuVienAnh', maxCount: 10 }
     ], CloudinaryImageUploadConfig))
     @ApiConsumes('multipart/form-data')
@@ -94,18 +93,13 @@ export class ChiTietKyNhanController {
     createFull(
         @Body() body: any,
         @UploadedFiles() files: {
-            imgUrl?: Express.Multer.File[],
             thuVienAnh?: Express.Multer.File[]
         },
         @ActiveUser('userId') userId: number
     ) {
         // Parse form data
         const payload: CreateChiTietKyNhanCompleteBodyDTO = {
-            kyNhanId: body.kyNhanId || '',
-            ten: body.ten || '',
-            tinhCach: body.tinhCach || '',
-            quanHe: body.quanHe || null,
-            trichDoan: body.trichDoan || '',
+            kyNhanId: body.kyNhanId,
             thamKhao: body.thamKhao || null,
             boiCanhLichSuVaXuatThan: body.boiCanhLichSuVaXuatThan ? JSON.parse(body.boiCanhLichSuVaXuatThan) : [],
             suSachVietGi: body.suSachVietGi ? JSON.parse(body.suSachVietGi) : [],
@@ -116,7 +110,6 @@ export class ChiTietKyNhanController {
         return this.chiTietKyNhanService.createFull({
             data: payload,
             createdById: userId,
-            imgFile: files.imgUrl?.[0],
             thuVienAnhFiles: files.thuVienAnh || []
         })
     }
@@ -124,7 +117,6 @@ export class ChiTietKyNhanController {
     @Put(':chiTietKyNhanId/full')
     @ZodSerializerDto(UpdateChiTietKyNhanCompleteResDTO)
     @UseInterceptors(FileFieldsInterceptor([
-        { name: 'imgUrl', maxCount: 1 },
         { name: 'thuVienAnh', maxCount: 10 }
     ], CloudinaryImageUploadConfig))
     @ApiConsumes('multipart/form-data')
@@ -138,17 +130,12 @@ export class ChiTietKyNhanController {
         @Body() body: any,
         @Param() params: GetChiTietKyNhanParamsDTO,
         @UploadedFiles() files: {
-            imgUrl?: Express.Multer.File[],
             thuVienAnh?: Express.Multer.File[]
         },
         @ActiveUser('userId') userId: number
     ) {
         // Parse form data
         const payload: UpdateChiTietKyNhanCompleteBodyDTO = {
-            ten: body.ten || undefined,
-            tinhCach: body.tinhCach || undefined,
-            quanHe: body.quanHe !== undefined ? body.quanHe : null,
-            trichDoan: body.trichDoan || undefined,
             thamKhao: body.thamKhao !== undefined ? body.thamKhao : null,
             boiCanhLichSuVaXuatThan: body.boiCanhLichSuVaXuatThan ? JSON.parse(body.boiCanhLichSuVaXuatThan) : undefined,
             suSachVietGi: body.suSachVietGi ? JSON.parse(body.suSachVietGi) : undefined,
@@ -160,15 +147,12 @@ export class ChiTietKyNhanController {
             data: payload,
             id: params.chiTietKyNhanId,
             updatedById: userId,
-            imgFile: files.imgUrl?.[0],
             thuVienAnhFiles: files.thuVienAnh || []
         })
     }
 
     @Put(':chiTietKyNhanId')
     @ZodSerializerDto(UpdateChiTietKyNhanResDTO)
-    @UseInterceptors(FileInterceptor('imgUrl', CloudinaryImageUploadConfig))
-    @ApiConsumes('multipart/form-data')
     @ApiOperation({ summary: 'Cập nhật chi tiết kỳ nhân' })
     @ApiResponse({
         status: 200,
@@ -176,25 +160,14 @@ export class ChiTietKyNhanController {
         type: UpdateChiTietKyNhanResDTO
     })
     update(
-        @Body() body: any,
+        @Body() body: UpdateChiTietKyNhanBodyDTO,
         @Param() params: GetChiTietKyNhanParamsDTO,
-        @UploadedFile() imgFile: Express.Multer.File,
         @ActiveUser('userId') userId: number
     ) {
-        // Parse multipart form data và convert types
-        const payload: UpdateChiTietKyNhanBodyDTO = {}
-        if (body.ten !== undefined) payload.ten = body.ten
-        if (body.tinhCach !== undefined) payload.tinhCach = body.tinhCach
-        if (body.quanHe !== undefined) payload.quanHe = body.quanHe
-        if (body.trichDoan !== undefined) payload.trichDoan = body.trichDoan
-        if (body.thamKhao !== undefined) payload.thamKhao = body.thamKhao
-        if (body.imgUrl !== undefined && !imgFile) payload.imgUrl = body.imgUrl
-
         return this.chiTietKyNhanService.update({
-            data: payload,
+            data: body,
             id: params.chiTietKyNhanId,
-            updatedById: userId,
-            imgFile
+            updatedById: userId
         })
     }
 

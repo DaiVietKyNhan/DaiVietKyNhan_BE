@@ -212,14 +212,4 @@ export class ChiTietKyNhanRepo {
         }) as Promise<ChiTietKyNhanType[]>
     }
 
-    findExistByNameAndKyNhan(ten: string, kyNhanId: number): Promise<ChiTietKyNhanType | null> {
-        return this.prismaService.chiTietKyNhan.findFirst({
-            where: {
-                ten,
-                kyNhanId,
-                deletedAt: null
-            },
-            include: this.includeWithRelations
-        }) as Promise<ChiTietKyNhanType | null>
-    }
 }

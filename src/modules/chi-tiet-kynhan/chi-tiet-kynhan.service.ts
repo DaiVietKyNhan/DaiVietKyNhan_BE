@@ -62,50 +62,15 @@ export class ChiTietKyNhanService {
 
     async create({
         data,
-        createdById,
-        imgFile
+        createdById
     }: {
         data: CreateChiTietKyNhanBodyType
         createdById: number
-        imgFile?: Express.Multer.File
     }) {
-        let uploadedImgUrl: string | null = null
-
         try {
-            // Kiểm tra xem đã có chi tiết với tên này cho kỳ nhân này chưa
-            const isDuplicateName = data.ten
-                ? await this.chiTietKyNhanRepo.findExistByNameAndKyNhan(data.ten, data.kyNhanId)
-                : null
-            if (isDuplicateName) {
-                throw ChiTietKyNhanAlreadyExistsException
-            }
-
-            // Upload file nếu có
-            let imgUrl = data.imgUrl
-
-            if (imgFile) {
-                try {
-                    const uploadRes = await this.uploadService.uploadFileByType(
-                        imgFile,
-                        'chi-tiet-kynhan',
-                        'images'
-                    )
-                    imgUrl = uploadRes.url
-                    uploadedImgUrl = uploadRes.url
-                } catch (uploadError) {
-                    throw uploadError
-                }
-            }
-
-            // Tạo data object để create, bao gồm imgUrl nếu có upload file
-            const createData = { ...data }
-            if (imgUrl !== undefined) {
-                createData.imgUrl = imgUrl
-            }
-
             const chiTietKyNhan = await this.chiTietKyNhanRepo.create({
                 createdById,
-                data: createData
+                data
             })
 
             return {
@@ -114,15 +79,6 @@ export class ChiTietKyNhanService {
                 message: ENTITY_MESSAGE.CREATE_SUCCESS
             }
         } catch (error) {
-            // Cleanup uploaded file nếu có lỗi sau khi upload
-            if (uploadedImgUrl && imgFile) {
-                try {
-                    await this.uploadService.deleteFile(uploadedImgUrl, 'chi-tiet-kynhan/images')
-                } catch (cleanupError) {
-                    console.error('Failed to cleanup uploaded image after error:', cleanupError)
-                }
-            }
-
             if (isNotFoundPrismaError(error)) {
                 throw NotFoundRecordException
             }
@@ -139,72 +95,23 @@ export class ChiTietKyNhanService {
     async update({
         id,
         data,
-        updatedById,
-        imgFile
+        updatedById
     }: {
         id: number
         data: UpdateChiTietKyNhanBodyType
         updatedById: number
-        imgFile?: Express.Multer.File
     }) {
-        let uploadedImgUrl: string | null = null
-        let oldImgUrl: string | null = null
-
         try {
             const existing = await this.chiTietKyNhanRepo.findById(id)
             if (!existing) {
                 throw NotFoundRecordException
             }
 
-            // Kiểm tra tên trùng lặp nếu có thay đổi tên
-            if (data.ten && data.ten !== existing.ten) {
-                const isDuplicateName = await this.chiTietKyNhanRepo.findExistByNameAndKyNhan(
-                    data.ten,
-                    data.kyNhanId || existing.kyNhanId
-                )
-                if (isDuplicateName && isDuplicateName.id !== id) {
-                    throw ChiTietKyNhanAlreadyExistsException
-                }
-            }
-
-            // Upload file nếu có
-            let imgUrl = data.imgUrl
-
-            if (imgFile) {
-                try {
-                    const uploadRes = await this.uploadService.uploadFileByType(
-                        imgFile,
-                        'chi-tiet-kynhan',
-                        'images'
-                    )
-                    imgUrl = uploadRes.url
-                    uploadedImgUrl = uploadRes.url
-                    oldImgUrl = existing.imgUrl
-                } catch (uploadError) {
-                    throw uploadError
-                }
-            }
-
-            // Tạo data object để update, bao gồm imgUrl nếu có upload file
-            const updateData = { ...data }
-            if (imgUrl !== undefined) {
-                updateData.imgUrl = imgUrl
-            }
-
             const updatedChiTietKyNhan = await this.chiTietKyNhanRepo.update({
                 id,
                 updatedById,
-                data: updateData
+                data
             })
-
-            // Cleanup file cũ nếu upload thành công
-            if (oldImgUrl && oldImgUrl !== imgUrl) {
-                try {
-                    await this.uploadService.deleteFile(oldImgUrl, 'chi-tiet-kynhan/images')
-                } catch (cleanupError) {
-                    console.error('Failed to cleanup old image:', cleanupError)
-                }
-            }
 
             return {
                 statusCode: HttpStatus.OK,
@@ -212,14 +119,6 @@ export class ChiTietKyNhanService {
                 message: ENTITY_MESSAGE.UPDATE_SUCCESS
             }
         } catch (error) {
-            // Cleanup uploaded file nếu có lỗi sau khi upload
-            if (uploadedImgUrl && imgFile) {
-                try {
-                    await this.uploadService.deleteFile(uploadedImgUrl, 'chi-tiet-kynhan/images')
-                } catch (cleanupError) {
-                    console.error('Failed to cleanup uploaded image after error:', cleanupError)
-                }
-            }
             if (isNotFoundPrismaError(error)) {
                 throw NotFoundRecordException
             }
@@ -255,40 +154,16 @@ export class ChiTietKyNhanService {
     async createFull({
         data,
         createdById,
-        imgFile,
         thuVienAnhFiles
     }: {
         data: CreateChiTietKyNhanCompleteBodyType
         createdById: number
-        imgFile?: Express.Multer.File
         thuVienAnhFiles?: Express.Multer.File[]
     }) {
-        let uploadedImgUrl: string | null = null
         const uploadedThuVienAnhFiles: Array<{ url: string; file: Express.Multer.File }> = []
         const uploadWarnings: Array<{ fileName: string; error: string }> = []
 
         try {
-            // Kiểm tra xem đã có chi tiết với tên này cho kỳ nhân này chưa
-            const isDuplicateName = data.ten
-                ? await this.chiTietKyNhanRepo.findExistByNameAndKyNhan(data.ten, data.kyNhanId)
-                : null
-            if (isDuplicateName) {
-                throw ChiTietKyNhanAlreadyExistsException
-            }
-
-            // Upload ảnh chính của chi tiết kỳ nhân nếu có
-            if (imgFile) {
-                try {
-                    const uploadRes = await this.uploadService.uploadFileByType(
-                        imgFile,
-                        'chi-tiet-kynhan',
-                        'images'
-                    )
-                    uploadedImgUrl = uploadRes.url
-                } catch (uploadError) {
-                    throw uploadError
-                }
-            }
 
             // Upload thư viện ảnh nếu có
             if (thuVienAnhFiles && thuVienAnhFiles.length > 0) {
@@ -339,12 +214,7 @@ export class ChiTietKyNhanService {
                 const chiTietKyNhan = await tx.chiTietKyNhan.create({
                     data: {
                         kyNhanId: data.kyNhanId,
-                        ten: data.ten,
-                        tinhCach: data.tinhCach,
-                        quanHe: data.quanHe,
-                        trichDoan: data.trichDoan,
                         thamKhao: data.thamKhao,
-                        imgUrl: uploadedImgUrl || null,
                         createdById
                     }
                 })
@@ -448,7 +318,6 @@ export class ChiTietKyNhanService {
         } catch (error) {
             // Cleanup uploaded files nếu có lỗi
             const filesToCleanup = [
-                ...(uploadedImgUrl ? [uploadedImgUrl] : []),
                 ...uploadedThuVienAnhFiles.map(item => item.url)
             ]
 
@@ -477,17 +346,13 @@ export class ChiTietKyNhanService {
         data,
         id,
         updatedById,
-        imgFile,
         thuVienAnhFiles
     }: {
         data: UpdateChiTietKyNhanCompleteBodyType
         id: number
         updatedById: number
-        imgFile?: Express.Multer.File
         thuVienAnhFiles?: Express.Multer.File[]
     }) {
-        let uploadedImgUrl: string | null = null
-        let oldImgUrl: string | null = null
         const uploadedThuVienAnhFiles: Array<{ url: string; file: Express.Multer.File }> = []
         const uploadWarnings: Array<{ fileName: string; error: string }> = []
 
@@ -498,31 +363,7 @@ export class ChiTietKyNhanService {
                 throw NotFoundRecordException
             }
 
-            // Kiểm tra tên trùng lặp nếu có thay đổi tên
-            if (data.ten && data.ten !== existing.ten) {
-                const isDuplicateName = await this.chiTietKyNhanRepo.findExistByNameAndKyNhan(
-                    data.ten,
-                    existing.kyNhanId
-                )
-                if (isDuplicateName && isDuplicateName.id !== id) {
-                    throw ChiTietKyNhanAlreadyExistsException
-                }
-            }
 
-            // Upload ảnh chính của chi tiết kỳ nhân nếu có
-            if (imgFile) {
-                try {
-                    const uploadRes = await this.uploadService.uploadFileByType(
-                        imgFile,
-                        'chi-tiet-kynhan',
-                        'images'
-                    )
-                    uploadedImgUrl = uploadRes.url
-                    oldImgUrl = existing.imgUrl // Lưu URL cũ để cleanup sau
-                } catch (uploadError) {
-                    throw uploadError
-                }
-            }
 
             // Upload thư viện ảnh mới nếu có
             if (thuVienAnhFiles && thuVienAnhFiles.length > 0) {
@@ -573,12 +414,7 @@ export class ChiTietKyNhanService {
                 const updateData: any = {
                     updatedById
                 }
-                if (data.ten !== undefined) updateData.ten = data.ten
-                if (data.tinhCach !== undefined) updateData.tinhCach = data.tinhCach
-                if (data.quanHe !== undefined) updateData.quanHe = data.quanHe
-                if (data.trichDoan !== undefined) updateData.trichDoan = data.trichDoan
                 if (data.thamKhao !== undefined) updateData.thamKhao = data.thamKhao
-                if (uploadedImgUrl !== null) updateData.imgUrl = uploadedImgUrl
 
                 const chiTietKyNhan = await tx.chiTietKyNhan.update({
                     where: { id },
@@ -702,14 +538,6 @@ export class ChiTietKyNhanService {
                 return chiTietKyNhan
             })
 
-            // Cleanup file cũ nếu upload thành công
-            if (oldImgUrl && oldImgUrl !== uploadedImgUrl) {
-                try {
-                    await this.uploadService.deleteFile(oldImgUrl, 'chi-tiet-kynhan/images')
-                } catch (cleanupError) {
-                    console.error('Failed to cleanup old image:', cleanupError)
-                }
-            }
 
             // Fetch lại với đầy đủ relations
             const chiTietKyNhanWithRelations = await this.chiTietKyNhanRepo.findById(id)
@@ -724,7 +552,6 @@ export class ChiTietKyNhanService {
         } catch (error) {
             // Cleanup uploaded files nếu có lỗi
             const filesToCleanup = [
-                ...(uploadedImgUrl ? [uploadedImgUrl] : []),
                 ...uploadedThuVienAnhFiles.map(item => item.url)
             ]
 
