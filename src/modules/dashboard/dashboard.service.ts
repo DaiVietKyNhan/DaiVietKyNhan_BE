@@ -75,4 +75,13 @@ export class DashboardService {
       message: ENTITY_MESSAGE.GET_SUCCESS
     }
   }
+
+  async getPointsStats() {
+    const pointsStats = await this.dashboardRepo.getPointsStats()
+    return {
+      statusCode: HttpStatus.OK,
+      data: pointsStats,
+      message: ENTITY_MESSAGE.GET_SUCCESS
+    }
+  }
 }

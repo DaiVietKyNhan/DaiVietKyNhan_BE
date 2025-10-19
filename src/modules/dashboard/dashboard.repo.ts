@@ -154,4 +154,30 @@ export class DashboardRepo {
       rateCorrect
     }
   }
+
+  async getPointsStats() {
+    // Aggregate average and max points for active (non-deleted) users
+    const agg = await this.prismaService.user.aggregate({
+      where: {
+        deletedAt: null
+      },
+      _avg: { point: true },
+      _max: { point: true }
+    })
+
+    const averagePoint = Math.round(((agg._avg.point ?? 0) + Number.EPSILON) * 100) / 100
+    const maxPoint = agg._max.point ?? 0
+
+    // Threshold = averagePoint + 35%
+    const threshold = averagePoint * 1.35
+
+    const totalUserLargePoint = await this.prismaService.user.count({
+      where: {
+        deletedAt: null,
+        point: { gt: Math.floor(threshold) }
+      }
+    })
+
+    return { averagePoint, maxPoint, totalUserLargePoint }
+  }
 }

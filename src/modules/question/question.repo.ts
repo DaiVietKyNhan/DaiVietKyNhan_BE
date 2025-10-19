@@ -184,7 +184,10 @@ export class QuestionRepo {
           }
 
           // Calculate correct rate
-          rate = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100 * 100) / 100 : 0
+          rate =
+            totalAttempts > 0
+              ? Math.round((totalCorrect / totalAttempts) * 100 * 100) / 100
+              : 0
         }
 
         return {

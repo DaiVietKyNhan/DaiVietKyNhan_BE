@@ -3,7 +3,11 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 import { ZodSerializerDto } from 'nestjs-zod'
 
 import { DashboardService } from './dashboard.service'
-import { DashboardStatsResDTO, QuestionStatsResDTO } from './dto/dashboard.zod-dto'
+import {
+  DashboardStatsResDTO,
+  PointsStatsResDTO,
+  QuestionStatsResDTO
+} from './dto/dashboard.zod-dto'
 
 @Controller('dashboard')
 @ApiBearerAuth()
@@ -20,5 +24,11 @@ export class DashboardController {
   @ZodSerializerDto(QuestionStatsResDTO)
   getQuestionStats() {
     return this.dashboardService.getQuestionStats()
+  }
+
+  @Get('point/stats')
+  @ZodSerializerDto(PointsStatsResDTO)
+  getPointsStats() {
+    return this.dashboardService.getPointsStats()
   }
 }

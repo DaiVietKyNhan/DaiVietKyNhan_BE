@@ -33,3 +33,18 @@ export const QuestionStatsResSchema = z.object({
 
 export class DashboardStatsResDTO extends createZodDto(DashboardStatsResSchema) {}
 export class QuestionStatsResDTO extends createZodDto(QuestionStatsResSchema) {}
+
+// Points stats
+export const PointsStatsSchema = z.object({
+  averagePoint: z.number(),
+  maxPoint: z.number(),
+  totalUserLargePoint: z.number()
+})
+
+export const PointsStatsResSchema = z.object({
+  statusCode: z.number(),
+  data: PointsStatsSchema,
+  message: z.string()
+})
+
+export class PointsStatsResDTO extends createZodDto(PointsStatsResSchema) {}
