@@ -1,4 +1,5 @@
 import { checkIdSchema } from '@/common/utils/id.validation'
+import { MotaKyNhanSchema } from '@/modules/mo-ta-ky-nhan/entities/mo-ta-ky-nhan.entity'
 import { extendZodWithOpenApi } from '@anatine/zod-openapi'
 import { patchNestJsSwagger } from 'nestjs-zod'
 import { z } from 'zod'
@@ -90,18 +91,20 @@ export const CreateKyNhanCompleteBodySchema = z.object({
       mimeType: z.string().optional()
     })).optional()
   })
-}).strict()
+  .strict()
 
 export const CreateKyNhanCompleteResSchema = z.object({
   statusCode: z.number(),
   data: KyNhanSchema.extend({
-    chiTietKyNhans: z.array(z.object({
-      id: z.number(),
-      ten: z.string(),
-      tinhCach: z.string(),
-      quanHe: z.string().nullable(),
-      trichDoan: z.string()
-    }))
+    chiTietKyNhans: z.array(
+      z.object({
+        id: z.number(),
+        ten: z.string(),
+        tinhCach: z.string(),
+        quanHe: z.string().nullable(),
+        trichDoan: z.string()
+      })
+    )
   }),
   message: z.string(),
   uploadWarnings: z.array(z.string()).optional()
@@ -109,7 +112,8 @@ export const CreateKyNhanCompleteResSchema = z.object({
 
 export const GetKyNhansUserSchema = z.array(
   KyNhanSchema.extend({
-    unlocked: z.boolean().default(false)
+    unlocked: z.boolean().default(false),
+    motaKyNhan: MotaKyNhanSchema.nullable().optional()
   })
 )
 

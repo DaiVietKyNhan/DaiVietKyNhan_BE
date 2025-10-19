@@ -23,6 +23,7 @@ import {
   CreateKyNhanSummaryBodyDTO,
   CreateKyNhanSummaryResDTO,
   GetKyNhanSummariesResDTO,
+  GetKyNhanSummaryByLandIdParamsDTO,
   GetKyNhanSummaryByQuesIdParamsDTO,
   GetKyNhanSummaryParamsDTO,
   GetKyNhanSummaryResDTO,
@@ -52,6 +53,12 @@ export class KyNhanSummaryController {
   @ZodSerializerDto(GetKyNhanSummariesResDTO)
   findByQuestionId(@Param() params: GetKyNhanSummaryByQuesIdParamsDTO) {
     return this.kyNhanSummaryService.findByQuestionId(params.questionId)
+  }
+
+  @Get('land/:landId')
+  @ZodSerializerDto(GetKyNhanSummariesResDTO)
+  findListByLandId(@Param() params: GetKyNhanSummaryByLandIdParamsDTO) {
+    return this.kyNhanSummaryService.findListByLandId(params.landId)
   }
 
   @Post()

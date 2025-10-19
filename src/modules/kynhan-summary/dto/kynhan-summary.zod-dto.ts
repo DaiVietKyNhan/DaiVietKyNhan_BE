@@ -4,6 +4,7 @@ import {
   CreateKyNhanSummaryResSchema,
   GetKyNhanByQuesIdSummaryParamsSchema,
   GetKyNhanSummariesResSchema,
+  GetKyNhanSummaryByLandIdParamsSchema,
   GetKyNhanSummaryParamsSchema,
   GetKyNhanSummaryResSchema,
   GetKyNhanSummarysByUserResSchema,
@@ -33,6 +34,10 @@ export class GetKyNhanSummaryParamsDTO extends createZodDto(
 
 export class GetKyNhanSummaryByQuesIdParamsDTO extends createZodDto(
   GetKyNhanByQuesIdSummaryParamsSchema
+) {}
+
+export class GetKyNhanSummaryByLandIdParamsDTO extends createZodDto(
+  GetKyNhanSummaryByLandIdParamsSchema
 ) {}
 
 export class GetKyNhanSummaryResDTO extends createZodDto(GetKyNhanSummaryResSchema) {}
