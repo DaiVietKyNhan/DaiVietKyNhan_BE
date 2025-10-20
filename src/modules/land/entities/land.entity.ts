@@ -14,6 +14,7 @@ export const LandSchema = z
     id: z.number(),
     name: z.string().max(500),
     order: z.number().min(0),
+    startDate: z.date().nullable(),
     totalQuestion: z.number().min(0),
     createdById: z.number().nullable(),
     updatedById: z.number().nullable(),
@@ -27,6 +28,7 @@ export const LandSchema = z
 export const CreateLandBodySchema = LandSchema.pick({
   name: true,
   order: true,
+  startDate: true,
   totalQuestion: true
 }).strict()
 

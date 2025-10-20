@@ -8,7 +8,7 @@ import {
   isNotFoundPrismaError,
   isUniqueConstraintPrismaError
 } from 'src/shared/helpers'
-import { LandAlreadyExistsException } from './dto/land.error'
+import { LandAlreadyExistsException, LandNotOpenedException } from './dto/land.error'
 import { CreateLandBodyType, UpdateLandBodyType } from './entities/land.entity'
 import { LandRepo } from './land.repo'
 
@@ -39,8 +39,19 @@ export class LandService {
 
   async getQuestionsByLandId(landId: number, userId: number) {
     const existLand = await this.landRepo.findById(landId)
+
     if (!existLand) {
       throw NotFoundRecordException
+    }
+    const date = new Date()
+    const vnString = date.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' })
+    const vnDate = new Date(vnString)
+    vnDate.setHours(vnDate.getHours() + 7)
+    const time = vnDate.getTime()
+
+    // check xem co date ko, neu co thi so sanh voi ngay hien tai
+    if (existLand.startDate && existLand.startDate < vnDate) {
+      throw LandNotOpenedException
     }
 
     const landWithQuestionsAndAnswers = await this.landRepo.getQuestionsByLandId(
