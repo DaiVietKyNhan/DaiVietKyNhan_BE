@@ -51,7 +51,6 @@ export class LandService {
     const date = new Date()
     const vnString = date.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' })
     const vnDate = new Date(vnString)
-    vnDate.setHours(vnDate.getHours() + 7)
 
     console.log('now: vnDate =-==============-==========-=', vnDate)
 
