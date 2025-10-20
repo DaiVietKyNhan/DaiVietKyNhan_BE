@@ -104,7 +104,10 @@ async function createAchievements() {
         // Tạo thành tựu Kỳ Ấn
         for (const achievement of kyNhanAchievements) {
             await prisma.achievement.create({
-                data: achievement
+                data: {
+                    ...achievement,
+                    createdById: 1 // Admin user
+                }
             })
             console.log(`Created achievement: ${achievement.name}`)
         }
@@ -112,14 +115,20 @@ async function createAchievements() {
         // Tạo thành tựu Land
         for (const achievement of landAchievements) {
             await prisma.achievement.create({
-                data: achievement
+                data: {
+                    ...achievement,
+                    createdById: 1 // Admin user
+                }
             })
             console.log(`Created achievement: ${achievement.name}`)
         }
 
         // Tạo thành tựu thu thập tất cả vùng đất
         await prisma.achievement.create({
-            data: allLandsAchievement
+            data: {
+                ...allLandsAchievement,
+                createdById: 1 // Admin user
+            }
         })
         console.log(`Created achievement: ${allLandsAchievement.name}`)
 

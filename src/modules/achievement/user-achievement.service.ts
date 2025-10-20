@@ -75,11 +75,31 @@ export class UserAchievementService {
     }
 
     async findByUserId(userId: number) {
-        const userAchievements = await this.userAchievementRepo.findByUserId(userId)
+        // First, check if user has any achievements
+        let userAchievements = await this.userAchievementRepo.findByUserId(userId)
+
+        // If user has no achievements, initialize them automatically
+        if (!userAchievements || userAchievements.length === 0) {
+            try {
+                console.log(`Initializing achievements for user ${userId}`)
+                const result = await this.userAchievementRepo.createManyForUserFromActiveAchievements(userId, userId)
+                console.log(`Initialized ${result.count} achievements for user ${userId}`)
+
+                if (result.count === 0) {
+                    console.log('No active achievements found to initialize for user')
+                }
+
+                // Fetch again after initialization
+                userAchievements = await this.userAchievementRepo.findByUserId(userId)
+            } catch (error) {
+                console.error('Failed to initialize achievements for user:', error)
+                // Continue with empty array if initialization fails
+            }
+        }
 
         return {
             statusCode: HttpStatus.OK,
-            data: userAchievements,
+            data: userAchievements || [],
             message: ENTITY_MESSAGE.GET_LIST_SUCCESS
         }
     }

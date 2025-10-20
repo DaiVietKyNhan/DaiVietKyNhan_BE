@@ -188,7 +188,7 @@ export class AchievementService {
         }
     }
 
-    async getAchievementsByType(type: 'KY_NHAN_SUMMARY_COUNT' | 'LAND_COLLECTION') {
+    async getAchievementsByType(type: 'KY_NHAN_SUMMARY_COUNT' | 'LAND_COLLECTION' | 'ALL_LANDS_COLLECTED') {
         const achievements = await this.achievementRepo.findByType(type)
 
         return {
