@@ -2,7 +2,7 @@ import { ActiveUser } from '@/common/decorators/active-user.decorator'
 import { PaginationQueryDTO } from '@/shared/dtos/request.dto'
 import { PaginationResponseSchema } from '@/shared/models/response.model'
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
-import { ApiBearerAuth } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 import { ZodSerializerDto } from 'nestjs-zod'
 import {
   CreateLandBodyDTO,
@@ -29,6 +29,7 @@ export class LandController {
   }
 
   @Get('user/question/:landId')
+  @ApiParam({ name: 'landId', description: 'ID của Land' })
   @ZodSerializerDto(GetLandWithQuestionAndUserAnswerLogResDTO)
   getQuestionsByLandId(
     @Param() params: GetParamsLandDTO,
@@ -38,6 +39,7 @@ export class LandController {
   }
 
   @Get(':landId')
+  @ApiParam({ name: 'landId', description: 'ID của Land' })
   @ZodSerializerDto(GetLandResDTO)
   findById(@Param() params: GetParamsLandDTO) {
     return this.landService.findById(params.landId)

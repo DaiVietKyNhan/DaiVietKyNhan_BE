@@ -49,8 +49,14 @@ export class LandService {
     vnDate.setHours(vnDate.getHours() + 7)
     const time = vnDate.getTime()
 
+    // console.log('now < start date : ', existLand.startDate < vnDate)
     // check xem co date ko, neu co thi so sanh voi ngay hien tai
-    if (existLand.startDate && existLand.startDate < vnDate) {
+    if (
+      existLand.startDate !== null &&
+      existLand.startDate.getTime() > vnDate.getTime()
+    ) {
+      console.log(' vao so sanh ')
+
       throw LandNotOpenedException
     }
 
