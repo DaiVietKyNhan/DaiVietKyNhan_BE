@@ -181,6 +181,14 @@ export class LandRepo {
                 text: true,
                 isCorrect: true
               }
+            },
+            kynhanSummaries: {
+              select: {
+                id: true,
+                summary: true,
+                kyNhanId: true,
+                imgUrl: true
+              }
             }
           },
           orderBy: { id: 'asc' }

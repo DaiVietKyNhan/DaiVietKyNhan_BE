@@ -46,7 +46,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly googleService: GoogleService
-  ) {}
+  ) { }
 
   // @Post('otp')
   // @IsPublic()
@@ -195,8 +195,10 @@ export class AuthController {
     try {
       const data = await this.googleService.googleCallback({ code, state })
 
+
       return res.redirect(
         `${envConfig.GOOGLE_CLIENT_REDIRECT_URI}?accessToken=${data.accessToken}&refreshToken=${data.refreshToken}&user=${JSON.stringify(data.user)}`
+
       )
     } catch (error) {
       const message =
