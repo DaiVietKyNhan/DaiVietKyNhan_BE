@@ -9,6 +9,8 @@
   "scripts": {
     "init-seed-data": "ts-node initialScript/index.ts",
     "reset-sequences": "ts-node initialScript/reset-sequences.ts",
+    "create-achievements": "ts-node initialScript/create-achievements.ts",
+    "create-rewards": "ts-node initialScript/create-rewards.ts",
     "create-permissions": "ts-node initialScript/create-permissions.ts",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

@@ -886,6 +886,7 @@ enum UserLandStatus {
 enum AchievementType {
   KY_NHAN_SUMMARY_COUNT
   LAND_COLLECTION
+  ALL_LANDS_COLLECTED
 }
 
 enum UserAchievementStatus {

@@ -8,7 +8,7 @@ export const AchievementSchema = z
         id: z.number(),
         name: z.string().max(500),
         description: z.string().max(1000).nullable(),
-        type: z.enum(['KY_NHAN_SUMMARY_COUNT', 'LAND_COLLECTION']),
+        type: z.enum(['KY_NHAN_SUMMARY_COUNT', 'LAND_COLLECTION', 'ALL_LANDS_COLLECTED']),
         requirement: z.number().min(1),
         reward: z.number().min(0),
         isActive: z.boolean(),

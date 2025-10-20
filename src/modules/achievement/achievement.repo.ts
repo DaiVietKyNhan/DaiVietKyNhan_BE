@@ -168,7 +168,7 @@ export class AchievementRepo {
         })
     }
 
-    findByType(type: 'KY_NHAN_SUMMARY_COUNT' | 'LAND_COLLECTION') {
+    findByType(type: 'KY_NHAN_SUMMARY_COUNT' | 'LAND_COLLECTION' | 'ALL_LANDS_COLLECTED') {
         return this.prismaService.achievement.findMany({
             where: {
                 type,

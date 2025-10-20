@@ -31,9 +31,18 @@ async function createAchievements() {
                 description: 'Thu thập được 30 Kỳ Ấn',
                 type: 'KY_NHAN_SUMMARY_COUNT' as const,
                 requirement: 30,
-                reward: 700,
+                reward: 300,
                 isActive: true,
                 order: 3
+            },
+            {
+                name: 'Thu thập được 40 Kỳ Ấn',
+                description: 'Thu thập được 40 Kỳ Ấn',
+                type: 'KY_NHAN_SUMMARY_COUNT' as const,
+                requirement: 40,
+                reward: 400,
+                isActive: true,
+                order: 4
             }
         ]
 
@@ -68,8 +77,29 @@ async function createAchievements() {
                 isActive: true,
                 order: 3,
                 landId: 3 // Giả sử Làng Phù Đổng có ID = 3
+            },
+            {
+                name: 'Thu thập được Phủ Tây Hồ',
+                description: 'Thu thập được Phủ Tây Hồ',
+                type: 'LAND_COLLECTION' as const,
+                requirement: 1,
+                reward: 200,
+                isActive: true,
+                order: 4,
+                landId: 4 // Giả sử Phủ Tây Hồ có ID = 4
             }
         ]
+
+        // Tạo thành tựu cho việc thu thập tất cả 4 vùng đất
+        const allLandsAchievement = {
+            name: 'Thu thập được cả 4 vùng đất',
+            description: 'Thu thập được cả 4 vùng đất',
+            type: 'ALL_LANDS_COLLECTED' as const,
+            requirement: 4,
+            reward: 500,
+            isActive: true,
+            order: 1
+        }
 
         // Tạo thành tựu Kỳ Ấn
         for (const achievement of kyNhanAchievements) {
@@ -86,6 +116,12 @@ async function createAchievements() {
             })
             console.log(`Created achievement: ${achievement.name}`)
         }
+
+        // Tạo thành tựu thu thập tất cả vùng đất
+        await prisma.achievement.create({
+            data: allLandsAchievement
+        })
+        console.log(`Created achievement: ${allLandsAchievement.name}`)
 
         console.log('All achievements created successfully!')
     } catch (error) {

@@ -131,12 +131,69 @@ export class AchievementCheckerService {
     }
 
     /**
+     * Kiểm tra và cập nhật thành tựu thu thập tất cả vùng đất
+     */
+    async checkAllLandsCollectedAchievements(userId: number) {
+        try {
+            // Lấy tất cả thành tựu loại ALL_LANDS_COLLECTED
+            const achievements = await this.achievementRepo.findByType('ALL_LANDS_COLLECTED')
+
+            for (const achievement of achievements) {
+                // Đếm số lượng vùng đất user đã hoàn thành
+                const completedLandsCount = await this.prismaService.userLand.count({
+                    where: {
+                        userId,
+                        status: 'COMPLETED'
+                    }
+                })
+
+                const hasAllLands = completedLandsCount >= achievement.requirement
+
+                // Kiểm tra xem user đã có thành tựu này chưa
+                const userAchievement = await this.userAchievementRepo.findByUserAndAchievement({
+                    userId,
+                    achievementId: achievement.id
+                })
+
+                if (!userAchievement) {
+                    // Tạo user achievement mới
+                    await this.userAchievementRepo.create({
+                        createdById: userId,
+                        data: {
+                            userId,
+                            achievementId: achievement.id,
+                            status: hasAllLands ? 'COMPLETED' : 'PENDING',
+                            completedAt: hasAllLands ? new Date() : null,
+                            rewardClaimed: false
+                        }
+                    })
+                } else if (userAchievement.status === 'PENDING' && hasAllLands) {
+                    // Cập nhật thành tựu đã hoàn thành
+                    await this.userAchievementRepo.update({
+                        id: userAchievement.id,
+                        data: {
+                            status: 'COMPLETED',
+                            completedAt: new Date()
+                        },
+                        updatedById: userId
+                    })
+                }
+            }
+
+            // All lands collected achievement check completed
+        } catch (error) {
+            // Error checking all lands collected achievements
+        }
+    }
+
+    /**
      * Kiểm tra tất cả thành tựu của user
      */
     async checkAllAchievements(userId: number) {
         await Promise.all([
             this.checkKyNhanSummaryAchievements(userId),
-            this.checkLandAchievements(userId)
+            this.checkLandAchievements(userId),
+            this.checkAllLandsCollectedAchievements(userId)
         ])
     }
 }

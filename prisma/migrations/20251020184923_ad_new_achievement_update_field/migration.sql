@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "AchievementType" ADD VALUE 'ALL_LANDS_COLLECTED';
