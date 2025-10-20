@@ -196,4 +196,14 @@ export class LandRepo {
       }
     })
   }
+
+  getUserUnlockLand(landId: number, userId: number) {
+    return this.prismaService.userLand.findFirst({
+      where: {
+        landId,
+        userId,
+        deletedAt: null
+      }
+    })
+  }
 }

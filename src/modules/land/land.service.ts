@@ -2,13 +2,18 @@ import { ENTITY_MESSAGE } from '@/common/constants/message'
 import { PaginationQueryType } from '@/shared/models/request.model'
 import { HttpStatus, Injectable } from '@nestjs/common'
 
+import { UserLandStatus } from '@prisma/client'
 import { NotFoundRecordException } from 'src/shared/error'
 import {
   isForeignKeyConstraintPrismaError,
   isNotFoundPrismaError,
   isUniqueConstraintPrismaError
 } from 'src/shared/helpers'
-import { LandAlreadyExistsException, LandNotOpenedException } from './dto/land.error'
+import {
+  LandAlreadyExistsException,
+  LandNotOpenedException,
+  LandNotOpenedForUserException
+} from './dto/land.error'
 import { CreateLandBodyType, UpdateLandBodyType } from './entities/land.entity'
 import { LandRepo } from './land.repo'
 
@@ -47,7 +52,8 @@ export class LandService {
     const vnString = date.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' })
     const vnDate = new Date(vnString)
     vnDate.setHours(vnDate.getHours() + 7)
-    const time = vnDate.getTime()
+
+    console.log('now: vnDate =-==============-==========-=', vnDate)
 
     // console.log('now < start date : ', existLand.startDate < vnDate)
     // check xem co date ko, neu co thi so sanh voi ngay hien tai
@@ -55,9 +61,12 @@ export class LandService {
       existLand.startDate !== null &&
       existLand.startDate.getTime() > vnDate.getTime()
     ) {
-      console.log(' vao so sanh ')
-
       throw LandNotOpenedException
+    }
+
+    const userUnlockLand = await this.landRepo.getUserUnlockLand(landId, userId)
+    if (!userUnlockLand || userUnlockLand.status === UserLandStatus.LOCKED) {
+      throw LandNotOpenedForUserException
     }
 
     const landWithQuestionsAndAnswers = await this.landRepo.getQuestionsByLandId(
