@@ -4,7 +4,49 @@ const prisma = new PrismaClient()
 
 async function createAchievements() {
     try {
-        console.log('Creating achievements...')
+        console.log('Starting achievements setup...')
+
+        // Kiểm tra xem đã có achievements nào chưa
+        const existingAchievements = await prisma.achievement.findMany({
+            where: { deletedAt: null },
+            select: { id: true, name: true }
+        })
+
+        if (existingAchievements.length > 0) {
+            console.log(`Found ${existingAchievements.length} existing achievements. Cleaning up related data...`)
+
+            // Lấy danh sách achievement IDs
+            const achievementIds = existingAchievements.map(a => a.id)
+
+            // Xóa UserAchievement records liên quan trước
+            const deletedUserAchievements = await prisma.userAchievement.updateMany({
+                where: {
+                    achievementId: { in: achievementIds },
+                    deletedAt: null
+                },
+                data: {
+                    deletedAt: new Date(),
+                    deletedById: 1 // Admin user
+                }
+            })
+
+            console.log(`Deleted ${deletedUserAchievements.count} related user achievements.`)
+
+            // Soft delete: set deletedAt instead of hard delete
+            await prisma.achievement.updateMany({
+                where: { deletedAt: null },
+                data: {
+                    deletedAt: new Date(),
+                    deletedById: 1 // Admin user
+                }
+            })
+
+            console.log('All existing achievements have been deleted.')
+        } else {
+            console.log('No existing achievements found.')
+        }
+
+        console.log('Creating new achievements...')
 
         // Tạo thành tựu cho Kỳ Ấn (KyNhanSummary)
         const kyNhanAchievements = [
@@ -101,38 +143,25 @@ async function createAchievements() {
             order: 1
         }
 
-        // Tạo thành tựu Kỳ Ấn
-        for (const achievement of kyNhanAchievements) {
-            await prisma.achievement.create({
-                data: {
-                    ...achievement,
-                    createdById: 1 // Admin user
-                }
-            })
-            console.log(`Created achievement: ${achievement.name}`)
-        }
+        // Gộp tất cả achievements và tạo một lần để tránh quá nhiều kết nối DB
+        const allAchievements = [
+            ...kyNhanAchievements.map(achievement => ({ ...achievement, createdById: 1 })),
+            ...landAchievements.map(achievement => ({ ...achievement, createdById: 1 })),
+            { ...allLandsAchievement, createdById: 1 }
+        ]
 
-        // Tạo thành tựu Land
-        for (const achievement of landAchievements) {
-            await prisma.achievement.create({
-                data: {
-                    ...achievement,
-                    createdById: 1 // Admin user
-                }
-            })
-            console.log(`Created achievement: ${achievement.name}`)
-        }
+        console.log(`Creating ${allAchievements.length} achievements...`)
 
-        // Tạo thành tựu thu thập tất cả vùng đất
-        await prisma.achievement.create({
-            data: {
-                ...allLandsAchievement,
-                createdById: 1 // Admin user
-            }
+        const result = await prisma.achievement.createMany({
+            data: allAchievements
         })
-        console.log(`Created achievement: ${allLandsAchievement.name}`)
 
-        console.log('All achievements created successfully!')
+        console.log(`Successfully created ${result.count} achievements.`)
+
+        // Log tất cả achievements đã tạo
+        allAchievements.forEach(achievement => console.log(`✓ Created achievement: ${achievement.name} (${achievement.type})`))
+
+        console.log('🎉 All achievements created successfully!')
     } catch (error) {
         console.error('Error creating achievements:', error)
     } finally {
@@ -140,4 +169,16 @@ async function createAchievements() {
     }
 }
 
-createAchievements()
+// Wrapper để đảm bảo đóng kết nối database
+async function main() {
+    try {
+        await createAchievements()
+    } catch (error) {
+        console.error('Fatal error:', error)
+        process.exit(1)
+    } finally {
+        await prisma.$disconnect()
+    }
+}
+
+main()

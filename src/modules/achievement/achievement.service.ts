@@ -19,12 +19,14 @@ import {
 } from './entities/achievement.entity'
 import { AchievementRepo } from './achievement.repo'
 import { UserAchievementService } from './user-achievement.service'
+import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
 export class AchievementService {
     constructor(
         private achievementRepo: AchievementRepo,
-        private userAchievementService: UserAchievementService
+        private userAchievementService: UserAchievementService,
+        private prismaService: PrismaService
     ) { }
 
     async list(pagination: PaginationQueryType) {
@@ -204,31 +206,65 @@ export class AchievementService {
      */
     async initializeForAllUsers(createdById: number) {
         try {
+            console.log('Initializing achievements for all users...')
+
             // Get all active achievements
             const achievements = await this.achievementRepo.findActiveAchievements()
 
             if (!achievements.length) {
                 return {
                     statusCode: HttpStatus.OK,
-                    data: { initialized: 0 },
-                    message: 'No active achievements found'
+                    data: {
+                        totalCreated: 0,
+                        totalAchievements: 0,
+                        totalUsers: 0
+                    },
+                    message: 'Không có achievement nào trong hệ thống để thêm'
                 }
             }
 
-            let totalInitialized = 0
+            // Lấy tất cả user đang active
+            const users = await this.prismaService.user.findMany({
+                where: {
+                    status: 'ACTIVE',
+                    deletedAt: null
+                },
+                select: { id: true }
+            })
+
+            if (!users.length) {
+                return {
+                    statusCode: HttpStatus.OK,
+                    data: {
+                        totalCreated: 0,
+                        totalAchievements: achievements.length,
+                        totalUsers: 0
+                    },
+                    message: 'Không có user nào trong hệ thống'
+                }
+            }
+
+            console.log(`Found ${achievements.length} achievements and ${users.length} users`)
+
+            let totalCreated = 0
 
             // Initialize each achievement for all users
             for (const achievement of achievements) {
                 const result = await this.userAchievementService.initializeAchievementForAllUsers(achievement.id, createdById)
-                totalInitialized += result.data.initialized
+                totalCreated += result.data.initialized
             }
 
             return {
                 statusCode: HttpStatus.OK,
-                data: { initialized: totalInitialized },
-                message: `Initialized ${totalInitialized} user achievements for all users`
+                data: {
+                    totalCreated,
+                    totalAchievements: achievements.length,
+                    totalUsers: users.length
+                },
+                message: `Đã tạo ${totalCreated} user achievements cho ${users.length} users với ${achievements.length} achievements`
             }
         } catch (error) {
+            console.error('Error initializing achievements for all users:', error)
             throw error
         }
     }

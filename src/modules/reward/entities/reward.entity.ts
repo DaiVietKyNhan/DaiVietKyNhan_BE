@@ -10,6 +10,7 @@ export const RewardSchema = z
         description: z.string().max(1000).nullable(),
         requireValue: z.number().min(1),
         gift: z.string().max(1000),
+        code: z.string().max(100).nullable(), // Code để đổi quà cho CODE type rewards
         type: z.enum(['POINT', 'COIN', 'CODE']),
         limit: z.number().min(1).nullable(),
         startDate: z.date().nullable(),
@@ -30,6 +31,7 @@ export const CreateRewardBodySchema = RewardSchema.pick({
     description: true,
     requireValue: true,
     gift: true,
+    code: true, // Thêm code field
     type: true,
     limit: true,
     startDate: true,

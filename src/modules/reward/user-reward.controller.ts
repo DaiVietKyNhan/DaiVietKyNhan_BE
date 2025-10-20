@@ -3,7 +3,7 @@ import { PaginationQueryType } from '@/shared/models/request.model'
 import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 
-import { CreateUserRewardBodyDTO, UpdateUserRewardBodyDTO, ExchangeRewardBodyDTO } from './dto/user-reward.zod-dto'
+import { CreateUserRewardBodyDTO, UpdateUserRewardBodyDTO, ExchangeRewardBodyDTO, RedeemCodeBodyDTO } from './dto/user-reward.zod-dto'
 import { UserRewardService } from './user-reward.service'
 
 @ApiTags('User Reward')
@@ -68,6 +68,16 @@ export class UserRewardController {
         return this.userRewardService.exchangeReward({
             userId,
             rewardId: data.rewardId
+        })
+    }
+
+    @Post('redeem-code')
+    @ApiOperation({ summary: 'Đổi quà bằng code' })
+    @ApiResponse({ status: 200, description: 'Đổi quà bằng code thành công' })
+    async redeemCode(@Body() data: RedeemCodeBodyDTO, @ActiveUser('userId') userId: number) {
+        return this.userRewardService.redeemCode({
+            userId,
+            code: data.code
         })
     }
 

@@ -4,9 +4,51 @@ const prisma = new PrismaClient()
 
 async function createRewards() {
     try {
-        console.log('Creating rewards...')
+        console.log('Starting rewards setup...')
 
-        // Tạo reward đổi bằng điểm
+        // Kiểm tra xem đã có rewards nào chưa
+        const existingRewards = await prisma.reward.findMany({
+            where: { deletedAt: null },
+            select: { id: true, name: true }
+        })
+
+        if (existingRewards.length > 0) {
+            console.log(`Found ${existingRewards.length} existing rewards. Cleaning up related data...`)
+
+            // Lấy danh sách reward IDs
+            const rewardIds = existingRewards.map(r => r.id)
+
+            // Xóa UserReward records liên quan trước
+            const deletedUserRewards = await prisma.userReward.updateMany({
+                where: {
+                    rewardId: { in: rewardIds },
+                    deletedAt: null
+                },
+                data: {
+                    deletedAt: new Date(),
+                    deletedById: 1 // Admin user
+                }
+            })
+
+            console.log(`Deleted ${deletedUserRewards.count} related user rewards.`)
+
+            // Soft delete: set deletedAt instead of hard delete
+            await prisma.reward.updateMany({
+                where: { deletedAt: null },
+                data: {
+                    deletedAt: new Date(),
+                    deletedById: 1 // Admin user
+                }
+            })
+
+            console.log('All existing rewards have been deleted.')
+        } else {
+            console.log('No existing rewards found.')
+        }
+
+        console.log('Creating new rewards...')
+
+        // Tạo reward đổi bằng điểm (không cần giới hạn thời gian)
         const pointRewards = [
             {
                 name: 'Voucher 50k',
@@ -15,8 +57,8 @@ async function createRewards() {
                 gift: 'Voucher 50k',
                 type: 'POINT' as const,
                 limit: 100,
-                startDate: new Date(),
-                endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 ngày
+                startDate: null, // Không giới hạn thời gian
+                endDate: null, // Không giới hạn thời gian
                 isActive: true
             },
             {
@@ -26,13 +68,13 @@ async function createRewards() {
                 gift: 'Voucher 100k',
                 type: 'POINT' as const,
                 limit: 50,
-                startDate: new Date(),
-                endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 ngày
+                startDate: null, // Không giới hạn thời gian
+                endDate: null, // Không giới hạn thời gian
                 isActive: true
             }
         ]
 
-        // Tạo reward đổi bằng xu
+        // Tạo reward đổi bằng xu (không cần giới hạn thời gian)
         const coinRewards = [
             {
                 name: 'Áo thun Đại Việt Kỳ Nhân',
@@ -41,8 +83,8 @@ async function createRewards() {
                 gift: 'Áo thun Đại Việt Kỳ Nhân',
                 type: 'COIN' as const,
                 limit: 20,
-                startDate: new Date(),
-                endDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 ngày
+                startDate: null, // Không giới hạn thời gian
+                endDate: null, // Không giới hạn thời gian
                 isActive: true
             },
             {
@@ -52,52 +94,59 @@ async function createRewards() {
                 gift: 'Móc khóa Kỳ Nhân',
                 type: 'COIN' as const,
                 limit: 100,
-                startDate: new Date(),
-                endDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 ngày
+                startDate: null, // Không giới hạn thời gian
+                endDate: null, // Không giới hạn thời gian
                 isActive: true
             }
         ]
 
-        // Tạo reward đổi bằng code
+        // Tạo reward đổi bằng code (có giới hạn thời gian)
         const codeRewards = [
             {
                 name: 'Code đặc biệt',
                 description: 'Code đổi quà đặc biệt',
                 requireValue: 0, // CODE type không cần requireValue
-                gift: 'Code đặc biệt',
+                gift: 'Gói quà đặc biệt',
+                code: 'XXXXXX', // Code để đổi quà
                 type: 'CODE' as const,
                 limit: null, // Không giới hạn
-                startDate: new Date(),
+                startDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 ngày trước
                 endDate: null, // Không có ngày kết thúc
                 isActive: true
-            }
+            },
+            {
+                name: 'Code Sự Kiện Tết',
+                description: 'Code đặc biệt cho sự kiện Tết Nguyên Đán',
+                requireValue: 0,
+                gift: 'Gói quà Tết đặc biệt + 1000 coin',
+                code: 'qqqqqqqqq', // Code để đổi quà
+                type: 'CODE' as const,
+                limit: 5000,
+                startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 ngày trước
+                endDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 90 ngày
+                isActive: true
+            },
         ]
 
-        // Tạo reward đổi bằng điểm
-        for (const reward of pointRewards) {
-            await prisma.reward.create({
-                data: reward
-            })
-            console.log(`Created reward: ${reward.name}`)
-        }
+        // Gộp tất cả rewards và tạo một lần để tránh quá nhiều kết nối DB
+        const allRewards = [
+            ...pointRewards.map(reward => ({ ...reward, createdById: 1 })),
+            ...coinRewards.map(reward => ({ ...reward, createdById: 1 })),
+            ...codeRewards.map(reward => ({ ...reward, createdById: 1 }))
+        ]
 
-        // Tạo reward đổi bằng xu
-        for (const reward of coinRewards) {
-            await prisma.reward.create({
-                data: reward
-            })
-            console.log(`Created reward: ${reward.name}`)
-        }
+        console.log(`Creating ${allRewards.length} rewards...`)
 
-        // Tạo reward đổi bằng code
-        for (const reward of codeRewards) {
-            await prisma.reward.create({
-                data: reward
-            })
-            console.log(`Created reward: ${reward.name}`)
-        }
+        const result = await prisma.reward.createMany({
+            data: allRewards
+        })
 
-        console.log('All rewards created successfully!')
+        console.log(`Successfully created ${result.count} rewards.`)
+
+        // Log tất cả rewards đã tạo
+        allRewards.forEach(reward => console.log(`✓ Created reward: ${reward.name} (${reward.type})`))
+
+        console.log('🎉 All rewards created successfully!')
     } catch (error) {
         console.error('Error creating rewards:', error)
     } finally {
@@ -105,4 +154,16 @@ async function createRewards() {
     }
 }
 
-createRewards()
+// Wrapper để đảm bảo đóng kết nối database
+async function main() {
+    try {
+        await createRewards()
+    } catch (error) {
+        console.error('Fatal error:', error)
+        process.exit(1)
+    } finally {
+        await prisma.$disconnect()
+    }
+}
+
+main()

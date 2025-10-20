@@ -14,6 +14,7 @@ import { SharedUserRepository } from '@/shared/repositories/shared-user.repo'
 import {
     RewardNotActiveException,
     InsufficientValueException,
+    createInsufficientValueException,
     RewardExpiredException,
     RewardLimitExceededException,
     InvalidCodeException
@@ -23,7 +24,8 @@ import {
     CreateUserRewardBodyType,
     UpdateUserRewardBodySchema,
     UpdateUserRewardBodyType,
-    ExchangeRewardBodyType
+    ExchangeRewardBodyType,
+    RedeemCodeBodyType
 } from './entities/user-reward.entity'
 import { UserRewardRepo } from './user-reward.repo'
 import { RewardRepo } from './reward.repo'
@@ -120,7 +122,7 @@ export class UserRewardService {
             }
         } catch (error) {
             if (isUniqueConstraintPrismaError(error)) {
-                throw new BadRequestException('User reward already exists')
+                throw new BadRequestException('Thưởng đã tồn tại')
             }
             if (isForeignKeyConstraintPrismaError(error)) {
                 throw NotFoundRecordException
@@ -182,7 +184,7 @@ export class UserRewardService {
             }
         } catch (error) {
             if (isUniqueConstraintPrismaError(error)) {
-                throw new BadRequestException('User reward already exists')
+                throw new BadRequestException('Thưởng đã tồn tại')
             }
             if (isForeignKeyConstraintPrismaError(error)) {
                 throw NotFoundRecordException
@@ -236,7 +238,7 @@ export class UserRewardService {
 
             // Nếu đã có reward và status là COMPLETED thì báo lỗi
             if (existingUserReward && existingUserReward.status === 'COMPLETED') {
-                throw new BadRequestException('Bạn đã đổi reward này rồi')
+                throw new BadRequestException('Bạn đã đổi thưởng này rồi')
             }
 
             // Nếu đã có reward nhưng status là PENDING, thực hiện exchange và update thành COMPLETED
@@ -244,7 +246,7 @@ export class UserRewardService {
                 // Kiểm tra đủ giá trị và trừ điểm/coin (chỉ với POINT và COIN)
                 if (reward.type === 'POINT') {
                     if (user.point < reward.requireValue) {
-                        throw InsufficientValueException
+                        throw createInsufficientValueException('POINT')
                     }
                     await this.sharedUserRepo.minuspointByUserId({
                         userId,
@@ -252,7 +254,7 @@ export class UserRewardService {
                     })
                 } else if (reward.type === 'COIN') {
                     if (user.coin < reward.requireValue) {
-                        throw InsufficientValueException
+                        throw createInsufficientValueException('COIN')
                     }
                     await this.sharedUserRepo.minusCoinByUserId({
                         userId,
@@ -275,18 +277,18 @@ export class UserRewardService {
                 return {
                     statusCode: HttpStatus.OK,
                     data: userReward,
-                    message: 'Đổi quà thành công!'
+                    message: 'Đổi thưởng thành công!'
                 }
             }
 
             // Nếu chưa có reward, kiểm tra đủ giá trị và tạo mới
             if (reward.type === 'POINT') {
                 if (user.point < reward.requireValue) {
-                    throw InsufficientValueException
+                    throw createInsufficientValueException('POINT')
                 }
             } else if (reward.type === 'COIN') {
                 if (user.coin < reward.requireValue) {
-                    throw InsufficientValueException
+                    throw createInsufficientValueException('COIN')
                 }
             }
 
@@ -319,7 +321,96 @@ export class UserRewardService {
             return {
                 statusCode: HttpStatus.OK,
                 data: userReward,
-                message: 'Đổi quà thành công!'
+                message: 'Đổi thưởng thành công!'
+            }
+        } catch (error) {
+            if (isNotFoundPrismaError(error)) {
+                throw NotFoundRecordException
+            }
+            throw error
+        }
+    }
+
+    async redeemCode({ userId, code }: { userId: number; code: string }) {
+        try {
+            // Tìm reward bằng code trước
+            const reward = await this.rewardRepo.findByCode({ code })
+            if (!reward) {
+                throw InvalidCodeException
+            }
+
+            // Kiểm tra đây phải là reward type CODE
+            if (reward.type !== 'CODE') {
+                throw InvalidCodeException
+            }
+
+            // Kiểm tra reward có hoạt động không
+            if (!reward.isActive) {
+                throw RewardNotActiveException
+            }
+
+            // Kiểm tra thời gian
+            const now = new Date()
+            if (reward.startDate && reward.startDate > now) {
+                throw RewardExpiredException
+            }
+            if (reward.endDate && reward.endDate < now) {
+                throw RewardExpiredException
+            }
+
+            // Kiểm tra giới hạn (nếu có)
+            if (reward.limit) {
+                const usedCount = await this.userRewardRepo.countUserRewardsByRewardId(reward.id)
+                if (usedCount >= reward.limit) {
+                    throw RewardLimitExceededException
+                }
+            }
+
+            // Kiểm tra user đã đổi code này chưa
+            const existingUserReward = await this.userRewardRepo.findByUserAndReward({ userId, rewardId: reward.id })
+
+            if (existingUserReward) {
+                if (existingUserReward.status === 'COMPLETED') {
+                    throw new BadRequestException('Bạn đã sử dụng code này rồi')
+                }
+                if (existingUserReward.status === 'CANCELLED') {
+                    throw new BadRequestException('Code này đã bị hủy')
+                }
+
+                // Cập nhật existing userReward thành COMPLETED
+                const updatedUserReward = await this.userRewardRepo.update({
+                    id: existingUserReward.id,
+                    data: {
+                        status: 'COMPLETED',
+                        exchangedAt: new Date()
+                    },
+                    updatedById: userId
+                })
+
+                return {
+                    statusCode: HttpStatus.OK,
+                    data: updatedUserReward,
+                    message: 'Đổi quà bằng code thành công!'
+                }
+            }
+
+            // Tạo UserReward mới với status COMPLETED
+            const newUserReward = await this.userRewardRepo.create({
+                createdById: userId,
+                data: {
+                    userId,
+                    rewardId: reward.id,
+                    status: 'COMPLETED',
+                    valuePaid: 0,
+                    code: code,
+                    exchangedAt: new Date()
+                }
+            })
+
+            return {
+                statusCode: HttpStatus.OK,
+                data: newUserReward,
+                message: 'Đổi quà bằng code thành công!'
             }
         } catch (error) {
             if (isNotFoundPrismaError(error)) {

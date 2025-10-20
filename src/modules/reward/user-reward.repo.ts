@@ -109,6 +109,19 @@ export class UserRewardRepo {
         })
     }
 
+    findByUserAndCode({ userId, code }: { userId: number; code: string }) {
+        return this.prismaService.userReward.findFirst({
+            where: {
+                userId,
+                code,
+                deletedAt: null
+            },
+            include: {
+                reward: true
+            }
+        })
+    }
+
     update({
         id,
         data,
@@ -180,7 +193,12 @@ export class UserRewardRepo {
         return this.prismaService.userReward.findMany({
             where: {
                 userId,
-                deletedAt: null
+                deletedAt: null,
+                reward: {
+                    type: {
+                        in: ['POINT', 'COIN'] // Chỉ lấy rewards có type POINT và COIN, loại bỏ CODE
+                    }
+                }
             },
             include: {
                 reward: true
@@ -194,7 +212,28 @@ export class UserRewardRepo {
             where: {
                 userId,
                 status,
-                deletedAt: null
+                deletedAt: null,
+                reward: {
+                    type: {
+                        in: ['POINT', 'COIN'] // Chỉ lấy rewards có type POINT và COIN, loại bỏ CODE
+                    }
+                }
+            },
+            include: {
+                reward: true
+            },
+            orderBy: { createdAt: 'desc' }
+        })
+    }
+
+    findByUserIdAndCodeType(userId: number) {
+        return this.prismaService.userReward.findMany({
+            where: {
+                userId,
+                deletedAt: null,
+                reward: {
+                    type: 'CODE' // Chỉ lấy rewards có type CODE
+                }
             },
             include: {
                 reward: true

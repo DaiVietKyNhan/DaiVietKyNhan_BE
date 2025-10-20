@@ -220,11 +220,11 @@ export class UserAchievementService {
             }
 
             if (userAchievement.status !== 'COMPLETED') {
-                throw new BadRequestException('Achievement is not completed yet')
+                throw new BadRequestException('Thành tựu chưa hoàn thành')
             }
 
             if (userAchievement.rewardClaimed) {
-                throw new BadRequestException('Reward already claimed')
+                throw new BadRequestException('Thưởng đã được nhận')
             }
 
             // Get achievement reward amount

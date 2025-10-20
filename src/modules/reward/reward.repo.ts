@@ -83,6 +83,12 @@ export class RewardRepo {
         })
     }
 
+    findByCode({ code }: { code: string }) {
+        return this.prismaService.reward.findUnique({
+            where: { code }
+        })
+    }
+
     update({
         id,
         data,

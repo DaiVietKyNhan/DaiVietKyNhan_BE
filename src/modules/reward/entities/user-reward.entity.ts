@@ -41,6 +41,10 @@ export const ExchangeRewardBodySchema = z.object({
     rewardId: z.number()
 }).strict()
 
+export const RedeemCodeBodySchema = z.object({
+    code: z.string().min(1, 'Code không được để trống')
+}).strict()
+
 export const GetUserRewardResSchema = UserRewardSchema.extend({
     reward: z.object({
         id: z.number(),
@@ -69,6 +73,7 @@ export type UserRewardType = z.infer<typeof UserRewardSchema>
 export type CreateUserRewardBodyType = z.infer<typeof CreateUserRewardBodySchema>
 export type UpdateUserRewardBodyType = z.infer<typeof UpdateUserRewardBodySchema>
 export type ExchangeRewardBodyType = z.infer<typeof ExchangeRewardBodySchema>
+export type RedeemCodeBodyType = z.infer<typeof RedeemCodeBodySchema>
 export type GetUserRewardResType = z.infer<typeof GetUserRewardResSchema>
 export type GetUserRewardListResType = z.infer<typeof GetUserRewardListResSchema>
 
