@@ -21,7 +21,7 @@ export const CloudinaryImageMulterConfig = {
     }
   },
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB
+    fileSize: undefined // Bỏ giới hạn kích thước file
   }
 }
 
@@ -59,12 +59,12 @@ export const CloudinaryMultiMulterConfig = {
     }
   },
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB
+    fileSize: undefined, // Bỏ giới hạn kích thước file cho hình ảnh
     files: 2 // Tối đa 2 files
   }
 }
 
-// Multer config cho upload image với folder tùy chọn - giới hạn 15MB, tối đa 10 files
+// Multer config cho upload image với folder tùy chọn - không giới hạn kích thước, tối đa 10 files
 export const CloudinaryImageUploadConfig = {
   storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
@@ -76,7 +76,7 @@ export const CloudinaryImageUploadConfig = {
     }
   },
   limits: {
-    fileSize: 15 * 1024 * 1024, // 15MB
+    fileSize: undefined, // Bỏ giới hạn kích thước file
     files: 10 // Tối đa 10 files (phù hợp với maxCount: 10 trong controller)
   }
 }
@@ -124,7 +124,7 @@ export const CloudinaryFlexibleUploadConfig = {
     }
   },
   limits: {
-    fileSize: 50 * 1024 * 1024, // 50MB - sẽ validate chi tiết trong controller
+    fileSize: undefined, // Bỏ giới hạn kích thước file - sẽ validate chi tiết trong controller
     files: 1
   }
 }

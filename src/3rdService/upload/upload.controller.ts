@@ -148,7 +148,7 @@ export class UploadController {
   })
   @ApiResponse({
     status: 400,
-    description: 'File không hợp lệ hoặc vượt quá giới hạn kích thước (15MB)',
+    description: 'File không hợp lệ (không có giới hạn kích thước)',
     schema: {
       type: 'object',
       properties: {
@@ -216,7 +216,7 @@ export class UploadController {
         image: {
           type: 'string',
           format: 'binary',
-          description: 'File hình ảnh (JPEG, PNG, WEBP, GIF). Tối đa 15MB'
+          description: 'File hình ảnh (JPEG, PNG, WEBP, GIF). Không giới hạn kích thước'
         },
         folderName: {
           type: 'string',
@@ -333,7 +333,7 @@ export class UploadController {
   })
   @ApiResponse({
     status: 400,
-    description: 'File không hợp lệ, type không đúng hoặc vượt quá giới hạn kích thước',
+    description: 'File không hợp lệ hoặc type không đúng (không có giới hạn kích thước)',
     schema: {
       type: 'object',
       properties: {
@@ -392,21 +392,21 @@ export class UploadController {
         )
       }
 
-      // Validate file size based on type
-      const fileSizeLimits = {
-        image: 5 * 1024 * 1024, // 5MB
-        audio: 10 * 1024 * 1024, // 10MB
-        video: 50 * 1024 * 1024, // 50MB
-        document: 5 * 1024 * 1024 // 5MB
-      }
+      // Bỏ giới hạn kích thước file - cho phép upload không giới hạn
+      // const fileSizeLimits = {
+      //   image: 5 * 1024 * 1024, // 5MB
+      //   audio: 10 * 1024 * 1024, // 10MB
+      //   video: 50 * 1024 * 1024, // 50MB
+      //   document: 5 * 1024 * 1024 // 5MB
+      // }
 
-      const maxSize = fileSizeLimits[type] || fileSizeLimits.image
-      if (file.size > maxSize) {
-        const maxSizeMB = Math.round(maxSize / (1024 * 1024))
-        throw new BadRequestException(
-          `Kích thước file ${type} không được vượt quá ${maxSizeMB}MB`
-        )
-      }
+      // const maxSize = fileSizeLimits[type] || fileSizeLimits.image
+      // if (file.size > maxSize) {
+      //   const maxSizeMB = Math.round(maxSize / (1024 * 1024))
+      //   throw new BadRequestException(
+      //     `Kích thước file ${type} không được vượt quá ${maxSizeMB}MB`
+      //   )
+      // }
 
       // Get appropriate upload folder based on file type
       let uploadFolder: string
@@ -464,7 +464,7 @@ export class UploadController {
         image: {
           type: 'string',
           format: 'binary',
-          description: 'File hình ảnh avatar (JPEG, PNG, WEBP, GIF). Tối đa 15MB'
+          description: 'File hình ảnh avatar (JPEG, PNG, WEBP, GIF). Không giới hạn kích thước'
         }
       },
       required: ['image']
