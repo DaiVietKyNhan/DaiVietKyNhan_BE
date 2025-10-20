@@ -1,4 +1,5 @@
 import { checkIdSchema } from '@/common/utils/id.validation'
+import { KyNhanSummarySchema } from '@/modules/kynhan-summary/entities/kynhan-summary.entity'
 import { QuestionSchema } from '@/modules/question/entities/question.entity'
 import { UserAnswerLogSchema } from '@/modules/user-answerlog/entities/user-answerlog.entity'
 import { extendZodWithOpenApi } from '@anatine/zod-openapi'
@@ -71,6 +72,14 @@ export const LandWithQuestionAndUserAnswerLogSchema = LandSchema.extend({
             id: true,
             text: true,
             isCorrect: true
+          })
+        ),
+        kynhanSummaries: z.array(
+          KyNhanSummarySchema.pick({
+            id: true,
+            summary: true,
+            kyNhanId: true,
+            imgUrl: true
           })
         )
       })

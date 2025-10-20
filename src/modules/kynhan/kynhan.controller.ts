@@ -13,11 +13,12 @@ import {
   UploadedFile,
   UseInterceptors
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiResponse } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger'
 import { ZodSerializerDto } from 'nestjs-zod'
 import {
   CreateKyNhanBodyDTO,
   CreateKyNhanResDTO,
+  GetKyNhansUserResDTO,
   GetKyNhanUserResDTO,
   GetParamsKyNhanDTO,
   UpdateKyNhanBodyDTO,
@@ -32,7 +33,7 @@ import { KynhanService } from './kynhan.service'
 @Controller('kynhan')
 @ApiBearerAuth()
 export class KynhanController {
-  constructor(private readonly kynhanService: KynhanService) { }
+  constructor(private readonly kynhanService: KynhanService) {}
 
   @Get()
   @ZodSerializerDto(PaginationResponseSchema)
@@ -47,7 +48,7 @@ export class KynhanController {
   }
 
   @Get('list/user')
-  @ZodSerializerDto(GetKyNhanUserResDTO)
+  @ZodSerializerDto(GetKyNhansUserResDTO)
   getListByUser(@ActiveUser('userId') userId: number) {
     return this.kynhanService.getListByUser(userId)
   }
@@ -75,7 +76,6 @@ export class KynhanController {
       imgFile
     })
   }
-
 
   @Put(':kyNhanId')
   @ZodSerializerDto(UpdateKyNhanResDTO)
