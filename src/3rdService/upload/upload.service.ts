@@ -13,7 +13,7 @@ export interface UploadResult {
 export class UploadService {
   private readonly logger = new Logger(UploadService.name)
 
-  constructor(@Inject('Cloudinary') private cloudinary) {}
+  constructor(@Inject('Cloudinary') private cloudinary) { }
 
   private isImageFile(mimetype: string): boolean {
     return mimetype.startsWith('image/')
@@ -563,19 +563,19 @@ export class UploadService {
       )
     }
 
-    // Validate file size based on type
-    const fileSizeLimits = {
-      image: 5 * 1024 * 1024, // 5MB
-      audio: 10 * 1024 * 1024, // 10MB
-      video: 50 * 1024 * 1024, // 50MB
-      document: 5 * 1024 * 1024 // 5MB
-    }
+    // Bỏ giới hạn kích thước file - cho phép upload không giới hạn
+    // const fileSizeLimits = {
+    //   image: 5 * 1024 * 1024, // 5MB
+    //   audio: 10 * 1024 * 1024, // 10MB
+    //   video: 50 * 1024 * 1024, // 50MB
+    //   document: 5 * 1024 * 1024 // 5MB
+    // }
 
-    const maxSize = fileSizeLimits[fileType]
-    if (fileSize > maxSize) {
-      const maxSizeMB = Math.round(maxSize / (1024 * 1024))
-      throw new BadRequestException(`File ${fileType} không được vượt quá ${maxSizeMB}MB`)
-    }
+    // const maxSize = fileSizeLimits[fileType]
+    // if (fileSize > maxSize) {
+    //   const maxSizeMB = Math.round(maxSize / (1024 * 1024))
+    //   throw new BadRequestException(`File ${fileType} không được vượt quá ${maxSizeMB}MB`)
+    // }
 
     // Generate unique public ID
     const timestamp = Date.now()
