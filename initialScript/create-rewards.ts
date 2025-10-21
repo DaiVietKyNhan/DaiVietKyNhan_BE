@@ -123,7 +123,19 @@ async function createRewards() {
                 type: 'CODE' as const,
                 limit: 5000,
                 startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 ngày trước
-                endDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 90 ngày
+                endDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 ngày trước
+                isActive: true
+            },
+            {
+                name: 'Code 500 Coin + 500 Điểm',
+                description: 'Code đổi 500 coin và 500 điểm',
+                requireValue: 0,
+                gift: 'Quà tặng đặc biệt + 500 coin + 500 điểm',
+                code: 'ABC123XYZ', // Code để đổi quà
+                type: 'CODE' as const,
+                limit: 1000, // Giới hạn 1000 lần sử dụng
+                startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 ngày trước
+                endDate: null, // Không có ngày kết thúc
                 isActive: true
             },
         ]
