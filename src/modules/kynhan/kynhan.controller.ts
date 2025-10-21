@@ -49,8 +49,11 @@ export class KynhanController {
 
   @Get('list/user')
   @ZodSerializerDto(GetKyNhansUserResDTO)
-  getListByUser(@ActiveUser('userId') userId: number) {
-    return this.kynhanService.getListByUser(userId)
+  getListByUser(
+    @ActiveUser('userId') userId: number,
+    @Query() params: PaginationQueryDTO
+  ) {
+    return this.kynhanService.getListByUser(userId, params)
   }
 
   @Post()

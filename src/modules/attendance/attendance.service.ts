@@ -71,8 +71,26 @@ export class AttendanceService {
   async create({ createdById }: { createdById: number }) {
     try {
       // lay ra attendenceConfig co trong ngay hom do
-      const date = new Date()
-      date.setUTCHours(0, 0, 0, 0)
+      const date2 = new Date()
+      const vnString = date2.toLocaleString('en-US', {
+        timeZone: 'Asia/Ho_Chi_Minh'
+      })
+      const now = new Date()
+      const vnDate = new Date(
+        now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' })
+      )
+
+      // Tạo ngày mới theo múi giờ Việt Nam
+      const year = vnDate.getFullYear()
+      const month = vnDate.getMonth()
+      const day = vnDate.getDate()
+
+      // Set giờ 0h00 tại VN, rồi chuyển sang UTC
+      const utcDate = new Date(Date.UTC(year, month, day, 0, 0, 0, 0))
+
+      const date = utcDate
+      console.log(date)
+
       const getWeekDate = getWeekDay(date)
 
       const attendenceConfig =
