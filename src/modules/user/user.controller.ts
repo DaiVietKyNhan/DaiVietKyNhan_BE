@@ -29,6 +29,12 @@ export class UserController {
     return this.userService.list(query)
   }
 
+  @Get('user-rank')
+  @ZodSerializerDto(PaginationResponseSchema)
+  getRanking(@Query() query: PaginationQueryDTO) {
+    return this.userService.getRanking(query)
+  }
+
   @Put('add-heart')
   @ZodSerializerDto(CreateUserResDTO)
   addHeartToUser(@ActiveUser('userId') userId: number) {

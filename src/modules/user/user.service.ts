@@ -32,6 +32,19 @@ export class UserService {
     }
   }
 
+  async getRanking(pagination: PaginationQueryType) {
+    const customerId = await this.sharedRoleRepo.getCustomerRoleId()
+    if (!customerId) {
+      throw NotFoundRecordException
+    }
+    const data = await this.userRepo.getRanking(pagination, customerId)
+    return {
+      statusCode: HttpStatus.OK,
+      data,
+      message: ENTITY_MESSAGE.GET_LIST_SUCCESS
+    }
+  }
+
   async getUserList(pagination: PaginationQueryType) {
     const customerId = await this.sharedRoleRepo.getCustomerRoleId()
     if (!customerId) {

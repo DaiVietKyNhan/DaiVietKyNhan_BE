@@ -135,6 +135,60 @@ export class UserRepo {
     }
   }
 
+  async getRanking(pagination: PaginationQueryType, customerId?: number) {
+    // 👉 Kiểm tra & thêm sort:-point,status=ACTIVE nếu chưa có
+    pagination.qs = pagination.qs || ''
+
+    if (!pagination.qs.includes('sort:-point')) {
+      pagination.qs = (pagination.qs ? pagination.qs + ',' : '') + 'sort:-point'
+    }
+
+    if (!pagination.qs.includes('status=ACTIVE')) {
+      pagination.qs = (pagination.qs ? pagination.qs + ',' : '') + 'status=ACTIVE'
+    }
+    const { where, orderBy } = parseQs(pagination.qs, USER_FIELDS)
+
+    const skip = (pagination.currentPage - 1) * pagination.pageSize
+    const take = pagination.pageSize
+
+    const [totalItems, data] = await Promise.all([
+      this.prismaService.user.count({
+        where: {
+          deletedAt: null,
+          ...where,
+          ...(customerId ? { roleId: customerId } : {})
+        }
+      }),
+      this.prismaService.user.findMany({
+        where: {
+          deletedAt: null,
+          ...where,
+          ...(customerId ? { roleId: customerId } : {})
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatar: true,
+          point: true
+        },
+        orderBy,
+        skip,
+        take
+      })
+    ])
+
+    return {
+      results: data,
+      pagination: {
+        current: pagination.currentPage,
+        pageSize: pagination.pageSize,
+        totalPage: Math.ceil(totalItems / pagination.pageSize),
+        totalItem: totalItems
+      }
+    }
+  }
+
   async getUserActiveList(pagination: PaginationQueryType) {
     const { where, orderBy } = parseQs(pagination.qs, USER_FIELDS)
 
