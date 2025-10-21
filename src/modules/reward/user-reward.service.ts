@@ -274,6 +274,11 @@ export class UserRewardService {
                     updatedById: userId
                 })
 
+                // Nếu là CODE type, parse gift để cộng coin/point
+                if (reward.type === 'CODE') {
+                    await this.processGiftRewards(userId, reward.gift)
+                }
+
                 return {
                     statusCode: HttpStatus.OK,
                     data: userReward,
@@ -317,6 +322,11 @@ export class UserRewardService {
                     exchangedAt: new Date()
                 }
             })
+
+            // Nếu là CODE type, parse gift để cộng coin/point
+            if (reward.type === 'CODE') {
+                await this.processGiftRewards(userId, reward.gift)
+            }
 
             return {
                 statusCode: HttpStatus.OK,
@@ -387,6 +397,9 @@ export class UserRewardService {
                     updatedById: userId
                 })
 
+                // Parse gift string để cộng coin và điểm cho user
+                await this.processGiftRewards(userId, reward.gift)
+
                 return {
                     statusCode: HttpStatus.OK,
                     data: updatedUserReward,
@@ -406,6 +419,9 @@ export class UserRewardService {
                     exchangedAt: new Date()
                 }
             })
+
+            // Parse gift string để cộng coin và điểm cho user
+            await this.processGiftRewards(userId, reward.gift)
 
             return {
                 statusCode: HttpStatus.OK,
@@ -517,6 +533,63 @@ export class UserRewardService {
         } catch (error) {
             console.error('Error initializing rewards for all users:', error)
             throw error
+        }
+    }
+
+    /**
+     * Parse gift string và tự động cộng coin/point cho user
+     * Ví dụ: "Gói quà Tết đặc biệt + 1000 coin" -> cộng 1000 coin
+     */
+    private async processGiftRewards(userId: number, gift: string): Promise<void> {
+        if (!gift) return
+
+        try {
+            // Regex để tìm số coin trong gift string
+            // Ví dụ: "+ 1000 coin", "+1000 coin", "+ 1000 COIN", "+1000coin", "+1000COIN"
+            const coinMatch = gift.match(/\+?\s*(\d+)\s*coin/gi)
+            if (coinMatch && coinMatch.length > 0) {
+                // Lấy số lượng coin từ tất cả matches (tổng cộng)
+                let totalCoins = 0
+                for (const match of coinMatch) {
+                    const coinAmount = parseInt(match.replace(/[^0-9]/g, ''))
+                    if (!isNaN(coinAmount)) {
+                        totalCoins += coinAmount
+                    }
+                }
+
+                if (totalCoins > 0) {
+                    await this.sharedUserRepo.addCoinByUserId({
+                        userId,
+                        amount: totalCoins
+                    })
+                    console.log(`Added ${totalCoins} coins to user ${userId} from gift: ${gift}`)
+                }
+            }
+
+            // Regex để tìm số điểm trong gift string
+            // Ví dụ: "+ 500 điểm", "+500 điểm", "+ 500 point", "+500point", "+500POINT", "+500 Point"
+            const pointMatch = gift.match(/\+?\s*(\d+)\s*(điểm|point)/gi)
+            if (pointMatch && pointMatch.length > 0) {
+                // Lấy số lượng điểm từ tất cả matches (tổng cộng)
+                let totalPoints = 0
+                for (const match of pointMatch) {
+                    const pointAmount = parseInt(match.replace(/[^0-9]/g, ''))
+                    if (!isNaN(pointAmount)) {
+                        totalPoints += pointAmount
+                    }
+                }
+
+                if (totalPoints > 0) {
+                    await this.sharedUserRepo.addpointByUserId({
+                        userId,
+                        amount: totalPoints
+                    })
+                    console.log(`Added ${totalPoints} points to user ${userId} from gift: ${gift}`)
+                }
+            }
+        } catch (error) {
+            console.error(`Error processing gift rewards for user ${userId}, gift: ${gift}`, error)
+            // Không throw error để không ảnh hưởng đến flow chính
         }
     }
 }
