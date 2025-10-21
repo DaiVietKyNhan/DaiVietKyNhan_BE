@@ -221,10 +221,8 @@ export class GodProfileService {
       const userAnswer = q.userAnswer
       if (!testType || !userAnswer) continue
       try {
-        const point =
-          q.answer === userAnswer.answer
-            ? getPointHome(userAnswer.answer, q.testQuestionHomeType)
-            : 0
+        const point = getPointHome(userAnswer.answer, q.testQuestionHomeType)
+
         aggPoints[testType] = (aggPoints[testType] || 0) + point
       } catch (err) {
         this.logger.warn('Failed to compute point for question', err)
