@@ -36,7 +36,6 @@ export class UserController {
   }
 
   @Put('add-heart')
-  @ZodSerializerDto(CreateUserResDTO)
   addHeartToUser(@ActiveUser('userId') userId: number) {
     return this.userService.addHeartToUser(userId)
   }
