@@ -223,6 +223,13 @@ export class UserLandBargeRepo {
             land: true
           }
         }
+      },
+      orderBy: {
+        landBarge: {
+          land: {
+            order: 'asc'
+          }
+        }
       }
     })
   }
