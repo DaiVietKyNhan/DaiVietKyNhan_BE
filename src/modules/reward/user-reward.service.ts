@@ -539,10 +539,13 @@ export class UserRewardService {
     private async processGiftRewards(userId: number, gift: string): Promise<void> {
         if (!gift) return
 
+        console.log(`Processing gift rewards for user ${userId}, gift: "${gift}"`)
+
         try {
             // Regex để tìm số coin trong gift string
             // Ví dụ: "+ 1000 coin", "+1000 coin", "+ 1000 COIN", "+1000coin", "+1000COIN", "150 COIN", "300 COIN"
-            const coinMatch = gift.match(/(\+?\s*)?(\d+)\s*coin/gi)
+            const coinMatch = gift.match(/(\d+)\s*coin/gi)
+            console.log(`Coin matches for "${gift}":`, coinMatch)
             if (coinMatch && coinMatch.length > 0) {
                 // Lấy số lượng coin từ tất cả matches (tổng cộng)
                 let totalCoins = 0
@@ -564,7 +567,8 @@ export class UserRewardService {
 
             // Regex để tìm số điểm trong gift string
             // Ví dụ: "+ 500 điểm", "+500 điểm", "+ 500 point", "+500point", "+500POINT", "+500 Point", "500 điểm", "1000 point"
-            const pointMatch = gift.match(/(\+?\s*)?(\d+)\s*(điểm|point)/gi)
+            const pointMatch = gift.match(/(\d+)\s*(điểm|point)/gi)
+            console.log(`Point matches for "${gift}":`, pointMatch)
             if (pointMatch && pointMatch.length > 0) {
                 // Lấy số lượng điểm từ tất cả matches (tổng cộng)
                 let totalPoints = 0
@@ -576,11 +580,14 @@ export class UserRewardService {
                 }
 
                 if (totalPoints > 0) {
-                    await this.sharedUserRepo.addpointByUserId({
+                    console.log(`Adding ${totalPoints} points to user ${userId}`)
+                    const result = await this.sharedUserRepo.addpointByUserId({
                         userId,
                         amount: totalPoints
                     })
-                    console.log(`Added ${totalPoints} points to user ${userId} from gift: ${gift}`)
+                    console.log(`Added ${totalPoints} points to user ${userId} from gift: ${gift}. Result:`, result)
+                } else {
+                    console.log(`No points to add for user ${userId} from gift: ${gift}`)
                 }
             }
         } catch (error) {
