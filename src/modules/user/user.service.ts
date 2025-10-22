@@ -21,7 +21,7 @@ export class UserService {
     private readonly hashingService: HashingService,
     private readonly sharedRoleRepo: SharedRoleRepository,
     private readonly sharedUserRepo: SharedUserRepository
-  ) {}
+  ) { }
 
   async list(pagination: PaginationQueryType) {
     const data = await this.userRepo.list(pagination)
@@ -89,6 +89,7 @@ export class UserService {
     try {
       const { confirmPassword, ...userData } = data
       userData.password = await this.hashingService.hash(data.password)
+      userData.email = userData.email.toLowerCase()
       const user = await this.userRepo.create({
         createdById,
         data: userData

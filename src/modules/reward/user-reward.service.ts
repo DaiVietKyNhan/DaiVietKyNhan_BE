@@ -274,10 +274,8 @@ export class UserRewardService {
                     updatedById: userId
                 })
 
-                // Nếu là CODE type, parse gift để cộng coin/point
-                if (reward.type === 'CODE') {
-                    await this.processGiftRewards(userId, reward.gift)
-                }
+                // Parse gift để cộng coin/point cho tất cả loại reward
+                await this.processGiftRewards(userId, reward.gift)
 
                 return {
                     statusCode: HttpStatus.OK,
@@ -323,10 +321,8 @@ export class UserRewardService {
                 }
             })
 
-            // Nếu là CODE type, parse gift để cộng coin/point
-            if (reward.type === 'CODE') {
-                await this.processGiftRewards(userId, reward.gift)
-            }
+            // Parse gift để cộng coin/point cho tất cả loại reward
+            await this.processGiftRewards(userId, reward.gift)
 
             return {
                 statusCode: HttpStatus.OK,
