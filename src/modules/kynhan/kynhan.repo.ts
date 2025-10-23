@@ -129,7 +129,10 @@ export class KynhanRepo {
   async getListByUser(
     userId: number,
     pagination: PaginationQueryType
-  ): Promise<(KyNhanType & { unlocked: boolean })[]> {
+  ): Promise<{
+    results: (KyNhanType & { unlocked: boolean })[]
+    totalKyNhanClaim: number
+  }> {
     const { where, orderBy } = parseQs(pagination.qs || '', KYNHAN_FIELDS)
 
     // Fetch user's KyNhan IDs
@@ -159,9 +162,17 @@ export class KynhanRepo {
     })
 
     // Map each KyNhan with unlocked field
-    return allKyNhans.map((kyNhan) => ({
+    const results = allKyNhans.map((kyNhan) => ({
       ...kyNhan,
       unlocked: userKyNhanIds.has(kyNhan.id)
     }))
+
+    // Count total unlocked KyNhan
+    const totalKyNhanClaim = results.filter((k) => k.unlocked).length
+
+    return {
+      results,
+      totalKyNhanClaim
+    }
   }
 }

@@ -10,7 +10,7 @@ import {
 } from 'src/shared/helpers'
 
 import { AttendancesStatus } from '@/common/constants/attendance.constant'
-import { WeekDay, WeekDayType } from '@/common/constants/attendence-config.constant'
+import { WeekDayType } from '@/common/constants/attendence-config.constant'
 import { SharedUserRepository } from '@/shared/repositories/shared-user.repo'
 import { AttendenceConfigRepo } from '../attendence-config/attendence-config.repo'
 import { AttendanceRepo } from './attendence.repo'
@@ -101,10 +101,10 @@ export class AttendanceService {
       }
       //check streat chua ?
       let isStreakSunday = false
-      if (attendenceConfig.dayOfWeek === WeekDay.SUNDAY) {
-        isStreakSunday =
-          (await this.findStreakDate(createdById, date)).count >= 6 ? true : false
-      }
+      const streakData = await this.findStreakDate(createdById, date)
+      // Kiểm tra xem có streak liên tiếp >= 6 ngày trước hôm nay không
+      isStreakSunday = streakData.count >= 6 ? true : false
+      console.log('isStreat: ', isStreakSunday)
 
       const data: CreateAttendanceBodyType = {
         date,
@@ -199,33 +199,57 @@ export class AttendanceService {
   }
 
   async findStreakDate(userId: number, date: Date, addDayOfWeek: boolean = false) {
-    // 1️⃣ Xác định đầu và cuối tuần (T2 → CN)
-    const startOfWeek = new Date(date)
-    startOfWeek.setDate(date.getDate() - date.getDay() + 1) // T2
-    startOfWeek.setHours(0, 0, 0, 0)
+    // 1️⃣ Tính streak liên tiếp từ hôm nay trở về trước
+    const today = new Date(date)
+    today.setHours(0, 0, 0, 0)
 
-    const endOfWeek = new Date(startOfWeek)
-    endOfWeek.setDate(startOfWeek.getDate() + 6)
-    endOfWeek.setHours(23, 59, 59, 999)
+    // Lấy tất cả điểm danh của user, sắp xếp theo ngày giảm dần
+    const allAttendances = await this.attendanceRepo.findByUserId(userId)
 
-    // 2️⃣ Lấy tất cả điểm danh trong tuần
-    let attendances = await this.attendanceRepo.findStreakWithStartEndDay(
-      userId,
-      startOfWeek,
-      endOfWeek
-    )
+    // Sắp xếp theo ngày giảm dần
+    const sortedAttendances = allAttendances
+      .filter((att) => {
+        const attDate = new Date(att.date)
+        attDate.setHours(0, 0, 0, 0)
+        return attDate < today // Chỉ lấy các ngày trước hôm nay
+      })
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
+    // 2️⃣ Đếm streak liên tiếp
+    let streakCount = 0
+    let expectedDate = new Date(today)
+    expectedDate.setDate(expectedDate.getDate() - 1) // Bắt đầu từ hôm qua
+
+    const streakAttendances: AttendanceType[] = []
+
+    for (const att of sortedAttendances) {
+      const attDate = new Date(att.date)
+      attDate.setHours(0, 0, 0, 0)
+
+      if (attDate.getTime() === expectedDate.getTime()) {
+        streakCount++
+        streakAttendances.push(att)
+        // Tiếp tục kiểm tra ngày trước đó
+        expectedDate.setDate(expectedDate.getDate() - 1)
+      } else if (attDate.getTime() < expectedDate.getTime()) {
+        // Có khoảng trống, dừng streak
+        break
+      }
+    }
+
+    // 3️⃣ Thêm dayOfWeek nếu cần
+    let attendances: any[] = streakAttendances
     if (addDayOfWeek) {
-      const attendancesWithDay: AttendanceWithDayOfWeekType[] = attendances.map(
+      const attendancesWithDay: AttendanceWithDayOfWeekType[] = streakAttendances.map(
         (att) => ({
           ...att,
-          dayOfWeek: getWeekDay(att.date) // dùng hàm bạn đã viết
+          dayOfWeek: getWeekDay(att.date)
         })
       )
       attendances = attendancesWithDay
     }
 
-    const count = attendances.length
+    const count = streakCount
     const isFullWeek = count >= 7
 
     return { count, isFullWeek, attendances }
