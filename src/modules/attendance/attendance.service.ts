@@ -51,6 +51,8 @@ export class AttendanceService {
   }
 
   async findByUser(userId: number, date: Date = new Date()) {
+    console.log(date)
+
     const attendances = await this.findStreakDate(userId, date, true)
     const userInfo = await this.shareUserRepo.findUnique({ id: userId })
     if (!userInfo) {
@@ -60,6 +62,25 @@ export class AttendanceService {
       user: userInfo,
       attendances: attendances.attendances,
       count: attendances.count
+    }
+    return {
+      statusCode: HttpStatus.OK,
+      data,
+      message: ENTITY_MESSAGE.GET_SUCCESS
+    }
+  }
+
+  // New: return attendance records of the week containing the given date (Mon-Sun)
+  async findByUserWeek(userId: number, date: Date = new Date()) {
+    const weekly = await this.findWeekAttendances(userId, date, true)
+    const userInfo = await this.shareUserRepo.findUnique({ id: userId })
+    if (!userInfo) {
+      throw NotFoundRecordException
+    }
+    const data = {
+      user: userInfo,
+      attendances: weekly.attendances,
+      count: weekly.count
     }
     return {
       statusCode: HttpStatus.OK,
@@ -250,6 +271,39 @@ export class AttendanceService {
     }
 
     const count = streakCount
+    const isFullWeek = count >= 7
+
+    return { count, isFullWeek, attendances }
+  }
+
+  // Helper: get all attendances in the week (Mon-Sun) of the given date
+  async findWeekAttendances(userId: number, date: Date, addDayOfWeek: boolean = false) {
+    // Determine start (Mon) and end (Sun) of the week for the given date
+    const startOfWeek = new Date(date)
+    startOfWeek.setDate(date.getDate() - date.getDay() + 1) // Monday
+    startOfWeek.setHours(0, 0, 0, 0)
+
+    const endOfWeek = new Date(startOfWeek)
+    endOfWeek.setDate(startOfWeek.getDate() + 6) // Sunday
+    endOfWeek.setHours(23, 59, 59, 999)
+
+    let attendances = await this.attendanceRepo.findStreakWithStartEndDay(
+      userId,
+      startOfWeek,
+      endOfWeek
+    )
+
+    if (addDayOfWeek) {
+      const attendancesWithDay: AttendanceWithDayOfWeekType[] = attendances.map(
+        (att) => ({
+          ...att,
+          dayOfWeek: getWeekDay(att.date)
+        })
+      )
+      attendances = attendancesWithDay as any
+    }
+
+    const count = attendances.length
     const isFullWeek = count >= 7
 
     return { count, isFullWeek, attendances }
