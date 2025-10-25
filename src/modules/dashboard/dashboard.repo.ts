@@ -1,9 +1,75 @@
+import envConfig from '@/config/env.config'
+import { SharedRoleRepository } from '@/shared/repositories/shared-role.repo'
 import { PrismaService } from '@/shared/services/prisma.service'
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
+import fs from 'fs'
+import { google } from 'googleapis'
 
 @Injectable()
 export class DashboardRepo {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private sharedRoleRepo: SharedRoleRepository
+  ) {}
+
+  private static webVisitsCache: { value: number; expires: number } | null = null
+  private static webVisitsLastWeekCache: { value: number; expires: number } | null = null
+  private readonly logger = new Logger(DashboardRepo.name)
+
+  /**
+   * Create Google auth client using env credentials or key file.
+   */
+  private async createGoogleAuthClient() {
+    const saClientEmail = envConfig.GA_SA_CLIENT_EMAIL
+    const saPrivateKey = envConfig.GA_SA_PRIVATE_KEY
+
+    let auth: any
+    if (saClientEmail && saPrivateKey) {
+      const normalizedKey = saPrivateKey.includes('\\n')
+        ? saPrivateKey.replace(/\\n/g, '\n')
+        : saPrivateKey
+
+      auth = new google.auth.GoogleAuth({
+        credentials: {
+          client_email: saClientEmail,
+          private_key: normalizedKey
+        },
+        scopes: ['https://www.googleapis.com/auth/analytics.readonly']
+      })
+    } else {
+      const credPath = envConfig.GOOGLE_APPLICATION_CREDENTIALS
+      if (!credPath || !fs.existsSync(credPath)) {
+        throw new Error('Google credentials not available')
+      }
+
+      auth = new google.auth.GoogleAuth({
+        keyFile: credPath,
+        scopes: ['https://www.googleapis.com/auth/analytics.readonly']
+      })
+    }
+
+    const client = await auth.getClient()
+    // attach to google global options to reuse
+    google.options({ auth: client as any })
+    return { auth, client }
+  }
+
+  /** Extract a metric value from Analytics Data API response by metric name. */
+  private extractMetricValueFromRes(resData: any, metricIndex = 0): number {
+    if (!resData) return 0
+
+    // Prefer totals
+    if (resData.totals && resData.totals.length > 0 && resData.totals[0].metricValues) {
+      return Number(resData.totals[0].metricValues[metricIndex]?.value || 0)
+    }
+
+    // Fallback: sum across rows by metricIndex
+    if (resData.rows && resData.rows.length > 0) {
+      return resData.rows.reduce((s: number, r: any) => s + Number(r.metricValues?.[metricIndex]?.value || 0), 0)
+    }
+
+    return 0
+  }
 
   async getUserPlayStats() {
     // Current month range
@@ -75,6 +141,61 @@ export class DashboardRepo {
     })
   }
 
+  /** Count active users excluding admin role */
+  async getTotalUsersExcludingAdmin(): Promise<number> {
+    const adminRoleId = await this.sharedRoleRepo.getAdminRoleId()
+    return this.prismaService.user.count({
+      where: {
+        deletedAt: null,
+        status: 'ACTIVE',
+        roleId: { not: adminRoleId }
+      }
+    })
+  }
+
+  /** Count users by whether they have a godProfile (null vs not null), excluding admins */
+  async getUsersCountByGodProfile(hasGodProfile: boolean): Promise<number> {
+    const adminRoleId = await this.sharedRoleRepo.getAdminRoleId()
+    return this.prismaService.user.count({
+      where: {
+        deletedAt: null,
+        status: 'ACTIVE',
+        roleId: { not: adminRoleId },
+        godProfileId: hasGodProfile ? { not: null } : null
+      }
+    })
+  }
+
+  /** Count users (excluding admins) as of a given date (createdAt <= asOf) optionally filtering by godProfile presence */
+  async getUsersCountByGodProfileAsOfDate(
+    hasGodProfile: boolean,
+    asOf: Date
+  ): Promise<number> {
+    const adminRoleId = await this.sharedRoleRepo.getAdminRoleId()
+    return this.prismaService.user.count({
+      where: {
+        deletedAt: null,
+        status: 'ACTIVE',
+        roleId: { not: adminRoleId },
+        godProfileId: hasGodProfile ? { not: null } : null,
+        createdAt: { lte: asOf }
+      }
+    })
+  }
+
+  /** Total users (excluding admins) as of a given date (createdAt <= asOf) */
+  async getTotalUsersExcludingAdminAsOfDate(asOf: Date): Promise<number> {
+    const adminRoleId = await this.sharedRoleRepo.getAdminRoleId()
+    return this.prismaService.user.count({
+      where: {
+        deletedAt: null,
+        status: 'ACTIVE',
+        roleId: { not: adminRoleId },
+        createdAt: { lte: asOf }
+      }
+    })
+  }
+
   async getTotalUsersLastMonth(): Promise<number> {
     const lastMonth = new Date()
     lastMonth.setMonth(lastMonth.getMonth() - 1)
@@ -91,39 +212,182 @@ export class DashboardRepo {
   }
 
   async getWebVisits(): Promise<number> {
-    // Count unique devices that have been active (web visits approximation)
-    const result = await this.prismaService.device.count({
-      where: {
-        isActive: true,
-        user: {
-          deletedAt: null,
-          status: 'ACTIVE'
+    console.log('dang call ga')
+
+    // Return cached value if still valid
+    const now = Date.now()
+    if (DashboardRepo.webVisitsCache && DashboardRepo.webVisitsCache.expires > now) {
+      return DashboardRepo.webVisitsCache.value
+    }
+
+    // Try to fetch from Google Analytics Data API (GA4) using service account
+    try {
+      const propertyId = envConfig.GA_PROPERTY_ID
+
+      // Prefer credentials passed directly via env vars (avoid JSON file)
+      // GA_SA_CLIENT_EMAIL and GA_SA_PRIVATE_KEY can be set in .env
+      const saClientEmail = envConfig.GA_SA_CLIENT_EMAIL
+      const saPrivateKey = envConfig.GA_SA_PRIVATE_KEY
+
+      let auth: any
+      if (saClientEmail && saPrivateKey) {
+        // Private key in .env may contain literal \n; replace escaped newlines if present
+        const normalizedKey = saPrivateKey.includes('\\n')
+          ? saPrivateKey.replace(/\\n/g, '\n')
+          : saPrivateKey
+
+        auth = new google.auth.GoogleAuth({
+          credentials: {
+            client_email: saClientEmail,
+            private_key: normalizedKey
+          },
+          scopes: ['https://www.googleapis.com/auth/analytics.readonly']
+        })
+      } else {
+        // Fallback: credentials file path from env config (must be set)
+        const credPath = envConfig.GOOGLE_APPLICATION_CREDENTIALS
+        if (!credPath || !fs.existsSync(credPath)) {
+          this.logger.warn(
+            'Google credentials not found (env creds or file); falling back to device count'
+          )
+          throw new Error('Google credentials not available')
+        }
+
+        auth = new google.auth.GoogleAuth({
+          keyFile: credPath,
+          scopes: ['https://www.googleapis.com/auth/analytics.readonly']
+        })
+      }
+
+      const analyticsData = google.analyticsdata('v1beta')
+      const client = await auth.getClient()
+      // Attach auth client globally for the googleapis instance to avoid typing overloads
+      // google.options typing can be strict; cast client to any to satisfy union types at compile-time
+      google.options({ auth: client as any })
+
+      // compute dates: fixed start 2025-10-15 to today
+      const today = new Date()
+      const fmt = (d: Date) => d.toISOString().slice(0, 10)
+      const startDate = '2025-10-15'
+      const endDate = fmt(today)
+
+      const res = await analyticsData.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestBody: {
+          metrics: [{ name: 'screenPageViews' }],
+          dateRanges: [{ startDate, endDate }]
+        }
+      })
+      console.log('xong call ga')
+      console.log('data ne: ', res.data)
+
+      // Try to read totals -> metricValues
+      let visits = 0
+      // @ts-ignore - runtime shape may vary
+      if (res.data && (res.data.totals || res.data.rows)) {
+        // totals preferred
+        // @ts-ignore
+        if (
+          res.data.totals &&
+          res.data.totals.length > 0 &&
+          res.data.totals[0].metricValues
+        ) {
+          // @ts-ignore
+          visits = Number(res.data.totals[0].metricValues[0].value || 0)
+        } else if (res.data.rows && res.data.rows.length > 0) {
+          // sum first metric across rows
+          // @ts-ignore
+          visits = res.data.rows.reduce(
+            (s: number, r: any) => s + Number(r.metricValues?.[0]?.value || 0),
+            0
+          )
         }
       }
-    })
 
-    return result
+      // Cache for 10 minutes
+      DashboardRepo.webVisitsCache = { value: visits, expires: now + 10 * 60 * 1000 }
+      return visits
+    } catch (err) {
+      this.logger.warn('Failed to fetch GA data: ' + (err as Error).message)
+
+      // Fallback: Count unique devices that have been active (existing approximation)
+      const result = await this.prismaService.device.count({
+        where: {
+          isActive: true,
+          user: {
+            deletedAt: null,
+            status: 'ACTIVE'
+          }
+        }
+      })
+
+      // Cache fallback for 1 minute to avoid DB pressure
+      DashboardRepo.webVisitsCache = { value: result, expires: now + 60 * 1000 }
+      return result
+    }
   }
 
   async getWebVisitsLastWeek(): Promise<number> {
-    const lastWeek = new Date()
-    lastWeek.setDate(lastWeek.getDate() - 7)
+    // Return cached value if still valid
+    const now = Date.now()
+    if (DashboardRepo.webVisitsLastWeekCache && DashboardRepo.webVisitsLastWeekCache.expires > now) {
+      return DashboardRepo.webVisitsLastWeekCache.value
+    }
 
-    const result = await this.prismaService.device.count({
-      where: {
-        isActive: true,
-        lastActive: {
-          gte: lastWeek,
-          lt: new Date()
-        },
-        user: {
-          deletedAt: null,
-          status: 'ACTIVE'
+    // We'll attempt to fetch screenPageViews for the previous 7-day window (14 -> 8 days ago)
+    try {
+      const propertyId = envConfig.GA_PROPERTY_ID
+      if (!propertyId) throw new Error('GA_PROPERTY_ID not configured')
+
+      const { client } = await this.createGoogleAuthClient()
+      const analyticsData = google.analyticsdata('v1beta')
+
+      // compute dates: start = 1 month ago, end = today
+      const today = new Date()
+      const start = new Date(today)
+      start.setMonth(today.getMonth() - 1)
+
+      const fmt = (d: Date) => d.toISOString().slice(0, 10)
+
+      const res = await analyticsData.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestBody: {
+          metrics: [{ name: 'screenPageViews' }],
+          dateRanges: [{ startDate: fmt(start), endDate: fmt(today) }]
         }
-      }
-    })
+      })
 
-    return result
+      const visits = this.extractMetricValueFromRes(res.data, 0)
+
+      // cache for 10 minutes
+      DashboardRepo.webVisitsLastWeekCache = { value: visits, expires: now + 10 * 60 * 1000 }
+      return visits
+    } catch (err) {
+      this.logger.warn('Failed to fetch GA data for last week: ' + (err as Error).message)
+
+      // Fallback: count devices active in that month-ago range
+      const start = new Date()
+      start.setMonth(start.getMonth() - 1)
+      const end = new Date()
+
+      const result = await this.prismaService.device.count({
+        where: {
+          isActive: true,
+          lastActive: {
+            gte: start,
+            lt: end
+          },
+          user: {
+            deletedAt: null,
+            status: 'ACTIVE'
+          }
+        }
+      })
+
+      // cache fallback for 1 minute
+      DashboardRepo.webVisitsLastWeekCache = { value: result, expires: now + 60 * 1000 }
+      return result
+    }
   }
 
   async getTotalQuestions(): Promise<number> {

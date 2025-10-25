@@ -30,8 +30,8 @@ const DashboardStatSchema = z.object({
 const DashboardStatsSchema = z.object({
   totalUsers: DashboardStatSchema,
   webVisits: DashboardStatSchema,
-  questions: DashboardStatSchema,
-  interaction: DashboardStatSchema
+  userNotPlay: DashboardStatSchema,
+  userPlay: DashboardStatSchema
 })
 
 export const DashboardStatsResSchema = z.object({

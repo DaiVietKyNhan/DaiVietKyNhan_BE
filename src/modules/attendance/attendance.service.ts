@@ -124,7 +124,8 @@ export class AttendanceService {
       let isStreakSunday = false
       const streakData = await this.findStreakDate(createdById, date)
       // Kiểm tra xem có streak liên tiếp >= 6 ngày trước hôm nay không
-      isStreakSunday = streakData.count >= 6 ? true : false
+      const totalStreakWithToday = streakData.count + 1 // Bao gồm cả hôm nay
+      isStreakSunday = totalStreakWithToday % 7 === 0 ? true : false
       console.log('isStreat: ', isStreakSunday)
 
       const data: CreateAttendanceBodyType = {
