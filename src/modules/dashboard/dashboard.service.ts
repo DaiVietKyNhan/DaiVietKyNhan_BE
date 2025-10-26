@@ -116,12 +116,12 @@ export class DashboardService {
         title: 'Lượt truy cập Web'
       },
       userNotPlay: {
-        value: `${userNotPlayPercent}%`,
+        value: usersWithoutGodProfile,
         change: `${userNotPlayChange > 0 ? '+' : ''}${userNotPlayChange}% so với tháng trước`,
         title: 'Tương tác'
       },
       userPlay: {
-        value: `${userPlayPercent}%`,
+        value: usersWithGodProfile,
         change: `${userPlayChange > 0 ? '+' : ''}${userPlayChange}% so với tháng trước`,
         title: 'Tương tác'
       }
