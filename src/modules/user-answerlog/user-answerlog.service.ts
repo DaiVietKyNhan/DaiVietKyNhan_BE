@@ -153,6 +153,10 @@ export class UserAnswerLogService {
             landId,
             userId: createdById
           })
+          // hoan thanh dat
+          await this.achievementCheckerService.checkLandAchievements(createdById)
+
+          await this.achievementCheckerService.checkKyNhanSummaryAchievements(createdById)
         }
       }
       return {
@@ -351,10 +355,12 @@ export class UserAnswerLogService {
           landId,
           userId: createdById
         })
-        await this.achievementCheckerService.checkKyNhanSummaryAchievements(createdById)
 
-        await this.achievementCheckerService.checkKyNhanSummaryAchievements(createdById)
+        // hoan thanh dat
+        await this.achievementCheckerService.checkLandAchievements(createdById)
       }
+
+      await this.achievementCheckerService.checkKyNhanSummaryAchievements(createdById)
       return {
         statusCode: HttpStatus.CREATED,
         data: {

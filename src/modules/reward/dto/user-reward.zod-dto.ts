@@ -1,18 +1,28 @@
+import { PaginationQuerySchema } from '@/shared/models/request.model'
 import { createZodDto } from 'nestjs-zod'
-import { CreateUserRewardBodySchema, UpdateUserRewardBodySchema, ExchangeRewardBodySchema, RedeemCodeBodySchema } from '../entities/user-reward.entity'
+import { z } from 'zod'
+import {
+  CreateUserRewardBodySchema,
+  ExchangeRewardBodySchema,
+  RedeemCodeBodySchema,
+  UpdateUserRewardBodySchema
+} from '../entities/user-reward.entity'
 
-export class CreateUserRewardBodyDTO extends createZodDto(
-    CreateUserRewardBodySchema
-) { }
+export class CreateUserRewardBodyDTO extends createZodDto(CreateUserRewardBodySchema) {}
 
-export class UpdateUserRewardBodyDTO extends createZodDto(
-    UpdateUserRewardBodySchema
-) { }
+export class UpdateUserRewardBodyDTO extends createZodDto(UpdateUserRewardBodySchema) {}
 
-export class ExchangeRewardBodyDTO extends createZodDto(
-    ExchangeRewardBodySchema
-) { }
+export class ExchangeRewardBodyDTO extends createZodDto(ExchangeRewardBodySchema) {}
 
-export class RedeemCodeBodyDTO extends createZodDto(
-    RedeemCodeBodySchema
-) { }
+export class RedeemCodeBodyDTO extends createZodDto(RedeemCodeBodySchema) {}
+
+// DTO for filtering user rewards by reward.code
+export const GetListUserRewardQuerySchema = PaginationQuerySchema.extend({
+  rewardCode: z.string().optional()
+})
+
+export type GetListUserRewardQueryType = z.infer<typeof GetListUserRewardQuerySchema>
+
+export class GetListUserRewardQueryDTO extends createZodDto(
+  GetListUserRewardQuerySchema
+) {}

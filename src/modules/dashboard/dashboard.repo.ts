@@ -65,7 +65,10 @@ export class DashboardRepo {
 
     // Fallback: sum across rows by metricIndex
     if (resData.rows && resData.rows.length > 0) {
-      return resData.rows.reduce((s: number, r: any) => s + Number(r.metricValues?.[metricIndex]?.value || 0), 0)
+      return resData.rows.reduce(
+        (s: number, r: any) => s + Number(r.metricValues?.[metricIndex]?.value || 0),
+        0
+      )
     }
 
     return 0
@@ -330,7 +333,10 @@ export class DashboardRepo {
   async getWebVisitsLastWeek(): Promise<number> {
     // Return cached value if still valid
     const now = Date.now()
-    if (DashboardRepo.webVisitsLastWeekCache && DashboardRepo.webVisitsLastWeekCache.expires > now) {
+    if (
+      DashboardRepo.webVisitsLastWeekCache &&
+      DashboardRepo.webVisitsLastWeekCache.expires > now
+    ) {
       return DashboardRepo.webVisitsLastWeekCache.value
     }
 
@@ -360,7 +366,10 @@ export class DashboardRepo {
       const visits = this.extractMetricValueFromRes(res.data, 0)
 
       // cache for 10 minutes
-      DashboardRepo.webVisitsLastWeekCache = { value: visits, expires: now + 10 * 60 * 1000 }
+      DashboardRepo.webVisitsLastWeekCache = {
+        value: visits,
+        expires: now + 10 * 60 * 1000
+      }
       return visits
     } catch (err) {
       this.logger.warn('Failed to fetch GA data for last week: ' + (err as Error).message)
