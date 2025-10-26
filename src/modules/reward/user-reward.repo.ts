@@ -16,7 +16,7 @@ export class UserRewardRepo {
   constructor(private prismaService: PrismaService) { }
 
   async getListUserReward(query: GetListUserRewardQueryType) {
-    const { rewardCode, ...pagination } = query
+    const { rewardCode, status, ...pagination } = query
     const { where: parsedWhere, orderBy: parsedOrderBy } = parseQs(
       pagination.qs,
       USER_REWARD_FIELDS
@@ -27,7 +27,8 @@ export class UserRewardRepo {
     const where = {
       ...parsedWhere,
       deletedAt: null as Date | null,
-      ...(rewardCode ? { reward: { code: rewardCode } } : {})
+      ...(rewardCode ? { reward: { code: rewardCode } } : {}),
+      ...(status ? { status } : {})
     }
 
     const [totalItems, data] = await Promise.all([
