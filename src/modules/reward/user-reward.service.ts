@@ -80,10 +80,6 @@ export class UserRewardService {
         for (const userReward of userRewards) {
             const reward = userReward.reward
 
-            // Bỏ qua những reward đã CLAIMED
-            if (userReward.status === 'CLAIMED') {
-                continue
-            }
 
             // Chỉ xử lý POINT và COIN type, bỏ CODE
             if (reward.type === 'POINT' || reward.type === 'COIN') {
@@ -303,11 +299,11 @@ export class UserRewardService {
             })
 
             // Nếu đã có reward và status là CLAIMED thì báo lỗi
-            if (existingUserReward && existingUserReward.status === 'CLAIMED') {
-                throw new BadRequestException('Bạn đã đổi thưởng này rồi')
-            }
+            // if (existingUserReward && existingUserReward.status === 'CLAIMED') {
+            //     throw new BadRequestException('Bạn đã đổi thưởng này rồi')
+            // }
 
-            // Nếu đã có reward và status là COMPLETED, thực hiện exchange và update thành CLAIMED
+            // Nếu đã có reward và status là COMPLETED, thực hiện exchange và update thành PENDING
             if (existingUserReward && existingUserReward.status === 'COMPLETED') {
                 // Kiểm tra đủ giá trị và trừ điểm/coin (chỉ với POINT và COIN)
                 if (reward.type === 'POINT') {
@@ -328,12 +324,12 @@ export class UserRewardService {
                     })
                 }
 
-                // Update existing record thành COMPLETED
+                // Update existing record thành PENDING
                 const userReward = await this.userRewardRepo.update({
                     id: existingUserReward.id,
                     data: {
-                        status: 'CLAIMED',
-                        exchangedAt: new Date(),
+                        status: 'PENDING',
+                        exchangedAt: null,
                         code:
                             reward.type === 'CODE'
                                 ? `CODE_${Date.now()}`
