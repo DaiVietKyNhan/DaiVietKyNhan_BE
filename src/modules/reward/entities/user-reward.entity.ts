@@ -8,7 +8,7 @@ export const UserRewardSchema = z
     id: z.number(),
     userId: z.number(),
     rewardId: z.number(),
-    status: z.enum(['PENDING', 'COMPLETED', 'CANCELLED']),
+    status: z.enum(['PENDING', 'COMPLETED', 'CLAIMED', 'CANCELLED']),
     exchangedAt: z.date().nullable(),
     code: z.string().max(100).nullable(),
     valuePaid: z.number().min(0),
@@ -31,7 +31,7 @@ export const CreateUserRewardBodySchema = UserRewardSchema.pick({
 })
 
 export const UpdateUserRewardBodySchema = z.object({
-  status: z.enum(['PENDING', 'COMPLETED', 'CANCELLED']).optional(),
+  status: z.enum(['PENDING', 'COMPLETED', 'CANCELLED', 'CLAIMED']).optional(),
   exchangedAt: z.any().optional(),
   code: z.string().nullable().optional(),
   valuePaid: z.number().optional()

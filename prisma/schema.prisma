@@ -907,6 +907,7 @@ enum UserRewardStatus {
   PENDING
   COMPLETED
   CANCELLED
+  CLAIMED
 }
 
 enum answerOptionType {

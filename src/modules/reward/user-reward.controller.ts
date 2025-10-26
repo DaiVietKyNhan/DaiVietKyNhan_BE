@@ -45,7 +45,7 @@ export class UserRewardController {
   @ApiResponse({ status: 200, description: 'Get my rewards by status successfully' })
   async getMyRewardsByStatus(
     @ActiveUser('userId') userId: number,
-    @Param('status') status: 'PENDING' | 'COMPLETED' | 'CANCELLED'
+    @Param('status') status: 'PENDING' | 'COMPLETED' | 'CLAIMED' | 'CANCELLED'
   ) {
     return this.userRewardService.findByUserIdAndStatus(userId, status)
   }

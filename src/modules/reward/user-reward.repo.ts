@@ -13,7 +13,7 @@ import {
 
 @Injectable()
 export class UserRewardRepo {
-  constructor(private prismaService: PrismaService) {}
+  constructor(private prismaService: PrismaService) { }
 
   async getListUserReward(query: GetListUserRewardQueryType) {
     const { rewardCode, ...pagination } = query
@@ -243,7 +243,7 @@ export class UserRewardRepo {
         deletedAt: null,
         reward: {
           type: {
-            in: ['POINT', 'COIN'] // Chỉ lấy rewards có type POINT và COIN, loại bỏ CODE
+            in: ['POINT', 'COIN'] // Chỉ lấy POINT và COIN, bỏ CODE
           }
         }
       },
@@ -254,7 +254,7 @@ export class UserRewardRepo {
     })
   }
 
-  findByUserIdAndStatus(userId: number, status: 'PENDING' | 'COMPLETED' | 'CANCELLED') {
+  findByUserIdAndStatus(userId: number, status: 'PENDING' | 'COMPLETED' | 'CLAIMED' | 'CANCELLED') {
     return this.prismaService.userReward.findMany({
       where: {
         userId,
