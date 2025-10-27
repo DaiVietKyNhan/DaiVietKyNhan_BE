@@ -241,6 +241,9 @@ export class UserRewardRepo {
     return this.prismaService.userReward.findMany({
       where: {
         userId,
+        // status: {
+        //   not: 'CLAIMED'
+        // },
         deletedAt: null,
         reward: {
           type: {

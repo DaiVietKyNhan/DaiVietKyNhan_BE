@@ -27,6 +27,7 @@ import {
 } from './entities/user-reward.entity'
 import { RewardRepo } from './reward.repo'
 import { UserRewardRepo } from './user-reward.repo'
+import { UserRewardHistoryRepo } from './user-reward-history.repo' // Add this
 
 @Injectable()
 export class UserRewardService {
@@ -34,7 +35,8 @@ export class UserRewardService {
         private userRewardRepo: UserRewardRepo,
         private rewardRepo: RewardRepo,
         private sharedUserRepo: SharedUserRepository,
-        private prismaService: PrismaService
+        private prismaService: PrismaService,
+        private userRewardHistoryRepo: UserRewardHistoryRepo // Add this
     ) { }
 
     async getListUserReward(query: GetListUserRewardQueryType) {
@@ -69,7 +71,6 @@ export class UserRewardService {
     }
 
     async findByUserId(userId: number) {
-
         const user = await this.sharedUserRepo.findUnique({ id: userId })
         if (!user) {
             throw NotFoundRecordException
@@ -341,6 +342,19 @@ export class UserRewardService {
 
                 // Parse gift để cộng coin/point cho tất cả loại reward
                 await this.processGiftRewards(userId, reward.gift)
+
+                // After successful exchange, create history record
+                await this.userRewardHistoryRepo.create({
+                    data: {
+                        user: { connect: { id: userId } },
+                        reward: { connect: { id: rewardId } },
+                        status: 'CLAIMED',
+                        exchangedAt: new Date(),
+                        code: userReward.code,
+                        valuePaid: userReward.valuePaid
+                    },
+                    createdById: userId
+                })
 
                 return {
                     statusCode: HttpStatus.OK,
