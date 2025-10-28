@@ -8,16 +8,19 @@ import { RewardService } from './reward.service'
 import { UserRewardController } from './user-reward.controller'
 import { UserRewardRepo } from './user-reward.repo'
 import { UserRewardService } from './user-reward.service'
+import { UserRewardHistoryRepo } from './user-reward-history.repo'
+import { UserRewardHistoryController } from './user-reward-history.controller'
 
 @Module({
     imports: [SharedModule],
-    controllers: [RewardController, UserRewardController],
+    controllers: [RewardController, UserRewardController, UserRewardHistoryController],
     providers: [
         RewardService,
         RewardRepo,
         UserRewardService,
         UserRewardRepo,
-        PrismaService
+        PrismaService,
+        UserRewardHistoryRepo
     ],
     exports: [RewardService, UserRewardService]
 })
