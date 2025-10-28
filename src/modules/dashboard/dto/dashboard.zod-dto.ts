@@ -120,3 +120,37 @@ export const LandStatsResSchema = z.object({
 })
 
 export class LandStatsResDTO extends createZodDto(LandStatsResSchema) {}
+
+// Gender and Age stats
+export const GenderStatSchema = z.object({
+  amount: z.number(),
+  percent: z.number()
+})
+
+export const AgeRangeStatSchema = z.object({
+  amount: z.number(),
+  percent: z.number()
+})
+
+export const GenderAgesStatsSchema = z.object({
+  genders: z.object({
+    male: GenderStatSchema,
+    female: GenderStatSchema,
+    other: GenderStatSchema
+  }),
+  ages: z.object({
+    '0-17': AgeRangeStatSchema,
+    '18-24': AgeRangeStatSchema,
+    '25-34': AgeRangeStatSchema,
+    '35-50': AgeRangeStatSchema,
+    '50+': AgeRangeStatSchema
+  })
+})
+
+export const GenderAgesStatsResSchema = z.object({
+  statusCode: z.number(),
+  data: GenderAgesStatsSchema,
+  message: z.string()
+})
+
+export class GenderAgesStatsResDTO extends createZodDto(GenderAgesStatsResSchema) {}

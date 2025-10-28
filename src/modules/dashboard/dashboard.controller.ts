@@ -5,6 +5,7 @@ import { ZodSerializerDto } from 'nestjs-zod'
 import { DashboardService } from './dashboard.service'
 import {
   DashboardStatsResDTO,
+  GenderAgesStatsResDTO,
   LandStatsResDTO,
   PointsStatsResDTO,
   QuestionStatsResDTO,
@@ -41,6 +42,14 @@ export class DashboardController {
   @ZodSerializerDto(UserStatsResDTO)
   getUserStatsMonth() {
     return this.dashboardService.getUserStatsMonth()
+  }
+
+  @Get('user/gender-ages')
+  @ApiOperation({ summary: 'Get user statistics by gender and age ranges' })
+  @ApiResponse({ status: 200, description: 'Get gender and age statistics successfully' })
+  @ZodSerializerDto(GenderAgesStatsResDTO)
+  getUserStatsGenderAges() {
+    return this.dashboardService.getUserStatsGenderAges()
   }
 
   @Get('user-play/top-user/stats')

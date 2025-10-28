@@ -751,4 +751,99 @@ export class DashboardRepo {
 
     return landStats
   }
+
+  /**
+   * Get gender and age statistics for all users
+   */
+  async getGenderAgesStats() {
+    // Get all non-deleted users with gender and birthDate
+    const users = await this.prismaService.user.findMany({
+      where: {
+        deletedAt: null
+      },
+      select: {
+        id: true,
+        gender: true,
+        birthDate: true
+      }
+    })
+
+    const totalUsers = users.length
+    const currentYear = new Date().getFullYear()
+
+    // Count by gender
+    const maleCount = users.filter((u) => u.gender === 'MALE').length
+    const femaleCount = users.filter((u) => u.gender === 'FEMALE').length
+
+    // Calculate age and count by age range
+    const ageRanges = {
+      '0-17': 0,
+      '18-24': 0,
+      '25-34': 0,
+      '35-50': 0,
+      '50+': 0
+    }
+
+    users.forEach((user) => {
+      if (user.birthDate) {
+        const birthYear = new Date(user.birthDate).getFullYear()
+        const age = currentYear - birthYear
+
+        if (age <= 17) {
+          ageRanges['0-17']++
+        } else if (age <= 24) {
+          ageRanges['18-24']++
+        } else if (age <= 34) {
+          ageRanges['25-34']++
+        } else if (age <= 50) {
+          ageRanges['35-50']++
+        } else {
+          ageRanges['50+']++
+        }
+      }
+    })
+
+    // Calculate percentages (round to 2 decimal places)
+    const calcPercent = (count: number) =>
+      totalUsers > 0 ? Math.round((count / totalUsers) * 10000) / 100 : 0
+
+    return {
+      genders: {
+        male: {
+          amount: maleCount,
+          percent: calcPercent(maleCount)
+        },
+        female: {
+          amount: femaleCount,
+          percent: calcPercent(femaleCount)
+        },
+        other: {
+          amount: totalUsers - maleCount - femaleCount,
+          percent: calcPercent(totalUsers - maleCount - femaleCount)
+        }
+      },
+      ages: {
+        '0-17': {
+          amount: ageRanges['0-17'],
+          percent: calcPercent(ageRanges['0-17'])
+        },
+        '18-24': {
+          amount: ageRanges['18-24'],
+          percent: calcPercent(ageRanges['18-24'])
+        },
+        '25-34': {
+          amount: ageRanges['25-34'],
+          percent: calcPercent(ageRanges['25-34'])
+        },
+        '35-50': {
+          amount: ageRanges['35-50'],
+          percent: calcPercent(ageRanges['35-50'])
+        },
+        '50+': {
+          amount: ageRanges['50+'],
+          percent: calcPercent(ageRanges['50+'])
+        }
+      }
+    }
+  }
 }

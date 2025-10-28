@@ -178,4 +178,13 @@ export class DashboardService {
       message: ENTITY_MESSAGE.GET_SUCCESS
     }
   }
+
+  async getUserStatsGenderAges() {
+    const stats = await this.dashboardRepo.getGenderAgesStats()
+    return {
+      statusCode: HttpStatus.OK,
+      data: stats,
+      message: ENTITY_MESSAGE.GET_SUCCESS
+    }
+  }
 }
