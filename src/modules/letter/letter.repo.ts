@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable } from '@nestjs/common'
 import { PrismaService } from '@/shared/services/prisma.service'
 import { Prisma } from '@prisma/client'
 import { PaginationQueryType } from '@/shared/models/request.model'
@@ -130,15 +130,31 @@ export class LetterRepo {
     async list(pagination: PaginationQueryType) {
         const { where, orderBy } = parseQs(pagination.qs, LETTER_FIELDS)
 
+        // Initialize where clause if undefined
+        const whereClause = where || {}
+
+        // Validate and transform where clause for Letter model
+        const validStatuses = ['PENDING', 'REMOVE', 'PUBLIC']
+        if (whereClause.status && !validStatuses.includes(whereClause.status)) {
+            throw new BadRequestException(`Invalid status: ${whereClause.status}. Valid values are: ${validStatuses.join(', ')}`)
+        }
+
+        // Convert isFirstPublic from string to boolean if present
+        if (whereClause.isFirstPublic !== undefined) {
+            if (typeof whereClause.isFirstPublic === 'string') {
+                whereClause.isFirstPublic = whereClause.isFirstPublic === 'true'
+            }
+        }
+
         const skip = (pagination.currentPage - 1) * pagination.pageSize
         const take = pagination.pageSize
 
         const [totalItems, data] = await Promise.all([
             this.prismaService.letter.count({
-                where: { deletedAt: null, ...where }
+                where: { deletedAt: null, ...whereClause }
             }),
             this.prismaService.letter.findMany({
-                where: { deletedAt: null, ...where },
+                where: { deletedAt: null, ...whereClause },
                 include: {
                     fromUser: {
                         select: {
