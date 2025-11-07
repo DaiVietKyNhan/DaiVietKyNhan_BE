@@ -432,6 +432,19 @@ export class UserRewardService {
                 // Parse gift string để cộng coin và điểm cho user
                 await this.processGiftRewards(userId, reward.gift)
 
+                // After successful exchange, create history record
+                await this.userRewardHistoryRepo.create({
+                    data: {
+                        user: { connect: { id: userId } },
+                        reward: { connect: { id: reward.id } },
+                        status: 'CLAIMED',
+                        exchangedAt: new Date(),
+                        code: updatedUserReward.code,
+                        valuePaid: updatedUserReward.valuePaid
+                    },
+                    createdById: userId
+                })
+
                 return {
                     statusCode: HttpStatus.OK,
                     data: updatedUserReward,
@@ -454,6 +467,19 @@ export class UserRewardService {
 
             // Parse gift string để cộng coin và điểm cho user
             await this.processGiftRewards(userId, reward.gift)
+
+            // After successful exchange, create history record
+            await this.userRewardHistoryRepo.create({
+                data: {
+                    user: { connect: { id: userId } },
+                    reward: { connect: { id: reward.id } },
+                    status: 'CLAIMED',
+                    exchangedAt: new Date(),
+                    code: newUserReward.code,
+                    valuePaid: newUserReward.valuePaid
+                },
+                createdById: userId
+            })
 
             return {
                 statusCode: HttpStatus.OK,
