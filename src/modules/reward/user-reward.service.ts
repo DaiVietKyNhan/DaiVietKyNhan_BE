@@ -708,45 +708,81 @@ export class UserRewardService {
                 }
             }
 
+            // Tối ưu: Lấy tất cả existing history trước (ngoài transaction) để tránh timeout
+            const existingHistories = await this.prismaService.userRewardHistory.findMany({
+                where: {
+                    status: 'CLAIMED',
+                    deletedAt: null,
+                    OR: codeRewards.map((ur) => ({
+                        userId: ur.userId,
+                        rewardId: ur.rewardId,
+                        exchangedAt: ur.exchangedAt
+                    }))
+                },
+                select: {
+                    userId: true,
+                    rewardId: true,
+                    exchangedAt: true
+                }
+            })
+
+            // Tạo Set để check nhanh hơn
+            const existingHistorySet = new Set(
+                existingHistories.map((h) => `${h.userId}-${h.rewardId}-${h.exchangedAt?.getTime()}`)
+            )
+
             let migrated = 0
             let skipped = 0
 
-            // Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu
-            await this.prismaService.$transaction(async (tx) => {
-                for (const userReward of codeRewards) {
-                    // Kiểm tra xem đã có trong history chưa (tránh duplicate)
-                    const existingHistory = await tx.userRewardHistory.findFirst({
-                        where: {
-                            userId: userReward.userId,
-                            rewardId: userReward.rewardId,
-                            status: 'CLAIMED',
-                            exchangedAt: userReward.exchangedAt,
-                            deletedAt: null
-                        }
-                    })
+            // Chuẩn bị data để insert batch
+            const dataToInsert: Array<{
+                userId: number
+                rewardId: number
+                status: 'CLAIMED'
+                exchangedAt: Date
+                code: string | null
+                valuePaid: number
+                createdById: number
+            }> = []
 
-                    if (existingHistory) {
-                        skipped++
-                        continue
-                    }
+            for (const userReward of codeRewards) {
+                const key = `${userReward.userId}-${userReward.rewardId}-${userReward.exchangedAt?.getTime()}`
 
-                    // Tạo record trong UserRewardHistory
-                    // Lấy code từ reward (code của reward) thay vì userReward.code
-                    await tx.userRewardHistory.create({
-                        data: {
-                            user: { connect: { id: userReward.userId } },
-                            reward: { connect: { id: userReward.rewardId } },
-                            status: 'CLAIMED',
-                            exchangedAt: userReward.exchangedAt || new Date(),
-                            code: userReward.reward.code, // Lấy code từ reward
-                            valuePaid: userReward.valuePaid,
-                            createdBy: { connect: { id: adminUserId } }
-                        }
-                    })
-
-                    migrated++
+                // Kiểm tra xem đã có trong history chưa (tránh duplicate)
+                if (existingHistorySet.has(key)) {
+                    skipped++
+                    continue
                 }
-            })
+
+                // Thêm vào danh sách để insert batch
+                dataToInsert.push({
+                    userId: userReward.userId,
+                    rewardId: userReward.rewardId,
+                    status: 'CLAIMED' as const,
+                    exchangedAt: userReward.exchangedAt || new Date(),
+                    code: userReward.reward.code, // Lấy code từ reward
+                    valuePaid: userReward.valuePaid,
+                    createdById: adminUserId
+                })
+            }
+
+            // Insert batch trong transaction với timeout tăng lên
+            if (dataToInsert.length > 0) {
+                await this.prismaService.$transaction(
+                    async (tx) => {
+                        // Sử dụng createMany để insert batch (nhanh hơn)
+                        await tx.userRewardHistory.createMany({
+                            data: dataToInsert,
+                            skipDuplicates: true // Bỏ qua nếu có duplicate
+                        })
+                    },
+                    {
+                        maxWait: 30000, // 30 giây
+                        timeout: 60000 // 60 giây
+                    }
+                )
+                migrated = dataToInsert.length
+            }
 
             return {
                 statusCode: HttpStatus.OK,
