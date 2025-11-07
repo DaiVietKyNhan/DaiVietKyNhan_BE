@@ -110,6 +110,24 @@ export class LetterController {
         return this.letterService.delete(params.letterId, userId)
     }
 
+    @Put('status')
+    @ApiOperation({
+        summary: 'Cập nhật status nhiều thư cùng lúc (Admin only)',
+        description: 'Admin có thể cập nhật status nhiều thư cùng lúc. Nếu chuyển từ PENDING sang PUBLIC và đây là lần đầu tiên user có thư PUBLIC, thưởng 200 xu'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Cập nhật status thành công',
+        type: BulkUpdateLetterResDTO
+    })
+    @ZodSerializerDto(BulkUpdateLetterResDTO)
+    bulkUpdateStatus(
+        @Body() body: BulkUpdateLetterBodyDTO,
+        @ActiveUser('userId') userId: number
+    ) {
+        return this.letterService.bulkUpdateStatus(body.letters, body.status, userId)
+    }
+
     @Put(':letterId')
     @ApiOperation({
         summary: 'Cập nhật đầy đủ thông tin thư (Admin only)',
@@ -129,22 +147,6 @@ export class LetterController {
         return this.letterService.updateFull(params.letterId, body, userId)
     }
 
-    @Put('status')
-    @ApiOperation({
-        summary: 'Cập nhật status nhiều thư cùng lúc (Admin only)',
-        description: 'Admin có thể cập nhật status nhiều thư cùng lúc. Nếu chuyển từ PENDING sang PUBLIC và đây là lần đầu tiên user có thư PUBLIC, thưởng 200 xu'
-    })
-    @ApiResponse({
-        status: 200,
-        description: 'Cập nhật status thành công',
-        type: BulkUpdateLetterResDTO
-    })
-    @ZodSerializerDto(BulkUpdateLetterResDTO)
-    bulkUpdateStatus(
-        @Body() body: BulkUpdateLetterBodyDTO,
-        @ActiveUser('userId') userId: number
-    ) {
-        return this.letterService.bulkUpdateStatus(body.letters, body.status, userId)
-    }
+
 }
 
