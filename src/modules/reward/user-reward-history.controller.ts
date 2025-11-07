@@ -16,8 +16,10 @@ export class UserRewardHistoryController {
     ) { }
 
     @Get()
+    @ApiOperation({ summary: 'Lấy danh sách lịch sử đổi quà với phân trang' })
+    @ApiResponse({ status: 200, description: 'Lấy danh sách thành công' })
     list(@Query() query: PaginationQueryDTO) {
-        return this.userRewardHistoryRepo.list(query)
+        return this.userRewardService.listHistory(query)
     }
 
     @Get('my-history')

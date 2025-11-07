@@ -58,6 +58,27 @@ export class UserRewardService {
         }
     }
 
+    /**
+     * Lấy danh sách UserRewardHistory với format chuẩn
+     */
+    async listHistory(pagination: PaginationQueryType) {
+        const repoData = await this.userRewardHistoryRepo.list(pagination)
+
+        return {
+            statusCode: HttpStatus.OK,
+            message: ENTITY_MESSAGE.GET_LIST_SUCCESS,
+            data: {
+                results: repoData.data,
+                pagination: {
+                    current: repoData.currentPage,
+                    pageSize: repoData.pageSize,
+                    totalPage: repoData.totalPage,
+                    totalItem: repoData.total
+                }
+            }
+        }
+    }
+
     async findById(id: number) {
         const userReward = await this.userRewardRepo.findUnique({ id })
         if (!userReward) {

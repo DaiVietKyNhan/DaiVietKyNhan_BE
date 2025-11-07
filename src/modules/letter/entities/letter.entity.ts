@@ -58,14 +58,15 @@ export const UpdateLetterBodySchema = z.object({
     status: z.enum(['PENDING', 'REMOVE', 'PUBLIC']).optional()
 })
 
+// Letter item schema for bulk update
+const LetterItemSchema = z.object({
+    letterId: z.number(),
+    fromUserId: z.number()
+})
+
 // Bulk Update Letter Body Schema
 export const BulkUpdateLetterBodySchema = z.object({
-    letters: z.array(
-        z.object({
-            letterId: checkIdSchema(ENTITY_MESSAGE.ID_INVALID),
-            fromUserId: checkIdSchema(ENTITY_MESSAGE.ID_INVALID)
-        })
-    ).min(1),
+    letters: z.array(LetterItemSchema).min(1),
     status: z.enum(['PENDING', 'REMOVE', 'PUBLIC'])
 })
 
