@@ -2,49 +2,18 @@ version: '3.8'
 
 services:
   backend:
-    container_name: daivietkynhan-backend
+    container_name: dvkn-backend2
     build:
       context: .
       dockerfile: dockerfile
     env_file:
       - .env.production
-    depends_on:
-      - postgres
-      - redis
-    networks:
-      - dvkn-network
-    restart: unless-stopped
-
-  postgres:
-    image: postgres:15-alpine
-    container_name: daivietkynhan-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234554321
-      POSTGRES_DB: daivietkynhan
     ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+      - "8081:8081"
     networks:
       - dvkn-network
-
-  redis:
-    image: redis:7-alpine
-    container_name: daivietkynhan-redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redisdata:/data
-    networks:
-      - dvkn-network
 
 networks:
   dvkn-network:
     external: true
-
-volumes:
-  pgdata:
-  redisdata:
