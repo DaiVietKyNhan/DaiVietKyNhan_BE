@@ -238,7 +238,6 @@ model KyNhan {
   kyNhanSummaries KyNhanSummary[]
   motaKyNhan      MotaKyNhan?
   users           User[]          @relation("KyNhanToUser")
-  letters         Letter[]
 
   @@index([deletedAt])
 }
@@ -947,19 +946,26 @@ enum answerOptionType {
 }
 
 model Letter {
-  id          Int       @id @default(autoincrement())
-  fromUserId  Int
-  kyNhanId    Int
-  content     String    @db.Text
-  isRead      Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  deletedById Int?
+  id            Int          @id @default(autoincrement())
+  fromUserId    Int
+  from          String       @db.VarChar(500)
+  to            String       @db.VarChar(500)
+  content       String       @db.Text
+  status        LetterStatus @default(PENDING)
+  isFirstPublic Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?
+  deletedById   Int?
 
-  fromUser  User   @relation("LetterFromUser", fields: [fromUserId], references: [id])
-  kyNhan    KyNhan @relation(fields: [kyNhanId], references: [id])
-  deletedBy User?  @relation("LetterDeletedBy", fields: [deletedById], references: [id])
+  fromUser  User  @relation("LetterFromUser", fields: [fromUserId], references: [id])
+  deletedBy User? @relation("LetterDeletedBy", fields: [deletedById], references: [id])
 
   @@map("letters")
+}
+
+enum LetterStatus {
+  PENDING
+  REMOVE
+  PUBLIC
 }

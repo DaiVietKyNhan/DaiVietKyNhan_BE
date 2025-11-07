@@ -19,13 +19,6 @@ export class LetterRepo {
                         name: true,
                         avatar: true
                     }
-                },
-                kyNhan: {
-                    select: {
-                        id: true,
-                        name: true,
-                        imgUrl: true
-                    }
                 }
             }
         })
@@ -40,13 +33,6 @@ export class LetterRepo {
                         id: true,
                         name: true,
                         avatar: true
-                    }
-                },
-                kyNhan: {
-                    select: {
-                        id: true,
-                        name: true,
-                        imgUrl: true
                     }
                 }
             }
@@ -66,13 +52,6 @@ export class LetterRepo {
                         name: true,
                         avatar: true
                     }
-                },
-                kyNhan: {
-                    select: {
-                        id: true,
-                        name: true,
-                        imgUrl: true
-                    }
                 }
             },
             orderBy: {
@@ -91,13 +70,6 @@ export class LetterRepo {
                         id: true,
                         name: true,
                         avatar: true
-                    }
-                },
-                kyNhan: {
-                    select: {
-                        id: true,
-                        name: true,
-                        imgUrl: true
                     }
                 }
             }
@@ -124,21 +96,20 @@ export class LetterRepo {
     }
 
     async getUnreadCount(userId: number) {
-        // Đếm số thư chưa đọc của user (isRead = false)
+        // Đếm số thư của user (không còn isRead, có thể dùng status nếu cần)
         return this.prismaService.letter.count({
             where: {
                 fromUserId: userId,
-                isRead: false,
                 deletedAt: null
             }
         })
     }
 
-    async findByKyNhanId(kyNhanId: number) {
-        // Lấy tất cả thư gửi cho kỳ nhân này
+    async findByToName(toName: string) {
+        // Lấy tất cả thư gửi cho tên này
         return this.prismaService.letter.findMany({
             where: {
-                kyNhanId,
+                to: toName,
                 deletedAt: null
             },
             include: {
@@ -147,13 +118,6 @@ export class LetterRepo {
                         id: true,
                         name: true,
                         avatar: true
-                    }
-                },
-                kyNhan: {
-                    select: {
-                        id: true,
-                        name: true,
-                        imgUrl: true
                     }
                 }
             },
@@ -181,13 +145,6 @@ export class LetterRepo {
                             id: true,
                             name: true,
                             avatar: true
-                        }
-                    },
-                    kyNhan: {
-                        select: {
-                            id: true,
-                            name: true,
-                            imgUrl: true
                         }
                     }
                 },

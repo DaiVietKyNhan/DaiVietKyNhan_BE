@@ -1,5 +1,5 @@
 import { ActiveUser } from '@/common/decorators/active-user.decorator'
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
+import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ZodSerializerDto } from 'nestjs-zod'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
@@ -12,8 +12,12 @@ import {
     GetLetterParamsDTO,
     GetLetterResDTO,
     UpdateLetterBodyDTO,
-    UpdateLetterResDTO
+    UpdateLetterResDTO,
+    UpdateLetterFullBodyDTO,
+    BulkUpdateLetterBodyDTO,
+    BulkUpdateLetterResDTO
 } from './dto/letter.zod-dto'
+import { LETTER_ERROR_MESSAGE } from './dto/letter.error'
 import { LetterService } from './letter.service'
 
 @ApiTags('Letter - Gửi thư')
@@ -32,7 +36,7 @@ export class LetterController {
     @Post()
     @ApiOperation({
         summary: 'Gửi thư mới',
-        description: 'Gửi thư cho kỳ nhân. Lần đầu tiên gửi thư (bất kể gửi cho ai) sẽ nhận 200 xu'
+        description: 'Gửi thư cho kỳ nhân. Thư sẽ có status PENDING, admin sẽ duyệt và chuyển sang PUBLIC'
     })
     @ApiResponse({
         status: 201,
@@ -59,16 +63,16 @@ export class LetterController {
         return this.letterService.getSentLetters(userId)
     }
 
-    @Get('by-kynhan/:kyNhanId')
-    @ApiOperation({ summary: 'Lấy tất cả thư gửi cho kỳ nhân' })
+    @Get('by-to/:toName')
+    @ApiOperation({ summary: 'Lấy tất cả thư gửi cho tên người nhận' })
     @ApiResponse({
         status: 200,
         description: 'Lấy danh sách thành công',
         type: GetLetterListResDTO
     })
     @ZodSerializerDto(GetLetterListResDTO)
-    getLettersByKyNhan(@Param('kyNhanId') kyNhanId: string) {
-        return this.letterService.getLettersByKyNhan(parseInt(kyNhanId))
+    getLettersByToName(@Param('toName') toName: string) {
+        return this.letterService.getLettersByToName(toName)
     }
 
     @Get('unread-count')
@@ -93,17 +97,6 @@ export class LetterController {
         return this.letterService.findById(params.letterId, userId)
     }
 
-    @Put(':letterId/mark-read')
-    @ApiOperation({ summary: 'Đánh dấu thư đã đọc' })
-    @ApiResponse({
-        status: 200,
-        description: 'Đánh dấu thành công',
-        type: UpdateLetterResDTO
-    })
-    @ZodSerializerDto(UpdateLetterResDTO)
-    markAsRead(@Param() params: GetLetterParamsDTO, @ActiveUser('userId') userId: number) {
-        return this.letterService.markAsRead(params.letterId, userId)
-    }
 
     @Delete(':letterId')
     @ApiOperation({ summary: 'Xóa thư' })
@@ -115,6 +108,43 @@ export class LetterController {
     @ZodSerializerDto(MessageResDTO)
     delete(@Param() params: GetLetterParamsDTO, @ActiveUser('userId') userId: number) {
         return this.letterService.delete(params.letterId, userId)
+    }
+
+    @Put(':letterId')
+    @ApiOperation({
+        summary: 'Cập nhật đầy đủ thông tin thư (Admin only)',
+        description: 'Admin có thể cập nhật đầy đủ các field của thư: from, to, content, status, isFirstPublic'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Cập nhật thành công',
+        type: UpdateLetterResDTO
+    })
+    @ZodSerializerDto(UpdateLetterResDTO)
+    updateFull(
+        @Param() params: GetLetterParamsDTO,
+        @Body() body: UpdateLetterFullBodyDTO,
+        @ActiveUser('userId') userId: number
+    ) {
+        return this.letterService.updateFull(params.letterId, body, userId)
+    }
+
+    @Put('status')
+    @ApiOperation({
+        summary: 'Cập nhật status nhiều thư cùng lúc (Admin only)',
+        description: 'Admin có thể cập nhật status nhiều thư cùng lúc. Nếu chuyển từ PENDING sang PUBLIC và đây là lần đầu tiên user có thư PUBLIC, thưởng 200 xu'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Cập nhật status thành công',
+        type: BulkUpdateLetterResDTO
+    })
+    @ZodSerializerDto(BulkUpdateLetterResDTO)
+    bulkUpdateStatus(
+        @Body() body: BulkUpdateLetterBodyDTO,
+        @ActiveUser('userId') userId: number
+    ) {
+        return this.letterService.bulkUpdateStatus(body.letters, body.status, userId)
     }
 }
 
