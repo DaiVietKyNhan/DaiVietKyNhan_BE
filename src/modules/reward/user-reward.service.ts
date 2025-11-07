@@ -1,6 +1,7 @@
 import { ENTITY_MESSAGE } from '@/common/constants/message'
+import { RoleName } from '@/common/constants/role.constant'
 import { PaginationQueryType } from '@/shared/models/request.model'
-import { HttpStatus, Injectable } from '@nestjs/common'
+import { ForbiddenException, HttpStatus, Injectable } from '@nestjs/common'
 
 import { SharedUserRepository } from '@/shared/repositories/shared-user.repo'
 import { BadRequestException } from '@nestjs/common'
@@ -661,6 +662,103 @@ export class UserRewardService {
                 error
             )
             // Không throw error để không ảnh hưởng đến flow chính
+        }
+    }
+
+    /**
+     * Migrate các UserReward type CODE với status COMPLETED sang UserRewardHistory
+     * Chỉ admin mới có quyền thực hiện
+     */
+    async initMigrateCodeRewardsToHistory(adminUserId: number) {
+        // Kiểm tra admin
+        const admin = await this.prismaService.user.findUnique({
+            where: { id: adminUserId },
+            include: { role: true }
+        })
+
+        if (!admin || admin.role.name !== RoleName.Admin) {
+            throw new ForbiddenException('Chỉ admin mới có quyền thực hiện migration')
+        }
+
+        try {
+            // Tìm tất cả UserReward có status COMPLETED và reward type CODE
+            const codeRewards = await this.prismaService.userReward.findMany({
+                where: {
+                    status: 'COMPLETED',
+                    deletedAt: null,
+                    reward: {
+                        type: 'CODE',
+                        deletedAt: null
+                    }
+                },
+                include: {
+                    reward: true
+                }
+            })
+
+            if (codeRewards.length === 0) {
+                return {
+                    statusCode: HttpStatus.OK,
+                    data: {
+                        totalFound: 0,
+                        migrated: 0,
+                        skipped: 0
+                    },
+                    message: 'Không có UserReward type CODE với status COMPLETED nào để migrate'
+                }
+            }
+
+            let migrated = 0
+            let skipped = 0
+
+            // Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu
+            await this.prismaService.$transaction(async (tx) => {
+                for (const userReward of codeRewards) {
+                    // Kiểm tra xem đã có trong history chưa (tránh duplicate)
+                    const existingHistory = await tx.userRewardHistory.findFirst({
+                        where: {
+                            userId: userReward.userId,
+                            rewardId: userReward.rewardId,
+                            status: 'CLAIMED',
+                            exchangedAt: userReward.exchangedAt,
+                            deletedAt: null
+                        }
+                    })
+
+                    if (existingHistory) {
+                        skipped++
+                        continue
+                    }
+
+                    // Tạo record trong UserRewardHistory
+                    // Lấy code từ reward (code của reward) thay vì userReward.code
+                    await tx.userRewardHistory.create({
+                        data: {
+                            user: { connect: { id: userReward.userId } },
+                            reward: { connect: { id: userReward.rewardId } },
+                            status: 'CLAIMED',
+                            exchangedAt: userReward.exchangedAt || new Date(),
+                            code: userReward.reward.code, // Lấy code từ reward
+                            valuePaid: userReward.valuePaid,
+                            createdBy: { connect: { id: adminUserId } }
+                        }
+                    })
+
+                    migrated++
+                }
+            })
+
+            return {
+                statusCode: HttpStatus.OK,
+                data: {
+                    totalFound: codeRewards.length,
+                    migrated,
+                    skipped
+                },
+                message: `Migration thành công! Tìm thấy ${codeRewards.length} records, đã migrate ${migrated} records, bỏ qua ${skipped} records (đã tồn tại)`
+            }
+        } catch (error) {
+            throw error
         }
     }
 }
