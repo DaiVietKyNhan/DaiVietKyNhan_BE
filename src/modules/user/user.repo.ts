@@ -14,7 +14,7 @@ import {
 
 @Injectable()
 export class UserRepo {
-  constructor(private prismaService: PrismaService) { }
+  constructor(private prismaService: PrismaService) {}
 
   create({
     createdById,
@@ -64,20 +64,20 @@ export class UserRepo {
   ): Promise<UserType> {
     return isHard
       ? this.prismaService.user.delete({
-        where: {
-          id
-        }
-      })
+          where: {
+            id
+          }
+        })
       : this.prismaService.user.update({
-        where: {
-          id,
-          deletedAt: null
-        },
-        data: {
-          deletedAt: new Date(),
-          deletedById
-        }
-      })
+          where: {
+            id,
+            deletedAt: null
+          },
+          data: {
+            deletedAt: new Date(),
+            deletedById
+          }
+        })
   }
 
   async list(pagination: PaginationQueryType, customerId?: number) {
@@ -172,7 +172,7 @@ export class UserRepo {
           avatar: true,
           point: true
         },
-        orderBy: orderBy ? [orderBy, { updatedAt: 'asc' }] : [{ updatedAt: 'asc' }],
+        orderBy,
         skip,
         take
       })

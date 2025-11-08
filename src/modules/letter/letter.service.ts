@@ -85,9 +85,9 @@ export class LetterService {
     }
 
     // Kiểm tra quyền truy cập (chỉ người gửi mới xem được)
-    if (letter.fromUserId !== userId) {
-      throw new ForbiddenException(LETTER_ERROR_MESSAGE.UNAUTHORIZED_ACCESS)
-    }
+    // if (letter.fromUserId !== userId) {
+    //   throw new ForbiddenException(LETTER_ERROR_MESSAGE.UNAUTHORIZED_ACCESS)
+    // }
 
     return {
       statusCode: 200,
