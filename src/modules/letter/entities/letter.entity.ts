@@ -2,6 +2,7 @@ import { ENTITY_MESSAGE } from '@/common/constants/message'
 import { checkIdSchema } from '@/common/utils/id.validation'
 import { LetterSchema } from '@/shared/models/shared-letter.model'
 import { UserSchema } from '@/shared/models/shared-user.model'
+import { PaginationQuerySchema } from '@/shared/models/request.model'
 import { extendZodWithOpenApi } from '@anatine/zod-openapi'
 import { patchNestJsSwagger } from 'nestjs-zod'
 import { z } from 'zod'
@@ -89,12 +90,34 @@ export const GetLetterParamsSchema = z.object({
     letterId: checkIdSchema(ENTITY_MESSAGE.ID_INVALID)
 })
 
+// List Letter Query Schema (extends PaginationQuerySchema)
+export const ListLetterQuerySchema = PaginationQuerySchema.extend({
+    filterByUserId: z
+        .union([
+            z.boolean(),
+            z.string().transform((val, ctx) => {
+                const lowerVal = val.toLowerCase().trim()
+                if (lowerVal === 'true' || lowerVal === '1' || lowerVal === 'yes') return true
+                if (lowerVal === 'false' || lowerVal === '0' || lowerVal === 'no') return false
+                // If invalid value, throw error to inform user
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: `Invalid value for filterByUserId: "${val}". Must be "true" or "false".`
+                })
+                return z.NEVER
+            })
+        ])
+        .optional()
+        .default(true)
+})
+
 // Types
 export type CreateLetterBodyType = z.infer<typeof CreateLetterBodySchema>
 export type UpdateLetterBodyType = z.infer<typeof UpdateLetterBodySchema>
 export type UpdateLetterFullBodyType = z.infer<typeof UpdateLetterFullBodySchema>
 export type BulkUpdateLetterBodyType = z.infer<typeof BulkUpdateLetterBodySchema>
 export type LetterType = z.infer<typeof LetterSchema>
+export type ListLetterQueryType = z.infer<typeof ListLetterQuerySchema>
 
 // Fields for parseQs
 type LetterFieldType = keyof z.infer<typeof LetterSchema>

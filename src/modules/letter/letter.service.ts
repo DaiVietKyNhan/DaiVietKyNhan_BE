@@ -9,10 +9,10 @@ import {
   NotFoundException
 } from '@nestjs/common'
 
-import { PaginationQueryType } from '@/shared/models/request.model'
 import { LETTER_ERROR_MESSAGE } from './dto/letter.error'
 import { LetterRepo } from './letter.repo'
 import { LetterStatus } from '@prisma/client'
+import { ListLetterQueryType } from './entities/letter.entity'
 
 @Injectable()
 export class LetterService {
@@ -163,8 +163,8 @@ export class LetterService {
   /**
    * Lấy danh sách thư với phân trang
    */
-  async list(pagination: PaginationQueryType) {
-    const data = await this.letterRepo.list(pagination)
+  async list(query: ListLetterQueryType, userId: number) {
+    const data = await this.letterRepo.list(query, userId)
     return {
       statusCode: HttpStatus.OK,
       data,

@@ -3,7 +3,6 @@ import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Q
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ZodSerializerDto } from 'nestjs-zod'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
-import { PaginationQueryDTO } from '@/shared/dtos/request.dto'
 import { PaginationResponseSchema } from '@/shared/models/response.model'
 import {
     CreateLetterBodyDTO,
@@ -15,7 +14,8 @@ import {
     UpdateLetterResDTO,
     UpdateLetterFullBodyDTO,
     BulkUpdateLetterBodyDTO,
-    BulkUpdateLetterResDTO
+    BulkUpdateLetterResDTO,
+    ListLetterQueryDTO
 } from './dto/letter.zod-dto'
 import { LETTER_ERROR_MESSAGE } from './dto/letter.error'
 import { LetterService } from './letter.service'
@@ -29,8 +29,40 @@ export class LetterController {
     @Get()
     @ApiOperation({ summary: 'Lấy danh sách thư với phân trang' })
     @ZodSerializerDto(PaginationResponseSchema)
-    list(@Query() query: PaginationQueryDTO) {
-        return this.letterService.list(query)
+    list(@Query() query: ListLetterQueryDTO, @ActiveUser('userId') userId: number) {
+        // Debug: log the raw query to see what we're receiving
+        console.log('Controller - Raw query.filterByUserId:', query.filterByUserId, 'type:', typeof query.filterByUserId)
+
+        // Manually parse filterByUserId to handle edge cases
+        // This ensures we get the correct boolean value regardless of Zod parsing
+        const rawFilterByUserId = (query as any).filterByUserId
+        let filterByUserId: boolean = true // Default to true
+
+        if (rawFilterByUserId !== undefined && rawFilterByUserId !== null) {
+            if (typeof rawFilterByUserId === 'boolean') {
+                filterByUserId = rawFilterByUserId
+            } else if (typeof rawFilterByUserId === 'string') {
+                const lowerVal = rawFilterByUserId.toLowerCase().trim()
+                if (lowerVal === 'false' || lowerVal === '0' || lowerVal === 'no') {
+                    filterByUserId = false
+                } else if (lowerVal === 'true' || lowerVal === '1' || lowerVal === 'yes') {
+                    filterByUserId = true
+                } else {
+                    // Invalid value - log warning but default to true for safety
+                    console.warn(`Invalid filterByUserId value: "${rawFilterByUserId}". Defaulting to true. Use "true" or "false".`)
+                    filterByUserId = true
+                }
+            } else {
+                filterByUserId = Boolean(rawFilterByUserId)
+            }
+        }
+        // If undefined/null, keep default true
+
+        console.log('Controller - Raw value:', rawFilterByUserId, 'Parsed filterByUserId:', filterByUserId)
+
+        // Create new query object with parsed value
+        const parsedQuery: ListLetterQueryDTO = { ...query, filterByUserId }
+        return this.letterService.list(parsedQuery, userId)
     }
 
     @Post()

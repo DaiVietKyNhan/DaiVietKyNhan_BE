@@ -9,7 +9,8 @@ import {
     UpdateLetterResSchema,
     UpdateLetterFullBodySchema,
     BulkUpdateLetterBodySchema,
-    BulkUpdateLetterResSchema
+    BulkUpdateLetterResSchema,
+    ListLetterQuerySchema
 } from '../entities/letter.entity'
 
 export class CreateLetterBodyDTO extends createZodDto(CreateLetterBodySchema) { }
@@ -31,4 +32,6 @@ export class BulkUpdateLetterBodyDTO extends createZodDto(BulkUpdateLetterBodySc
 export class BulkUpdateLetterResDTO extends createZodDto(BulkUpdateLetterResSchema) { }
 
 export class GetLetterParamsDTO extends createZodDto(GetLetterParamsSchema) { }
+
+export class ListLetterQueryDTO extends createZodDto(ListLetterQuerySchema) { }
 
