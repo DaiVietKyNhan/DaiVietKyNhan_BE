@@ -347,17 +347,20 @@ export class UserRewardService {
                     })
                 }
 
+                // Tính toán code và valuePaid trước khi update
+                const codeToSave = reward.type === 'CODE'
+                    ? `CODE_${Date.now()}`
+                    : (existingUserReward.code || null)
+                const valuePaidToSave = reward.type === 'CODE' ? 0 : reward.requireValue
+
                 // Update existing record thành PENDING
                 const userReward = await this.userRewardRepo.update({
                     id: existingUserReward.id,
                     data: {
                         status: 'PENDING',
                         exchangedAt: null,
-                        code:
-                            reward.type === 'CODE'
-                                ? `CODE_${Date.now()}`
-                                : existingUserReward.code || undefined,
-                        valuePaid: reward.type === 'CODE' ? 0 : reward.requireValue
+                        code: codeToSave,
+                        valuePaid: valuePaidToSave
                     },
                     updatedById: userId
                 })
@@ -365,15 +368,15 @@ export class UserRewardService {
                 // Parse gift để cộng coin/point cho tất cả loại reward
                 await this.processGiftRewards(userId, reward.gift)
 
-                // After successful exchange, create history record
+                // After successful exchange, create history record với code và valuePaid đã tính toán
                 await this.userRewardHistoryRepo.create({
                     data: {
                         user: { connect: { id: userId } },
                         reward: { connect: { id: rewardId } },
                         status: 'CLAIMED',
                         exchangedAt: new Date(),
-                        code: userReward.code,
-                        valuePaid: userReward.valuePaid
+                        code: codeToSave,
+                        valuePaid: valuePaidToSave
                     },
                     createdById: userId
                 })
@@ -441,12 +444,17 @@ export class UserRewardService {
                     throw new BadRequestException('Code này đã bị hủy')
                 }
 
-                // Cập nhật existing userReward thành COMPLETED
+                // Cập nhật existing userReward thành COMPLETED với code và valuePaid
+                const codeToSave = code
+                const valuePaidToSave = 0 // CODE type luôn có valuePaid = 0
+
                 const updatedUserReward = await this.userRewardRepo.update({
                     id: existingUserReward.id,
                     data: {
                         status: 'COMPLETED',
-                        exchangedAt: new Date()
+                        exchangedAt: new Date(),
+                        code: codeToSave,
+                        valuePaid: valuePaidToSave
                     },
                     updatedById: userId
                 })
@@ -454,15 +462,15 @@ export class UserRewardService {
                 // Parse gift string để cộng coin và điểm cho user
                 await this.processGiftRewards(userId, reward.gift)
 
-                // After successful exchange, create history record
+                // After successful exchange, create history record với code và valuePaid đã tính toán
                 await this.userRewardHistoryRepo.create({
                     data: {
                         user: { connect: { id: userId } },
                         reward: { connect: { id: reward.id } },
                         status: 'CLAIMED',
                         exchangedAt: new Date(),
-                        code: updatedUserReward.code,
-                        valuePaid: updatedUserReward.valuePaid
+                        code: codeToSave,
+                        valuePaid: valuePaidToSave
                     },
                     createdById: userId
                 })
@@ -475,14 +483,17 @@ export class UserRewardService {
             }
 
             // Tạo UserReward mới với status COMPLETED
+            const codeToSave = code
+            const valuePaidToSave = 0 // CODE type luôn có valuePaid = 0
+
             const newUserReward = await this.userRewardRepo.create({
                 createdById: userId,
                 data: {
                     userId,
                     rewardId: reward.id,
                     status: 'COMPLETED',
-                    valuePaid: 0,
-                    code: code,
+                    valuePaid: valuePaidToSave,
+                    code: codeToSave,
                     exchangedAt: new Date()
                 }
             })
@@ -490,15 +501,15 @@ export class UserRewardService {
             // Parse gift string để cộng coin và điểm cho user
             await this.processGiftRewards(userId, reward.gift)
 
-            // After successful exchange, create history record
+            // After successful exchange, create history record với code và valuePaid đã tính toán
             await this.userRewardHistoryRepo.create({
                 data: {
                     user: { connect: { id: userId } },
                     reward: { connect: { id: reward.id } },
                     status: 'CLAIMED',
                     exchangedAt: new Date(),
-                    code: newUserReward.code,
-                    valuePaid: newUserReward.valuePaid
+                    code: codeToSave,
+                    valuePaid: valuePaidToSave
                 },
                 createdById: userId
             })
