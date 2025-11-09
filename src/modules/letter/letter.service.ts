@@ -2,24 +2,23 @@ import { ENTITY_MESSAGE } from '@/common/constants/message'
 import { RoleName } from '@/common/constants/role.constant'
 import { PrismaService } from '@/shared/services/prisma.service'
 import {
-  BadRequestException,
   ForbiddenException,
   HttpStatus,
   Injectable,
   NotFoundException
 } from '@nestjs/common'
 
-import { LETTER_ERROR_MESSAGE } from './dto/letter.error'
-import { LetterRepo } from './letter.repo'
 import { LetterStatus } from '@prisma/client'
+import { LETTER_ERROR_MESSAGE } from './dto/letter.error'
 import { ListLetterQueryType } from './entities/letter.entity'
+import { LetterRepo } from './letter.repo'
 
 @Injectable()
 export class LetterService {
   constructor(
     private readonly letterRepo: LetterRepo,
     private readonly prismaService: PrismaService
-  ) { }
+  ) {}
 
   /**
    * Tạo thư mới
@@ -122,8 +121,6 @@ export class LetterService {
     }
   }
 
-
-
   /**
    * Xóa thư
    */
@@ -163,8 +160,10 @@ export class LetterService {
   /**
    * Lấy danh sách thư với phân trang
    */
-  async list(query: ListLetterQueryType, userId: number) {
-    const data = await this.letterRepo.list(query, userId)
+  async list(query: ListLetterQueryType, userId: number, roleName: string) {
+    const isAdmin = roleName === RoleName.Admin
+    const data = await this.letterRepo.list(query, userId, isAdmin)
+
     return {
       statusCode: HttpStatus.OK,
       data,
@@ -316,8 +315,8 @@ export class LetterService {
         // Kiểm tra xem user đã có thư PUBLIC nào với isFirstPublic = true chưa
         // Cần check cả các thư đang update trong batch (trước khi update) để tránh trường hợp
         // thư đã có isFirstPublic = true, sau đó bị update thành PENDING rồi lại thành PUBLIC
-        const lettersToCheck = existingLetters.filter(l =>
-          l.fromUserId === userId && l.isFirstPublic === true
+        const lettersToCheck = existingLetters.filter(
+          (l) => l.fromUserId === userId && l.isFirstPublic === true
         )
         const existingFirstPublic = lettersToCheck.length > 0
 
@@ -359,7 +358,9 @@ export class LetterService {
               }
             })
             rewardedUsers.add(userId)
-            console.log(`User ${userId} nhận 200 xu cho lần đầu có thư PUBLIC (thư ID: ${firstLetterId})`)
+            console.log(
+              `User ${userId} nhận 200 xu cho lần đầu có thư PUBLIC (thư ID: ${firstLetterId})`
+            )
           }
         }
       }
@@ -373,8 +374,4 @@ export class LetterService {
       message: ENTITY_MESSAGE.UPDATE_SUCCESS
     }
   }
-
-
-
-
 }
