@@ -10,6 +10,7 @@ import {
   PointsStatsResDTO,
   QuestionStatsResDTO,
   TopPlayersResDTO,
+  UserBehaviorStatsResDTO,
   UserPlayStatsResDTO,
   UserStatsResDTO
 } from './dto/dashboard.zod-dto'
@@ -62,6 +63,21 @@ export class DashboardController {
   @ZodSerializerDto(LandStatsResDTO)
   getLandStats() {
     return this.dashboardService.getLandStats()
+  }
+
+  @Get('user/behavior')
+  @ApiOperation({
+    summary: 'Get user behavior statistics',
+    description:
+      'Lấy thống kê hành vi người dùng bao gồm: thời gian tương tác trung bình, DAU/MAU/WAU, sự gắn bó người dùng, người dùng mới vs cũ'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Get user behavior statistics successfully'
+  })
+  @ZodSerializerDto(UserBehaviorStatsResDTO)
+  getStatsUserBehavior() {
+    return this.dashboardService.getStatsUserBehavior()
   }
 
   @Get('stats')

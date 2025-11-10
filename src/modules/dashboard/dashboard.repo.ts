@@ -846,4 +846,313 @@ export class DashboardRepo {
       }
     }
   }
+
+  /**
+   * Get active users count for a given date range (users who have answer logs in the period)
+   */
+  async getActiveUsersInPeriod(startDate: Date, endDate: Date): Promise<number> {
+    const adminRoleId = await this.sharedRoleRepo.getAdminRoleId()
+
+    const count = await this.prismaService.user.count({
+      where: {
+        deletedAt: null,
+        status: 'ACTIVE',
+        roleId: { not: adminRoleId },
+        userAnswerLogs: {
+          some: {
+            deletedAt: null,
+            createdAt: {
+              gte: startDate,
+              lte: endDate
+            }
+          }
+        }
+      }
+    })
+
+    return count
+  }
+
+  /**
+   * Get average session duration across all users with answer logs
+   * Approximated by calculating time spans between consecutive answers
+   */
+  async getAverageSessionDuration(): Promise<number> {
+    const adminRoleId = await this.sharedRoleRepo.getAdminRoleId()
+
+    // Get users with their answer logs sorted by time
+    const users = await this.prismaService.user.findMany({
+      where: {
+        deletedAt: null,
+        status: 'ACTIVE',
+        roleId: { not: adminRoleId },
+        userAnswerLogs: {
+          some: {
+            deletedAt: null
+          }
+        }
+      },
+      select: {
+        id: true,
+        userAnswerLogs: {
+          where: {
+            deletedAt: null
+          },
+          select: {
+            createdAt: true
+          },
+          orderBy: {
+            createdAt: 'asc'
+          }
+        }
+      }
+    })
+
+    let totalSessionMinutes = 0
+    let sessionCount = 0
+
+    users.forEach((user) => {
+      const logs = user.userAnswerLogs
+      if (logs.length < 2) return
+
+      // Calculate session duration for this user
+      const firstLog = logs[0].createdAt
+      const lastLog = logs[logs.length - 1].createdAt
+      const durationMs = lastLog.getTime() - firstLog.getTime()
+      const durationMinutes = durationMs / (1000 * 60)
+
+      if (durationMinutes > 0) {
+        totalSessionMinutes += durationMinutes
+        sessionCount++
+      }
+    })
+
+    // Return average in minutes (rounded to 2 decimal places)
+    return sessionCount > 0
+      ? Math.round((totalSessionMinutes / sessionCount) * 100) / 100
+      : 0
+  }
+
+  /**
+   * Get user behavior stats from Google Analytics
+   * Includes: engagement time, session duration, DAU/WAU/MAU, new vs returning users
+   */
+  async getUserBehaviorStatsFromGA() {
+    try {
+      const propertyId = envConfig.GA_PROPERTY_ID
+      if (!propertyId) throw new Error('GA_PROPERTY_ID not configured')
+
+      await this.createGoogleAuthClient()
+      const analyticsData = google.analyticsdata('v1beta')
+
+      const today = new Date()
+      const fmt = (d: Date) => d.toISOString().slice(0, 10)
+
+      // Date ranges
+      const startDate = '2025-10-15' // Fixed start date
+      const endDate = fmt(today)
+
+      // For DAU (yesterday)
+      const yesterday = new Date(today)
+      yesterday.setDate(yesterday.getDate() - 1)
+      const yesterdayStr = fmt(yesterday)
+
+      // For WAU (last 7 days)
+      const sevenDaysAgo = new Date(today)
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+      const sevenDaysAgoStr = fmt(sevenDaysAgo)
+
+      // For MAU (last 30 days)
+      const thirtyDaysAgo = new Date(today)
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      const thirtyDaysAgoStr = fmt(thirtyDaysAgo)
+
+      // Fetch multiple metrics in parallel
+      const [
+        engagementTimeRes,
+        sessionDurationRes,
+        dauRes,
+        wauRes,
+        mauRes,
+        newVsReturningRes
+      ] = await Promise.all([
+        // 1. Average engagement time per active user
+        analyticsData.properties.runReport({
+          property: `properties/${propertyId}`,
+          requestBody: {
+            metrics: [{ name: 'userEngagementDuration' }, { name: 'activeUsers' }],
+            dateRanges: [{ startDate, endDate }]
+          }
+        }),
+
+        // 2. Average session duration
+        analyticsData.properties.runReport({
+          property: `properties/${propertyId}`,
+          requestBody: {
+            metrics: [{ name: 'averageSessionDuration' }],
+            dateRanges: [{ startDate, endDate }]
+          }
+        }),
+
+        // 3. DAU - Daily Active Users (yesterday)
+        analyticsData.properties.runReport({
+          property: `properties/${propertyId}`,
+          requestBody: {
+            metrics: [{ name: 'activeUsers' }],
+            dateRanges: [{ startDate: yesterdayStr, endDate: yesterdayStr }]
+          }
+        }),
+
+        // 4. WAU - Weekly Active Users (last 7 days)
+        analyticsData.properties.runReport({
+          property: `properties/${propertyId}`,
+          requestBody: {
+            metrics: [{ name: 'activeUsers' }],
+            dateRanges: [{ startDate: sevenDaysAgoStr, endDate: endDate }]
+          }
+        }),
+
+        // 5. MAU - Monthly Active Users (last 30 days)
+        analyticsData.properties.runReport({
+          property: `properties/${propertyId}`,
+          requestBody: {
+            metrics: [{ name: 'activeUsers' }],
+            dateRanges: [{ startDate: thirtyDaysAgoStr, endDate: endDate }]
+          }
+        }),
+
+        // 6. New vs Returning users (last 30 days)
+        analyticsData.properties.runReport({
+          property: `properties/${propertyId}`,
+          requestBody: {
+            dimensions: [{ name: 'newVsReturning' }],
+            metrics: [{ name: 'activeUsers' }],
+            dateRanges: [{ startDate: thirtyDaysAgoStr, endDate: endDate }]
+          }
+        })
+      ])
+
+      // Extract values
+      const totalEngagementDuration = this.extractMetricValueFromRes(
+        engagementTimeRes.data,
+        0
+      )
+      const activeUsersCount = this.extractMetricValueFromRes(engagementTimeRes.data, 1)
+      const avgEngagementPerUser =
+        activeUsersCount > 0
+          ? Math.round((totalEngagementDuration / activeUsersCount) * 100) / 100
+          : 0
+
+      const avgSessionDuration = this.extractMetricValueFromRes(
+        sessionDurationRes.data,
+        0
+      )
+
+      const dau = this.extractMetricValueFromRes(dauRes.data, 0)
+      const wau = this.extractMetricValueFromRes(wauRes.data, 0)
+      const mau = this.extractMetricValueFromRes(mauRes.data, 0)
+
+      // Calculate ratios
+      const dauMauRatio = mau > 0 ? Math.round((dau / mau) * 1000) / 10 : 0
+      const dauWauRatio = wau > 0 ? Math.round((dau / wau) * 1000) / 10 : 0
+      const wauMauRatio = mau > 0 ? Math.round((wau / mau) * 1000) / 10 : 0
+
+      // Parse new vs returning users
+      let newUsers = 0
+      let returningUsers = 0
+
+      if (newVsReturningRes.data.rows && newVsReturningRes.data.rows.length > 0) {
+        // @ts-ignore
+        newVsReturningRes.data.rows.forEach((row: any) => {
+          const userType = row.dimensionValues?.[0]?.value || ''
+          const count = Number(row.metricValues?.[0]?.value || 0)
+
+          if (userType === 'new') {
+            newUsers = count
+          } else if (userType === 'returning') {
+            returningUsers = count
+          }
+        })
+      }
+
+      return {
+        avgEngagementPerUser, // seconds
+        avgSessionDuration, // seconds
+        dau,
+        wau,
+        mau,
+        dauMauRatio,
+        dauWauRatio,
+        wauMauRatio,
+        newUsers,
+        returningUsers
+      }
+    } catch (err) {
+      this.logger.warn('Failed to fetch GA user behavior data: ' + (err as Error).message)
+
+      // Fallback to database calculations
+      const now = new Date()
+
+      // DAU, WAU, MAU from DB
+      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+
+      const [dau, wau, mau] = await Promise.all([
+        this.getActiveUsersInPeriod(oneDayAgo, now),
+        this.getActiveUsersInPeriod(oneWeekAgo, now),
+        this.getActiveUsersInPeriod(oneMonthAgo, now)
+      ])
+
+      const dauMauRatio = mau > 0 ? Math.round((dau / mau) * 1000) / 10 : 0
+      const dauWauRatio = wau > 0 ? Math.round((dau / wau) * 1000) / 10 : 0
+      const wauMauRatio = mau > 0 ? Math.round((wau / mau) * 1000) / 10 : 0
+
+      const avgSessionDuration = await this.getAverageSessionDuration()
+
+      const adminRoleId = await this.sharedRoleRepo.getAdminRoleId()
+      const year = now.getFullYear()
+      const month = now.getMonth()
+      const startOfMonth = new Date(year, month, 1)
+      const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999)
+
+      const [newUsers, returningUsers] = await Promise.all([
+        this.prismaService.user.count({
+          where: {
+            deletedAt: null,
+            status: 'ACTIVE',
+            roleId: { not: adminRoleId },
+            createdAt: { gte: startOfMonth, lte: endOfMonth }
+          }
+        }),
+        this.prismaService.user.count({
+          where: {
+            deletedAt: null,
+            status: 'ACTIVE',
+            roleId: { not: adminRoleId },
+            createdAt: { lt: startOfMonth },
+            userAnswerLogs: {
+              some: {
+                deletedAt: null,
+                createdAt: { gte: startOfMonth, lte: endOfMonth }
+              }
+            }
+          }
+        })
+      ])
+
+      return {
+        avgEngagementPerUser: avgSessionDuration * 60, // convert minutes to seconds
+        avgSessionDuration: avgSessionDuration * 60,
+        dau,
+        wau,
+        mau,
+        dauMauRatio,
+        dauWauRatio,
+        wauMauRatio,
+        newUsers,
+        returningUsers
+      }
+    }
+  }
 }

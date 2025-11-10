@@ -154,3 +154,77 @@ export const GenderAgesStatsResSchema = z.object({
 })
 
 export class GenderAgesStatsResDTO extends createZodDto(GenderAgesStatsResSchema) {}
+
+// User behavior stats
+export const AverageEngagementTimeSchema = z.object({
+  value: z.number(),
+  valueInMinutes: z.number(),
+  displayValue: z.string(),
+  title: z.string()
+})
+
+export const AverageSessionDurationSchema = z.object({
+  value: z.number(),
+  valueInMinutes: z.number(),
+  displayValue: z.string(),
+  title: z.string()
+})
+
+export const DauMauRatioSchema = z.object({
+  value: z.number(),
+  displayValue: z.string(),
+  title: z.string(),
+  description: z.string()
+})
+
+export const UserEngagementSchema = z.object({
+  dauWauRatio: z.object({
+    value: z.number(),
+    displayValue: z.string(),
+    title: z.string()
+  }),
+  wauMauRatio: z.object({
+    value: z.number(),
+    displayValue: z.string(),
+    title: z.string()
+  }),
+  title: z.string()
+})
+
+export const NewVsReturningSchema = z.object({
+  newUsers: z.object({
+    value: z.number(),
+    title: z.string()
+  }),
+  returningUsers: z.object({
+    value: z.number(),
+    title: z.string()
+  }),
+  total: z.number(),
+  newUserPercent: z.number(),
+  returningUserPercent: z.number(),
+  title: z.string()
+})
+
+export const EngagementDataSchema = z.object({
+  dau: z.number(),
+  wau: z.number(),
+  mau: z.number()
+})
+
+export const UserBehaviorStatsSchema = z.object({
+  averageEngagementTime: AverageEngagementTimeSchema,
+  averageSessionDuration: AverageSessionDurationSchema,
+  dauMauRatio: DauMauRatioSchema,
+  userEngagement: UserEngagementSchema,
+  newVsReturning: NewVsReturningSchema,
+  engagementData: EngagementDataSchema
+})
+
+export const UserBehaviorStatsResSchema = z.object({
+  statusCode: z.number(),
+  data: UserBehaviorStatsSchema,
+  message: z.string()
+})
+
+export class UserBehaviorStatsResDTO extends createZodDto(UserBehaviorStatsResSchema) {}

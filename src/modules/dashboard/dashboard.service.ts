@@ -187,4 +187,103 @@ export class DashboardService {
       message: ENTITY_MESSAGE.GET_SUCCESS
     }
   }
+
+  async getStatsUserBehavior() {
+    // Fetch data from Google Analytics (with DB fallback)
+    const gaData = await this.dashboardRepo.getUserBehaviorStatsFromGA()
+
+    console.log('gaData from GA: ', gaData)
+
+    // Convert seconds to minutes for display
+    const avgEngagementMinutes =
+      Math.round((gaData.avgEngagementPerUser / 60) * 100) / 100
+    const avgSessionMinutes = Math.round((gaData.avgSessionDuration / 60) * 100) / 100
+
+    // Format to readable text
+    const formatTime = (totalSeconds: number) => {
+      const minutes = Math.floor(totalSeconds / 60)
+      const seconds = Math.round(totalSeconds % 60)
+      return `${minutes} phút ${String(seconds).padStart(2, '0')} giây`
+    }
+
+    const stats = {
+      // Thời gian tương tác trung bình trên mỗi người dùng đang hoạt động
+      averageEngagementTime: {
+        value: gaData.avgEngagementPerUser,
+        valueInMinutes: avgEngagementMinutes,
+        displayValue: formatTime(gaData.avgEngagementPerUser),
+        title: 'Thời gian tương tác trung bình trên mỗi người dùng đang hoạt động'
+      },
+
+      // Thời gian tương tác trung bình (session duration)
+      averageSessionDuration: {
+        value: gaData.avgSessionDuration,
+        valueInMinutes: avgSessionMinutes,
+        displayValue: formatTime(gaData.avgSessionDuration),
+        title: 'Thời gian tương tác trung bình'
+      },
+
+      // Tỷ lệ DAU/MAU
+      dauMauRatio: {
+        value: gaData.dauMauRatio,
+        displayValue: `${gaData.dauMauRatio}%`,
+        title: 'Tỷ lệ DAU/MAU',
+        description: 'Người dùng hoạt động hàng ngày / Người dùng hoạt động hàng tháng'
+      },
+
+      // Sự gắn bó của người dùng
+      userEngagement: {
+        dauWauRatio: {
+          value: gaData.dauWauRatio,
+          displayValue: `${gaData.dauWauRatio}%`,
+          title: 'DAU/WAU'
+        },
+        wauMauRatio: {
+          value: gaData.wauMauRatio,
+          displayValue: `${gaData.wauMauRatio}%`,
+          title: 'WAU/MAU'
+        },
+        title: 'Sự gắn bó của người dùng'
+      },
+
+      // Người dùng mới so với người dùng cũ
+      newVsReturning: {
+        newUsers: {
+          value: gaData.newUsers,
+          title: 'Người dùng mới'
+        },
+        returningUsers: {
+          value: gaData.returningUsers,
+          title: 'Người dùng quay lại'
+        },
+        total: gaData.newUsers + gaData.returningUsers,
+        newUserPercent:
+          gaData.newUsers + gaData.returningUsers > 0
+            ? Math.round(
+                (gaData.newUsers / (gaData.newUsers + gaData.returningUsers)) * 1000
+              ) / 10
+            : 0,
+        returningUserPercent:
+          gaData.newUsers + gaData.returningUsers > 0
+            ? Math.round(
+                (gaData.returningUsers / (gaData.newUsers + gaData.returningUsers)) * 1000
+              ) / 10
+            : 0,
+        title: 'Người dùng mới so với Người dùng cũ'
+      },
+
+      // Raw engagement data for reference
+      engagementData: {
+        dau: gaData.dau,
+        wau: gaData.wau,
+        mau: gaData.mau
+      }
+    }
+
+    return {
+      statusCode: HttpStatus.OK,
+      data: stats,
+      message: ENTITY_MESSAGE.GET_SUCCESS
+    }
+  }
 }
