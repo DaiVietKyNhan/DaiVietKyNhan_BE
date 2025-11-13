@@ -303,7 +303,7 @@ export class GodProfileService {
       },
       {
         image:
-          'https://res.cloudinary.com/dznt9yias/image/upload/v1762973317/191b8bf10cfe80a0d9ef_1_lkhrpf.png',
+          'https://res.cloudinary.com/dznt9yias/image/upload/v1762973318/837e2d9eaa9126cf7f80_gj3rfq.png',
         traitType: 'MELANCHOLIC',
         name: 'Liễu Hạnh'
       }
