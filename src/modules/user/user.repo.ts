@@ -172,7 +172,7 @@ export class UserRepo {
           avatar: true,
           point: true
         },
-        orderBy,
+        orderBy: [...(orderBy ? [orderBy] : []), { updatedAt: 'asc' }],
         skip,
         take
       })
@@ -280,6 +280,12 @@ export class UserRepo {
           }
         }
       }
+    })
+  }
+
+  getAllUserWithActive() {
+    return this.prismaService.user.findMany({
+      where: { deletedAt: null, status: 'ACTIVE' }
     })
   }
 }

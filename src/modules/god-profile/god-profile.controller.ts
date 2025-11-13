@@ -18,6 +18,7 @@ import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger'
 import { ZodSerializerDto } from 'nestjs-zod'
 
 import { CloudinaryImageUploadConfig } from '@/3rdService/upload/cloudinary/multer.config'
+import { IsPublic } from '@/common/decorators/auth.decorator'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
 import {
   CreateGodProfileResDTO,
@@ -37,6 +38,12 @@ export class GodProfileController {
   @ZodSerializerDto(PaginationResponseSchema)
   list(@Query() query: PaginationQueryDTO) {
     return this.godProfileService.list(query)
+  }
+
+  @Get('rank-home')
+  @IsPublic()
+  getRankHomes() {
+    return this.godProfileService.getRankHomes()
   }
 
   @Get('pointHome')
