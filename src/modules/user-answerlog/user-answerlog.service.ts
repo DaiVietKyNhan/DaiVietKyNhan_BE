@@ -357,6 +357,9 @@ export class UserAnswerLogService {
         })
 
         // hoan thanh dat
+        //
+        console.log('check land achive ne')
+
         await this.achievementCheckerService.checkLandAchievements(createdById)
       }
 
