@@ -285,25 +285,25 @@ export class GodProfileService {
     const items = [
       {
         image:
-          'https://res.cloudinary.com/dznt9yias/image/upload/v1762973319/c2c77522f22d7e73273c_owe2yq.png',
+          'https://res.cloudinary.com/dauhpllo7/image/upload/v1763402324/c2c77522f22d7e73273c_zpwokj.png',
         traitType: 'PHLEGMATIC',
         name: 'Sơn Tinh'
       },
       {
         image:
-          'https://res.cloudinary.com/dznt9yias/image/upload/v1762973317/191b8bf10cfe80a0d9ef_1_lkhrpf.png',
+          'https://res.cloudinary.com/dauhpllo7/image/upload/v1763402321/191b8bf10cfe80a0d9ef_1_kebqjr.png',
         traitType: 'SANGUINE',
         name: 'Chử Đồng Tử'
       },
       {
         image:
-          'https://res.cloudinary.com/dznt9yias/image/upload/v1762973320/bd798a9d0d9281ccd883_vvrwl6.png',
+          'https://res.cloudinary.com/dauhpllo7/image/upload/v1763402397/bd798a9d0d9281ccd883_t2xtf0.png',
         traitType: 'CHOLERIC',
         name: 'Thánh Gióng'
       },
       {
         image:
-          'https://res.cloudinary.com/dznt9yias/image/upload/v1762973318/837e2d9eaa9126cf7f80_gj3rfq.png',
+          'https://res.cloudinary.com/dauhpllo7/image/upload/v1763402325/837e2d9eaa9126cf7f80_ltywkp.png',
         traitType: 'MELANCHOLIC',
         name: 'Liễu Hạnh'
       }
