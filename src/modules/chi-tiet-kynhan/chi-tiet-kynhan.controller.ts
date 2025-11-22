@@ -37,6 +37,7 @@ import { CreateChiTietKyNhanCompleteBodySchema, UpdateChiTietKyNhanCompleteBodyS
 import { ZodError } from 'zod'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
 import { ChiTietKyNhanService } from './chi-tiet-kynhan.service'
+import { IsPublic } from '@/common/decorators/auth.decorator'
 
 @ApiTags('Chi Tiết Kỳ Nhân')
 @Controller('chi-tiet-kynhan')
@@ -188,6 +189,7 @@ export class ChiTietKyNhanController {
     }
 
     @Get('ky-nhan/:kyNhanId')
+    @IsPublic()
     @ApiOperation({ summary: 'Lấy danh sách chi tiết theo kỳ nhân' })
     @ApiResponse({
         status: 200,
