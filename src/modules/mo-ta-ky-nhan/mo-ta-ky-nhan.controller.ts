@@ -43,12 +43,12 @@ export class MotaKyNhanController {
   }
 
   @Get(':moTaKyNhanId')
-  @IsPublic()
   @ZodSerializerDto(GetMotaKyNhanResDTO)
   findById(@Param() params: GetParamsMotaKyNhanDTO) {
     return this.kynhanService.findById(params.moTaKyNhanId)
   }
   @Get('/kynhan/:kyNhanId')
+  @IsPublic()
   @ZodSerializerDto(GetMotaKyNhanResDTO)
   findBykyNhanId(@Param() params: GetParamsMotaKyNhanIdDTO) {
     return this.kynhanService.findByKyNhanId(params.kyNhanId)
