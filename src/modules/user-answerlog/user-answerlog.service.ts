@@ -128,7 +128,7 @@ export class UserAnswerLogService {
           await this.sharedUserRepo.minuspointByUserId({ userId: createdById, amount })
         }
         // muinus 1 heart
-        await this.sharedUserRepo.minusHeart({ userId: createdById, amount: 1 })
+        await this.sharedUserRepo.minusHeart({ userId: createdById, amount: 0 })
       }
 
       const answer = await this.userAnswerLogRepo.createOrUpdate({
