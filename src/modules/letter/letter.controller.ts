@@ -17,16 +17,18 @@ import {
   UpdateLetterResDTO
 } from './dto/letter.zod-dto'
 import { LetterService } from './letter.service'
+import { IsPublic } from '@/common/decorators/auth.decorator'
 
 @ApiTags('Letter - Gửi thư')
 @Controller('letter')
 @ApiBearerAuth()
 export class LetterController {
-  constructor(private readonly letterService: LetterService) {}
+  constructor(private readonly letterService: LetterService) { }
 
   @Get()
   @ApiOperation({ summary: 'Lấy danh sách thư với phân trang' })
   @ZodSerializerDto(PaginationResponseSchema)
+  @IsPublic()
   list(
     @Query() query: ListLetterQueryDTO,
     @ActiveUser('userId') userId: number,
