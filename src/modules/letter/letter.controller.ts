@@ -136,6 +136,7 @@ export class LetterController {
 
   @Get(':letterId')
   @ApiOperation({ summary: 'Lấy chi tiết thư' })
+  @IsPublic()
   @ApiResponse({
     status: 200,
     description: 'Lấy chi tiết thành công',
