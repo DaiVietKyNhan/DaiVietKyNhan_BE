@@ -29,13 +29,16 @@ import { CloudinaryImageUploadConfig } from '@/3rdService/upload/cloudinary/mult
 import { FileInterceptor } from '@nestjs/platform-express'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
 import { KynhanService } from './kynhan.service'
+import { Public } from '@/common/decorators/custom'
+import { IsPublic } from '@/common/decorators/auth.decorator'
 
 @Controller('kynhan')
 @ApiBearerAuth()
 export class KynhanController {
-  constructor(private readonly kynhanService: KynhanService) {}
+  constructor(private readonly kynhanService: KynhanService) { }
 
   @Get()
+  @IsPublic()
   @ZodSerializerDto(PaginationResponseSchema)
   list(@Query() query: PaginationQueryDTO) {
     return this.kynhanService.list(query)
@@ -49,8 +52,11 @@ export class KynhanController {
 
   @Get('list/user')
   @ZodSerializerDto(GetKyNhansUserResDTO)
-  getListByUser(@ActiveUser('userId') userId: number) {
-    return this.kynhanService.getListByUser(userId)
+  getListByUser(
+    @ActiveUser('userId') userId: number,
+    @Query() params: PaginationQueryDTO
+  ) {
+    return this.kynhanService.getListByUser(userId, params)
   }
 
   @Post()

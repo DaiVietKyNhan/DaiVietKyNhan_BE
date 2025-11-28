@@ -128,7 +128,7 @@ export class UserAnswerLogService {
           await this.sharedUserRepo.minuspointByUserId({ userId: createdById, amount })
         }
         // muinus 1 heart
-        await this.sharedUserRepo.minusHeart({ userId: createdById, amount: 1 })
+        await this.sharedUserRepo.minusHeart({ userId: createdById, amount: 0 })
       }
 
       const answer = await this.userAnswerLogRepo.createOrUpdate({
@@ -153,6 +153,10 @@ export class UserAnswerLogService {
             landId,
             userId: createdById
           })
+          // hoan thanh dat
+          await this.achievementCheckerService.checkLandAchievements(createdById)
+
+          await this.achievementCheckerService.checkKyNhanSummaryAchievements(createdById)
         }
       }
       return {
@@ -328,7 +332,7 @@ export class UserAnswerLogService {
 
         //KUMO
         // 3) Check achievements after adding KyNhanSummary
-        // await this.achievementCheckerService.checkKyNhanSummaryAchievements(createdById)
+        await this.achievementCheckerService.checkKyNhanSummaryAchievements(createdById)
       }
 
       const answer = await this.userAnswerLogRepo.createOrUpdate({
@@ -351,7 +355,15 @@ export class UserAnswerLogService {
           landId,
           userId: createdById
         })
+
+        // hoan thanh dat
+        //
+        console.log('check land achive ne')
+
+        await this.achievementCheckerService.checkLandAchievements(createdById)
       }
+
+      await this.achievementCheckerService.checkKyNhanSummaryAchievements(createdById)
       return {
         statusCode: HttpStatus.CREATED,
         data: {

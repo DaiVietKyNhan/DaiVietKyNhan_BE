@@ -39,12 +39,14 @@ export const CreateKyNhanResSchema = z.object({
   message: z.string()
 })
 
-
-export const GetKyNhansUserSchema = z.array(
-  KyNhanSchema.extend({
-    unlocked: z.boolean().default(false)
-  })
-)
+export const GetKyNhansUserSchema = z.object({
+  results: z.array(
+    KyNhanSchema.extend({
+      unlocked: z.boolean().default(false)
+    })
+  ),
+  totalKyNhanClaim: z.number()
+})
 
 export const GetKyNhansUserResSchema = z.object({
   statusCode: z.number(),

@@ -5,10 +5,12 @@ import { ZodSerializerDto } from 'nestjs-zod'
 import { DashboardService } from './dashboard.service'
 import {
   DashboardStatsResDTO,
+  GenderAgesStatsResDTO,
   LandStatsResDTO,
   PointsStatsResDTO,
   QuestionStatsResDTO,
   TopPlayersResDTO,
+  UserBehaviorStatsResDTO,
   UserPlayStatsResDTO,
   UserStatsResDTO
 } from './dto/dashboard.zod-dto'
@@ -43,6 +45,14 @@ export class DashboardController {
     return this.dashboardService.getUserStatsMonth()
   }
 
+  @Get('user/gender-ages')
+  @ApiOperation({ summary: 'Get user statistics by gender and age ranges' })
+  @ApiResponse({ status: 200, description: 'Get gender and age statistics successfully' })
+  @ZodSerializerDto(GenderAgesStatsResDTO)
+  getUserStatsGenderAges() {
+    return this.dashboardService.getUserStatsGenderAges()
+  }
+
   @Get('user-play/top-user/stats')
   @ZodSerializerDto(TopPlayersResDTO)
   getGameUserStats() {
@@ -53,6 +63,21 @@ export class DashboardController {
   @ZodSerializerDto(LandStatsResDTO)
   getLandStats() {
     return this.dashboardService.getLandStats()
+  }
+
+  @Get('user/behavior')
+  @ApiOperation({
+    summary: 'Get user behavior statistics',
+    description:
+      'Lấy thống kê hành vi người dùng bao gồm: thời gian tương tác trung bình, DAU/MAU/WAU, sự gắn bó người dùng, người dùng mới vs cũ'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Get user behavior statistics successfully'
+  })
+  @ZodSerializerDto(UserBehaviorStatsResDTO)
+  getStatsUserBehavior() {
+    return this.dashboardService.getStatsUserBehavior()
   }
 
   @Get('stats')

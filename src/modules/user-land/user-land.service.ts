@@ -27,7 +27,7 @@ export class UserLandService {
     private readonly landRepo: LandRepo,
     private readonly achievementCheckerService: AchievementCheckerService,
     private readonly userLandBargeServe: UserLandBargeService
-  ) {}
+  ) { }
 
   async list(pagination: PaginationQueryType) {
     const data = await this.userLandRepo.list(pagination)
@@ -221,6 +221,9 @@ export class UserLandService {
 
       // Kiểm tra thành tựu Land
       await this.achievementCheckerService.checkLandAchievements(userId)
+
+      // Kiểm tra thành tựu thu thập tất cả vùng đất
+      await this.achievementCheckerService.checkAllLandsCollectedAchievements(userId)
 
       return {
         statusCode: HttpStatus.OK,

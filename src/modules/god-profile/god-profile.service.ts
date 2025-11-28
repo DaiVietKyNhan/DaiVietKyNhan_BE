@@ -4,6 +4,7 @@ import { HttpStatus, Injectable, Logger } from '@nestjs/common'
 
 import { UploadService } from '@/3rdService/upload/upload.service'
 import { TestQuestionHomeRepo } from '@/modules/test-question-home/test-question-home.repo'
+import { UserRepo } from '@/modules/user/user.repo'
 import { getPointHome } from '@/shared/helpers'
 import { SharedUserRepository } from '@/shared/repositories/shared-user.repo'
 import { BadRequestException } from '@nestjs/common'
@@ -24,7 +25,8 @@ export class GodProfileService {
     private godProfileRepo: GodProfileRepo,
     private readonly sharedUserRepo: SharedUserRepository,
     private readonly uploadService: UploadService,
-    private readonly testQuestionHomeRepo: TestQuestionHomeRepo
+    private readonly testQuestionHomeRepo: TestQuestionHomeRepo,
+    private readonly userRepo: UserRepo
   ) {}
 
   private readonly logger = new Logger(GodProfileService.name)
@@ -221,10 +223,8 @@ export class GodProfileService {
       const userAnswer = q.userAnswer
       if (!testType || !userAnswer) continue
       try {
-        const point =
-          q.answer === userAnswer.answer
-            ? getPointHome(userAnswer.answer, q.testQuestionHomeType)
-            : 0
+        const point = getPointHome(userAnswer.answer, q.testQuestionHomeType)
+
         aggPoints[testType] = (aggPoints[testType] || 0) + point
       } catch (err) {
         this.logger.warn('Failed to compute point for question', err)
@@ -278,6 +278,110 @@ export class GodProfileService {
       statusCode: HttpStatus.OK,
       data: godProfile,
       message: 'Chọn Thần Bảo Hộ thành công'
+    }
+  }
+
+  async getRankHomes() {
+    const items = [
+      {
+        image:
+          'https://res.cloudinary.com/dauhpllo7/image/upload/v1763402324/c2c77522f22d7e73273c_zpwokj.png',
+        traitType: 'PHLEGMATIC',
+        name: 'Sơn Tinh'
+      },
+      {
+        image:
+          'https://res.cloudinary.com/dauhpllo7/image/upload/v1763402321/191b8bf10cfe80a0d9ef_1_kebqjr.png',
+        traitType: 'SANGUINE',
+        name: 'Chử Đồng Tử'
+      },
+      {
+        image:
+          'https://res.cloudinary.com/dauhpllo7/image/upload/v1763402397/bd798a9d0d9281ccd883_t2xtf0.png',
+        traitType: 'CHOLERIC',
+        name: 'Thánh Gióng'
+      },
+      {
+        image:
+          'https://res.cloudinary.com/dauhpllo7/image/upload/v1763402325/837e2d9eaa9126cf7f80_ltywkp.png',
+        traitType: 'MELANCHOLIC',
+        name: 'Liễu Hạnh'
+      }
+    ]
+
+    // 1. Lấy toàn bộ godProfile
+    const godProfileList = await this.godProfileRepo.findAll()
+
+    // 2. Lấy toàn bộ user active
+    const usersRes = await this.userRepo.getAllUserWithActive()
+
+    // 3. Dựa vào godProfileId trong user và id của godProfile để tính điểm cho từng nhà
+    // Group users by godProfileId and compute average point
+    const pointsByGodId: Record<number, { sum: number; count: number }> = {}
+
+    let usersWithoutGod = 0
+    let usersWithGod = 0
+
+    for (const user of usersRes) {
+      const godId = user.godProfileId as number | null
+
+      if (!godId) {
+        usersWithoutGod++
+        continue // bỏ qua user chưa chọn nhà
+      }
+
+      usersWithGod++
+      const userPoint = typeof user.point === 'number' ? user.point : 0
+
+      if (!pointsByGodId[godId]) {
+        pointsByGodId[godId] = { sum: 0, count: 0 }
+      }
+      pointsByGodId[godId].sum += userPoint
+      pointsByGodId[godId].count += 1
+    }
+
+    // 4. Map dựa vào traitType của godProfile với items.traitType
+    const housesWithPoints = items.map((item) => {
+      // Tìm godProfile tương ứng với traitType
+      const godProfile = godProfileList.find((god) => god.traitType === item.traitType)
+
+      if (!godProfile) {
+        // Không tìm thấy godProfile cho traitType này
+        return {
+          name: item.name,
+          img: item.image,
+          points: 0
+        }
+      }
+
+      // Lấy thống kê điểm cho godProfile này
+      const stats = pointsByGodId[godProfile.id as number]
+      const avgPoints = stats && stats.count > 0 ? stats.sum / stats.count : 0
+
+      return {
+        name: item.name,
+        img: item.image,
+        points: Math.round(avgPoints * 100) / 100 // làm tròn 2 chữ số thập phân
+      }
+    })
+
+    // 5. Sắp xếp theo điểm giảm dần và gán rank
+    housesWithPoints.sort((a, b) => b.points - a.points)
+
+    const rankedHouses = housesWithPoints.map((house, index) => ({
+      ...house,
+      rank: index + 1
+    }))
+
+    // 6. Lấy top 1
+    const top = rankedHouses[0] || { name: null, img: null, points: 0, rank: 0 }
+
+    return {
+      statusCode: HttpStatus.OK,
+      data: {
+        items: rankedHouses
+      },
+      message: ENTITY_MESSAGE.GET_LIST_SUCCESS
     }
   }
 }

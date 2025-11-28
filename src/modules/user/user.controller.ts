@@ -5,6 +5,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/
 import { ApiBearerAuth } from '@nestjs/swagger'
 import { ZodSerializerDto } from 'nestjs-zod'
 
+import { IsPublic } from '@/common/decorators/auth.decorator'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
 import {
   CreateUserBodyDTO,
@@ -29,8 +30,14 @@ export class UserController {
     return this.userService.list(query)
   }
 
+  @Get('user-rank')
+  @IsPublic()
+  @ZodSerializerDto(PaginationResponseSchema)
+  getRanking(@Query() query: PaginationQueryDTO) {
+    return this.userService.getRanking(query)
+  }
+
   @Put('add-heart')
-  @ZodSerializerDto(CreateUserResDTO)
   addHeartToUser(@ActiveUser('userId') userId: number) {
     return this.userService.addHeartToUser(userId)
   }

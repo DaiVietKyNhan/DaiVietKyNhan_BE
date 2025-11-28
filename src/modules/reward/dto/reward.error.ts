@@ -2,16 +2,29 @@ import { HttpException, HttpStatus } from '@nestjs/common'
 
 export const RewardAlreadyExistsException = new HttpException(
     {
-        message: 'Reward already exists',
+        message: 'Thưởng đã tồn tại',
         error: 'Conflict',
         statusCode: HttpStatus.CONFLICT
     },
     HttpStatus.CONFLICT
 )
 
+// Helper function để tạo message theo reward type
+export const createInsufficientValueException = (type: 'POINT' | 'COIN') => {
+    const typeText = type === 'POINT' ? 'điểm' : 'xu'
+    return new HttpException(
+        {
+            message: `Không đủ ${typeText} để đổi thưởng`,
+            error: 'Bad Request',
+            statusCode: HttpStatus.BAD_REQUEST
+        },
+        HttpStatus.BAD_REQUEST
+    )
+}
+
 export const InsufficientValueException = new HttpException(
     {
-        message: 'Insufficient value to exchange reward',
+        message: 'Không đủ type để đổi thưởng',
         error: 'Bad Request',
         statusCode: HttpStatus.BAD_REQUEST
     },
@@ -20,7 +33,7 @@ export const InsufficientValueException = new HttpException(
 
 export const RewardNotActiveException = new HttpException(
     {
-        message: 'Reward is not active',
+        message: 'Thưởng không hoạt động',
         error: 'Bad Request',
         statusCode: HttpStatus.BAD_REQUEST
     },
@@ -29,7 +42,7 @@ export const RewardNotActiveException = new HttpException(
 
 export const RewardExpiredException = new HttpException(
     {
-        message: 'Reward has expired',
+        message: 'Thưởng đã hết hạn',
         error: 'Bad Request',
         statusCode: HttpStatus.BAD_REQUEST
     },
@@ -38,7 +51,7 @@ export const RewardExpiredException = new HttpException(
 
 export const RewardLimitExceededException = new HttpException(
     {
-        message: 'Reward limit exceeded',
+        message: 'Giới hạn thưởng đã vượt',
         error: 'Bad Request',
         statusCode: HttpStatus.BAD_REQUEST
     },
@@ -47,7 +60,7 @@ export const RewardLimitExceededException = new HttpException(
 
 export const InvalidCodeException = new HttpException(
     {
-        message: 'Invalid exchange code',
+        message: 'Mã đổi thưởng không hợp lệ',
         error: 'Bad Request',
         statusCode: HttpStatus.BAD_REQUEST
     },

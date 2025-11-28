@@ -34,7 +34,7 @@ export class AttendanceController {
     @Param() params: GetParamsDateAttendanceDTO,
     @ActiveUser('userId') userId: number
   ) {
-    return this.attendanceService.findByUser(
+    return this.attendanceService.findByUserWeek(
       userId,
       params.date ? new Date(params.date) : new Date()
     )

@@ -144,4 +144,14 @@ export class AttendanceRepo {
       }
     })
   }
+
+  findByUserId(userId: number): Promise<AttendanceType[]> {
+    return this.prismaService.attendance.findMany({
+      where: {
+        userId,
+        deletedAt: null
+      },
+      orderBy: { date: 'desc' }
+    })
+  }
 }

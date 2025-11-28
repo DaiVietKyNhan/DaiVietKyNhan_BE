@@ -1,9 +1,17 @@
 import { ActiveUser } from '@/common/decorators/active-user.decorator'
 import { PaginationQueryType } from '@/shared/models/request.model'
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 
-import { CreateUserRewardBodyDTO, UpdateUserRewardBodyDTO, ExchangeRewardBodyDTO } from './dto/user-reward.zod-dto'
+import { PaginationResponseSchema } from '@/shared/models/response.model'
+import { ZodSerializerDto } from 'nestjs-zod'
+import {
+    CreateUserRewardBodyDTO,
+    ExchangeRewardBodyDTO,
+    GetListUserRewardQueryDTO,
+    RedeemCodeBodyDTO,
+    UpdateUserRewardBodyDTO
+} from './dto/user-reward.zod-dto'
 import { UserRewardService } from './user-reward.service'
 
 @ApiTags('User Reward')
@@ -19,6 +27,14 @@ export class UserRewardController {
         return this.userRewardService.list(pagination)
     }
 
+    @Get('reward')
+    @ApiOperation({ summary: 'Get user reward list with filters' })
+    @ApiResponse({ status: 200, description: 'Get user reward list successfully' })
+    @ZodSerializerDto(PaginationResponseSchema)
+    getListUserREward(@Query() query: GetListUserRewardQueryDTO) {
+        return this.userRewardService.getListUserReward(query)
+    }
+
     @Get('my-rewards')
     @ApiOperation({ summary: 'Get my rewards' })
     @ApiResponse({ status: 200, description: 'Get my rewards successfully' })
@@ -31,7 +47,7 @@ export class UserRewardController {
     @ApiResponse({ status: 200, description: 'Get my rewards by status successfully' })
     async getMyRewardsByStatus(
         @ActiveUser('userId') userId: number,
-        @Param('status') status: 'PENDING' | 'COMPLETED' | 'CANCELLED'
+        @Param('status') status: 'PENDING' | 'COMPLETED' | 'CLAIMED' | 'CANCELLED'
     ) {
         return this.userRewardService.findByUserIdAndStatus(userId, status)
     }
@@ -46,7 +62,10 @@ export class UserRewardController {
     @Post()
     @ApiOperation({ summary: 'Create user reward' })
     @ApiResponse({ status: 201, description: 'Create user reward successfully' })
-    async create(@Body() data: CreateUserRewardBodyDTO, @ActiveUser('userId') createdById: number) {
+    async create(
+        @Body() data: CreateUserRewardBodyDTO,
+        @ActiveUser('userId') createdById: number
+    ) {
         return this.userRewardService.create({ data, createdById })
     }
 
@@ -64,16 +83,35 @@ export class UserRewardController {
     @Post('exchange')
     @ApiOperation({ summary: 'Exchange reward' })
     @ApiResponse({ status: 200, description: 'đổi quà thành công' })
-    async exchangeReward(@Body() data: ExchangeRewardBodyDTO, @ActiveUser('userId') userId: number) {
+    async exchangeReward(
+        @Body() data: ExchangeRewardBodyDTO,
+        @ActiveUser('userId') userId: number
+    ) {
         return this.userRewardService.exchangeReward({
             userId,
             rewardId: data.rewardId
         })
     }
 
+    @Post('redeem-code')
+    @ApiOperation({ summary: 'Đổi quà bằng code' })
+    @ApiResponse({ status: 200, description: 'Đổi quà bằng code thành công' })
+    async redeemCode(
+        @Body() data: RedeemCodeBodyDTO,
+        @ActiveUser('userId') userId: number
+    ) {
+        return this.userRewardService.redeemCode({
+            userId,
+            code: data.code
+        })
+    }
+
     @Post('initialize-all-users-rewards')
     @ApiOperation({ summary: 'Initialize all system rewards for all users' })
-    @ApiResponse({ status: 200, description: 'Khởi tạo tất cả reward cho tất cả users thành công' })
+    @ApiResponse({
+        status: 200,
+        description: 'Khởi tạo tất cả reward cho tất cả users thành công'
+    })
     async initializeAllUsersRewards(@ActiveUser('userId') createdById: number) {
         return this.userRewardService.addAllSystemRewardsToAllUsers({ createdById })
     }

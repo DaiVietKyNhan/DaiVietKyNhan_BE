@@ -10,7 +10,7 @@ import {
 } from 'src/shared/helpers'
 
 import { AttendancesStatus } from '@/common/constants/attendance.constant'
-import { WeekDay, WeekDayType } from '@/common/constants/attendence-config.constant'
+import { WeekDayType } from '@/common/constants/attendence-config.constant'
 import { SharedUserRepository } from '@/shared/repositories/shared-user.repo'
 import { AttendenceConfigRepo } from '../attendence-config/attendence-config.repo'
 import { AttendanceRepo } from './attendence.repo'
@@ -51,6 +51,8 @@ export class AttendanceService {
   }
 
   async findByUser(userId: number, date: Date = new Date()) {
+    console.log(date)
+
     const attendances = await this.findStreakDate(userId, date, true)
     const userInfo = await this.shareUserRepo.findUnique({ id: userId })
     if (!userInfo) {
@@ -68,11 +70,48 @@ export class AttendanceService {
     }
   }
 
+  // New: return attendance records of the week containing the given date (Mon-Sun)
+  async findByUserWeek(userId: number, date: Date = new Date()) {
+    const weekly = await this.findWeekAttendances(userId, date, true)
+    const userInfo = await this.shareUserRepo.findUnique({ id: userId })
+    if (!userInfo) {
+      throw NotFoundRecordException
+    }
+    const data = {
+      user: userInfo,
+      attendances: weekly.attendances,
+      count: weekly.count
+    }
+    return {
+      statusCode: HttpStatus.OK,
+      data,
+      message: ENTITY_MESSAGE.GET_SUCCESS
+    }
+  }
+
   async create({ createdById }: { createdById: number }) {
     try {
       // lay ra attendenceConfig co trong ngay hom do
-      const date = new Date()
-      date.setUTCHours(0, 0, 0, 0)
+      const date2 = new Date()
+      const vnString = date2.toLocaleString('en-US', {
+        timeZone: 'Asia/Ho_Chi_Minh'
+      })
+      const now = new Date()
+      const vnDate = new Date(
+        now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' })
+      )
+
+      // Tạo ngày mới theo múi giờ Việt Nam
+      const year = vnDate.getFullYear()
+      const month = vnDate.getMonth()
+      const day = vnDate.getDate()
+
+      // Set giờ 0h00 tại VN, rồi chuyển sang UTC
+      const utcDate = new Date(Date.UTC(year, month, day, 0, 0, 0, 0))
+
+      const date = utcDate
+      console.log(date)
+
       const getWeekDate = getWeekDay(date)
 
       const attendenceConfig =
@@ -83,10 +122,11 @@ export class AttendanceService {
       }
       //check streat chua ?
       let isStreakSunday = false
-      if (attendenceConfig.dayOfWeek === WeekDay.SUNDAY) {
-        isStreakSunday =
-          (await this.findStreakDate(createdById, date)).count >= 6 ? true : false
-      }
+      const streakData = await this.findStreakDate(createdById, date)
+      // Kiểm tra xem có streak liên tiếp >= 6 ngày trước hôm nay không
+      const totalStreakWithToday = streakData.count + 1 // Bao gồm cả hôm nay
+      isStreakSunday = totalStreakWithToday % 7 === 0 ? true : false
+      console.log('isStreat: ', isStreakSunday)
 
       const data: CreateAttendanceBodyType = {
         date,
@@ -181,16 +221,73 @@ export class AttendanceService {
   }
 
   async findStreakDate(userId: number, date: Date, addDayOfWeek: boolean = false) {
-    // 1️⃣ Xác định đầu và cuối tuần (T2 → CN)
+    // 1️⃣ Tính streak liên tiếp từ hôm nay trở về trước
+    const today = new Date(date)
+    today.setHours(0, 0, 0, 0)
+
+    // Lấy tất cả điểm danh của user, sắp xếp theo ngày giảm dần
+    const allAttendances = await this.attendanceRepo.findByUserId(userId)
+
+    // Sắp xếp theo ngày giảm dần
+    const sortedAttendances = allAttendances
+      .filter((att) => {
+        const attDate = new Date(att.date)
+        attDate.setHours(0, 0, 0, 0)
+        return attDate < today // Chỉ lấy các ngày trước hôm nay
+      })
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+    // 2️⃣ Đếm streak liên tiếp
+    let streakCount = 0
+    let expectedDate = new Date(today)
+    expectedDate.setDate(expectedDate.getDate() - 1) // Bắt đầu từ hôm qua
+
+    const streakAttendances: AttendanceType[] = []
+
+    for (const att of sortedAttendances) {
+      const attDate = new Date(att.date)
+      attDate.setHours(0, 0, 0, 0)
+
+      if (attDate.getTime() === expectedDate.getTime()) {
+        streakCount++
+        streakAttendances.push(att)
+        // Tiếp tục kiểm tra ngày trước đó
+        expectedDate.setDate(expectedDate.getDate() - 1)
+      } else if (attDate.getTime() < expectedDate.getTime()) {
+        // Có khoảng trống, dừng streak
+        break
+      }
+    }
+
+    // 3️⃣ Thêm dayOfWeek nếu cần
+    let attendances: any[] = streakAttendances
+    if (addDayOfWeek) {
+      const attendancesWithDay: AttendanceWithDayOfWeekType[] = streakAttendances.map(
+        (att) => ({
+          ...att,
+          dayOfWeek: getWeekDay(att.date)
+        })
+      )
+      attendances = attendancesWithDay
+    }
+
+    const count = streakCount
+    const isFullWeek = count >= 7
+
+    return { count, isFullWeek, attendances }
+  }
+
+  // Helper: get all attendances in the week (Mon-Sun) of the given date
+  async findWeekAttendances(userId: number, date: Date, addDayOfWeek: boolean = false) {
+    // Determine start (Mon) and end (Sun) of the week for the given date
     const startOfWeek = new Date(date)
-    startOfWeek.setDate(date.getDate() - date.getDay() + 1) // T2
+    startOfWeek.setDate(date.getDate() - date.getDay() + 1) // Monday
     startOfWeek.setHours(0, 0, 0, 0)
 
     const endOfWeek = new Date(startOfWeek)
-    endOfWeek.setDate(startOfWeek.getDate() + 6)
+    endOfWeek.setDate(startOfWeek.getDate() + 6) // Sunday
     endOfWeek.setHours(23, 59, 59, 999)
 
-    // 2️⃣ Lấy tất cả điểm danh trong tuần
     let attendances = await this.attendanceRepo.findStreakWithStartEndDay(
       userId,
       startOfWeek,
@@ -201,10 +298,10 @@ export class AttendanceService {
       const attendancesWithDay: AttendanceWithDayOfWeekType[] = attendances.map(
         (att) => ({
           ...att,
-          dayOfWeek: getWeekDay(att.date) // dùng hàm bạn đã viết
+          dayOfWeek: getWeekDay(att.date)
         })
       )
-      attendances = attendancesWithDay
+      attendances = attendancesWithDay as any
     }
 
     const count = attendances.length

@@ -21,10 +21,23 @@ export class UserService {
     private readonly hashingService: HashingService,
     private readonly sharedRoleRepo: SharedRoleRepository,
     private readonly sharedUserRepo: SharedUserRepository
-  ) {}
+  ) { }
 
   async list(pagination: PaginationQueryType) {
     const data = await this.userRepo.list(pagination)
+    return {
+      statusCode: HttpStatus.OK,
+      data,
+      message: ENTITY_MESSAGE.GET_LIST_SUCCESS
+    }
+  }
+
+  async getRanking(pagination: PaginationQueryType) {
+    const customerId = await this.sharedRoleRepo.getCustomerRoleId()
+    if (!customerId) {
+      throw NotFoundRecordException
+    }
+    const data = await this.userRepo.getRanking(pagination, customerId)
     return {
       statusCode: HttpStatus.OK,
       data,
@@ -76,6 +89,7 @@ export class UserService {
     try {
       const { confirmPassword, ...userData } = data
       userData.password = await this.hashingService.hash(data.password)
+      userData.email = userData.email.toLowerCase()
       const user = await this.userRepo.create({
         createdById,
         data: userData

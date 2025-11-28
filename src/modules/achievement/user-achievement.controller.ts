@@ -39,8 +39,8 @@ export class UserAchievementController {
     @Get(':id')
     @ApiOperation({ summary: 'Get user achievement by id' })
     @ApiResponse({ status: 200, description: 'Lấy thành tựu của user thành công' })
-    async findById(@Param('id') id: number) {
-        return this.userAchievementService.findById(id)
+    async findById(@Param('id') id: string) {
+        return this.userAchievementService.findById(Number(id))
     }
 
     @Post()
@@ -54,24 +54,28 @@ export class UserAchievementController {
     @ApiOperation({ summary: 'Update user achievement' })
     @ApiResponse({ status: 200, description: 'Cập nhập thành tựu của user thành công' })
     async update(
-        @Param('id') id: number,
+        @Param('id') id: string,
         @Body() data: UpdateUserAchievementBodyDTO,
         @ActiveUser('userId') updatedById: number
     ) {
-        return this.userAchievementService.update({ id, data, updatedById })
+        return this.userAchievementService.update({ id: Number(id), data, updatedById })
     }
 
     @Post('claim-reward/:achievementId')
     @ApiOperation({ summary: 'Claim achievement reward' })
     @ApiResponse({ status: 200, description: 'Nhận thưởng thành tựu thành công' })
-    async claimReward(@ActiveUser('userId') userId: number, @Param('achievementId') achievementId: number) {
-        return this.userAchievementService.claimReward({ userId, achievementId, updatedById: userId })
+    async claimReward(@ActiveUser('userId') userId: number, @Param('achievementId') achievementId: string) {
+        return this.userAchievementService.claimReward({
+            userId,
+            achievementId: Number(achievementId),
+            updatedById: userId
+        })
     }
 
     @Delete(':id')
     @ApiOperation({ summary: 'Delete user achievement' })
     @ApiResponse({ status: 200, description: 'Xóa thành tựu của user thành công' })
-    async delete(@Param('id') id: number, @ActiveUser('userId') deletedById: number) {
-        return this.userAchievementService.delete({ id, deletedById })
+    async delete(@Param('id') id: string, @ActiveUser('userId') deletedById: number) {
+        return this.userAchievementService.delete({ id: Number(id), deletedById })
     }
 }

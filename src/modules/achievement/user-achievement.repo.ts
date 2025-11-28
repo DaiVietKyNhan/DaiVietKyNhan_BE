@@ -75,6 +75,25 @@ export class UserAchievementRepo {
      * Idempotent due to skipDuplicates on (userId, achievementId)
      */
     async createManyForUserFromActiveAchievements(userId: number, createdById: number) {
+        // Validate that the userId exists
+        const targetUser = await this.prismaService.user.findUnique({
+            where: { id: userId },
+            select: { id: true }
+        })
+
+        if (!targetUser) {
+            console.error(`User with id ${userId} not found`)
+            return { count: 0 }
+        }
+
+        // Validate that the createdById user exists, set to null if not found
+        const creatorUser = await this.prismaService.user.findUnique({
+            where: { id: createdById },
+            select: { id: true }
+        })
+
+        const validCreatedById = creatorUser ? createdById : null
+
         const achievements = await this.prismaService.achievement.findMany({
             where: { isActive: true, deletedAt: null },
             select: { id: true }
@@ -88,7 +107,7 @@ export class UserAchievementRepo {
             status: 'PENDING' as const,
             completedAt: null,
             rewardClaimed: false,
-            createdById
+            createdById: validCreatedById
         }))
 
         return this.prismaService.userAchievement.createMany({
@@ -102,6 +121,14 @@ export class UserAchievementRepo {
      * Called when a new achievement is added to the system
      */
     async createAchievementForAllUsers(achievementId: number, createdById: number) {
+        // Validate that the createdById user exists, set to null if not found
+        const creatorUser = await this.prismaService.user.findUnique({
+            where: { id: createdById },
+            select: { id: true }
+        })
+
+        const validCreatedById = creatorUser ? createdById : null
+
         // Get all active users
         const users = await this.prismaService.user.findMany({
             where: {
@@ -119,7 +146,7 @@ export class UserAchievementRepo {
             status: 'PENDING' as const,
             completedAt: null,
             rewardClaimed: false,
-            createdById
+            createdById: validCreatedById
         }))
 
         return this.prismaService.userAchievement.createMany({
@@ -323,7 +350,7 @@ export class UserAchievementRepo {
                     }
                 }
             },
-            orderBy: { createdAt: 'desc' }
+            orderBy: {  achievementId: 'asc' }
         })
     }
 

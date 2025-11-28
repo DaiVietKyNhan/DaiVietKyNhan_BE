@@ -126,17 +126,14 @@ export class KynhanRepo {
     })
   }
 
-  async getListByUser(userId: number): Promise<(KyNhanType & { unlocked: boolean })[]> {
-    // Fetch all KyNhan records
-    const allKyNhans = await this.prismaService.kyNhan.findMany({
-      where: {
-        deletedAt: null
-      },
-
-      orderBy: {
-        id: 'asc'
-      }
-    })
+  async getListByUser(
+    userId: number,
+    pagination: PaginationQueryType
+  ): Promise<{
+    results: (KyNhanType & { unlocked: boolean })[]
+    totalKyNhanClaim: number
+  }> {
+    const { where, orderBy } = parseQs(pagination.qs || '', KYNHAN_FIELDS)
 
     // Fetch user's KyNhan IDs
     const user = await this.prismaService.user.findUnique({
@@ -155,10 +152,27 @@ export class KynhanRepo {
 
     const userKyNhanIds = new Set(user?.userKynhans.map((k) => k.id) ?? [])
 
+    // Fetch KyNhan records with filter and sort from qs
+    const allKyNhans = await this.prismaService.kyNhan.findMany({
+      where: {
+        deletedAt: null,
+        ...where
+      },
+      orderBy: orderBy || { id: 'asc' }
+    })
+
     // Map each KyNhan with unlocked field
-    return allKyNhans.map((kyNhan) => ({
+    const results = allKyNhans.map((kyNhan) => ({
       ...kyNhan,
       unlocked: userKyNhanIds.has(kyNhan.id)
     }))
+
+    // Count total unlocked KyNhan
+    const totalKyNhanClaim = results.filter((k) => k.unlocked).length
+
+    return {
+      results,
+      totalKyNhanClaim
+    }
   }
 }

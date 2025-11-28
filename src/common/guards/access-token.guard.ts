@@ -17,7 +17,12 @@ import { AccessTokenPayload } from 'src/shared/types/jwt.type'
 // Các endpoint được phép truy cập ngay cả khi role inactive
 const ROLE_INACTIVE_WHITELIST = [
   { path: '/auth/me', method: 'GET' },
-  { path: '/auth/me', method: 'PUT' }
+  { path: '/auth/me', method: 'PUT' },
+  { path: '/auth/refresh-token', method: 'POST' },
+  { path: '/auth/change-password ', method: 'POST' },
+  { path: '/auth/verified-email/:email', method: 'GET' },
+  { path: '/auth/resend-verified-email/:email', method: 'POST' },
+  { path: '/auth/reset-password', method: 'POST' }
 ]
 
 @Injectable()

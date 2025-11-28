@@ -20,7 +20,7 @@ export class KynhanService {
     private kynhanRepo: KynhanRepo,
     private readonly uploadService: UploadService,
     private readonly prismaService: PrismaService
-  ) { }
+  ) {}
 
   async list(pagination: PaginationQueryType) {
     const data = await this.kynhanRepo.list(pagination)
@@ -31,8 +31,8 @@ export class KynhanService {
     }
   }
 
-  async getListByUser(userId: number) {
-    const data = await this.kynhanRepo.getListByUser(userId)
+  async getListByUser(userId: number, pagination: PaginationQueryType) {
+    const data = await this.kynhanRepo.getListByUser(userId, pagination)
     return {
       statusCode: HttpStatus.OK,
       data,
@@ -149,7 +149,7 @@ export class KynhanService {
           if (existing.imgUrl) {
             try {
               await this.uploadService.deleteFile(existing.imgUrl, 'kynhan/images')
-            } catch (delErr) { }
+            } catch (delErr) {}
           }
         } catch (uploadError) {
           throw uploadError

@@ -46,7 +46,12 @@ const configSchema = z.object({
   GOOGLE_REDIRECT_URI: z.string(),
   GOOGLE_CLIENT_REDIRECT_URI: z.string(),
   FE_URL: z.string().url(),
-  NEXTJS_APP_URL: z.string().url().optional()
+  NEXTJS_APP_URL: z.string().url().optional(),
+  GOOGLE_APPLICATION_CREDENTIALS: z.string(),
+  GA_PROPERTY_ID: z.string(),
+  // Optional: supply service account fields directly via env (avoid storing JSON file)
+  GA_SA_CLIENT_EMAIL: z.string().optional(),
+  GA_SA_PRIVATE_KEY: z.string().optional()
 })
 
 const configServer = configSchema.safeParse(process.env)

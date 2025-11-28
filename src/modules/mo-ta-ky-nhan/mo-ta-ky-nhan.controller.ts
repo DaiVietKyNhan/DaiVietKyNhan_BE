@@ -29,11 +29,12 @@ import { CloudinaryImageUploadConfig } from '@/3rdService/upload/cloudinary/mult
 import { FileInterceptor } from '@nestjs/platform-express'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
 import { MotaKyNhanService } from './mo-ta-ky-nhan.service'
+import { IsPublic } from '@/common/decorators/auth.decorator'
 
 @Controller('mo-ta-ky-nhan')
 @ApiBearerAuth()
 export class MotaKyNhanController {
-  constructor(private readonly kynhanService: MotaKyNhanService) {}
+  constructor(private readonly kynhanService: MotaKyNhanService) { }
 
   @Get()
   @ZodSerializerDto(PaginationResponseSchema)
@@ -47,6 +48,7 @@ export class MotaKyNhanController {
     return this.kynhanService.findById(params.moTaKyNhanId)
   }
   @Get('/kynhan/:kyNhanId')
+  @IsPublic()
   @ZodSerializerDto(GetMotaKyNhanResDTO)
   findBykyNhanId(@Param() params: GetParamsMotaKyNhanIdDTO) {
     return this.kynhanService.findByKyNhanId(params.kyNhanId)
