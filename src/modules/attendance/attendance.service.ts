@@ -138,13 +138,33 @@ export class AttendanceService {
 
       const existing = await this.attendanceRepo.findByUserIdAndDate(createdById, date)
 
-      // Nếu có bản ghi cũ đã xóa mềm → xóa hẳn trước khi tạo
-      if (existing && existing.deletedAt) {
-        await this.attendanceRepo.delete(
-          { id: existing.id, deletedById: createdById },
-          true
-        )
+      if (existing) {
+        // TRƯỜNG HỢP 1: Đã điểm danh rồi (Active) -> Trả về thành công luôn (Idempotency)
+        // Việc này giúp App không bao giờ bị lỗi kể cả khi spam nút bấm.
+        if (!existing.deletedAt) {
+          return {
+            statusCode: HttpStatus.OK, // Hoặc HttpStatus.CREATED tùy bạn
+            data: existing,
+            message: ATTENDANCE_MESSAGE.CHECKIN_SUCCESS // Báo luôn là thành công
+          }
+        }
+
+        // TRƯỜNG HỢP 2: Đã xóa mềm -> Xóa hẳn để tạo mới (Giữ nguyên logic cũ của bạn)
+        if (existing.deletedAt) {
+          await this.attendanceRepo.delete(
+            { id: existing.id, deletedById: createdById },
+            true
+          )
+        }
       }
+
+      // Nếu có bản ghi cũ đã xóa mềm → xóa hẳn trước khi tạo
+      // if (existing && existing.deletedAt) {
+      //   await this.attendanceRepo.delete(
+      //     { id: existing.id, deletedById: createdById },
+      //     true
+      //   )
+      // }
 
       const attendance = await this.attendanceRepo.create({
         createdById,

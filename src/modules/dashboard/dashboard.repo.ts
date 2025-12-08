@@ -90,7 +90,13 @@ export class DashboardRepo {
 
     // Total users (active, not deleted)
     const totalUser = await this.prismaService.user.count({
-      where: { deletedAt: null, status: 'ACTIVE' }
+      where: {
+        deletedAt: null,
+        status: 'ACTIVE',
+        role: {
+          name: { not: 'ADMIN' }
+        }
+      }
     })
 
     // Total plays (sum of amountAttempt for logs in current month)
@@ -759,7 +765,9 @@ export class DashboardRepo {
     // Get all non-deleted users with gender and birthDate
     const users = await this.prismaService.user.findMany({
       where: {
-        deletedAt: null
+        deletedAt: null,
+        status: 'ACTIVE',
+        role: { name: { not: 'ADMIN' } }
       },
       select: {
         id: true,
