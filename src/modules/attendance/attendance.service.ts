@@ -114,28 +114,6 @@ export class AttendanceService {
 
       const getWeekDate = getWeekDay(date)
 
-      const attendenceConfig =
-        await this.attendanceConfigRepo.findByDateOfWeek(getWeekDate)
-
-      if (!attendenceConfig) {
-        throw NotFoundRecordException
-      }
-      //check streat chua ?
-      let isStreakSunday = false
-      const streakData = await this.findStreakDate(createdById, date)
-      // Kiểm tra xem có streak liên tiếp >= 6 ngày trước hôm nay không
-      const totalStreakWithToday = streakData.count + 1 // Bao gồm cả hôm nay
-      isStreakSunday = totalStreakWithToday % 7 === 0 ? true : false
-      console.log('isStreat: ', isStreakSunday)
-
-      const data: CreateAttendanceBodyType = {
-        date,
-        status: AttendancesStatus.PRESENT,
-        coin: attendenceConfig.baseCoin,
-        bonusCoin: isStreakSunday ? attendenceConfig.bonusCoin : 0,
-        userId: createdById
-      }
-
       const existing = await this.attendanceRepo.findByUserIdAndDate(createdById, date)
 
       if (existing) {
@@ -156,6 +134,28 @@ export class AttendanceService {
             true
           )
         }
+      }
+
+      const attendenceConfig =
+        await this.attendanceConfigRepo.findByDateOfWeek(getWeekDate)
+
+      if (!attendenceConfig) {
+        throw NotFoundRecordException
+      }
+      //check streat chua ?
+      let isStreakSunday = false
+      const streakData = await this.findStreakDate(createdById, date)
+      // Kiểm tra xem có streak liên tiếp >= 6 ngày trước hôm nay không
+      const totalStreakWithToday = streakData.count + 1 // Bao gồm cả hôm nay
+      isStreakSunday = totalStreakWithToday % 7 === 0 ? true : false
+      console.log('isStreat: ', isStreakSunday)
+
+      const data: CreateAttendanceBodyType = {
+        date,
+        status: AttendancesStatus.PRESENT,
+        coin: attendenceConfig.baseCoin,
+        bonusCoin: isStreakSunday ? attendenceConfig.bonusCoin : 0,
+        userId: createdById
       }
 
       // Nếu có bản ghi cũ đã xóa mềm → xóa hẳn trước khi tạo
