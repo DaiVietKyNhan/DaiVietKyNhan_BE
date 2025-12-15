@@ -139,7 +139,7 @@ export class UserLandRepo {
 
     for (let i = 0; i < landIds.length; i++) {
       const landId = landIds[i]
-      const status = i === 0 ? 'PENDING' : 'PENDING'
+      const status = i === 0 ? 'PENDING' : 'LOCKED'
 
       // Check if already exists
       const existing = await this.findByUserIdAndLandId(userId, landId)
