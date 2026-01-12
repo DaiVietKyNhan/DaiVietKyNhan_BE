@@ -139,7 +139,8 @@ export class UserLandRepo {
 
     for (let i = 0; i < landIds.length; i++) {
       const landId = landIds[i]
-      const status = i === 0 ? 'PENDING' : 'LOCKED'
+      // const status = i === 0 ? 'PENDING' : 'LOCKED'
+      const status = i === 0 ? 'PENDING' : 'PENDING'
 
       // Check if already exists
       const existing = await this.findByUserIdAndLandId(userId, landId)
@@ -150,7 +151,7 @@ export class UserLandRepo {
         const updated = await this.prismaService.userLand.update({
           where: { id: existing.id },
           data: {
-            status,
+            status: existing.status === 'COMPLETED' ? existing.status : status,
             updatedById: userId
           }
         })

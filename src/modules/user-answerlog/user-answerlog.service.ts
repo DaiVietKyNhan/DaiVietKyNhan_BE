@@ -128,7 +128,7 @@ export class UserAnswerLogService {
           await this.sharedUserRepo.minuspointByUserId({ userId: createdById, amount })
         }
         // muinus 1 heart
-        await this.sharedUserRepo.minusHeart({ userId: createdById, amount: 1 })
+        await this.sharedUserRepo.minusHeart({ userId: createdById, amount: 0 })
       }
 
       const answer = await this.userAnswerLogRepo.createOrUpdate({
@@ -275,11 +275,15 @@ export class UserAnswerLogService {
       if (!user) {
         throw NotFoundRecordException
       }
-
-      if (user.coin < 500) {
+      // check point co du de tra loi cau hoi khong
+      if (user.coin < 0) {
         throw UserNotEnoughCoinException
       }
-      await this.sharedUserRepo.minusCoinByUserId({ userId: createdById, amount: 500 })
+      await this.sharedUserRepo.minusCoinByUserId({ userId: createdById, amount: 0 })
+      // if (user.coin < 500) {
+      //   throw UserNotEnoughCoinException
+      // }
+      // await this.sharedUserRepo.minusCoinByUserId({ userId: createdById, amount: 500 })
 
       // lấy câu hỏi kèm câu trả lời
       const quesWithAns = await this.quesRepo.getQuestionsByIdWithAnswer(data.questionId)
