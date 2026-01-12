@@ -12,6 +12,7 @@
     "create-achievements": "ts-node initialScript/create-achievements.ts",
     "create-rewards": "ts-node initialScript/create-rewards.ts",
     "create-permissions": "ts-node initialScript/create-permissions.ts",
+    "create-bulk-accounts": "ts-node initialScript/create-bulk-accounts.ts",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
